@@ -1,0 +1,16 @@
+{
+  "name": "mypet-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo für die mypet Haustierverwaltung",
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/**\" run dev",
+    "build": "pnpm --recursive --filter \"./apps/**\" run build",
+    "lint": "pnpm --recursive run lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "prettier": "^3.0.0"
+  },
+  "packageManager": "pnpm@10.8.1"
+}
