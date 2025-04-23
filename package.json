@@ -9,8 +9,8 @@
     "lint": "pnpm --recursive run lint"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "prettier": "^3.0.0"
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
   },
-  "packageManager": "pnpm@10.8.1"
+  "packageManager": "pnpm@10.9.0"
 }
