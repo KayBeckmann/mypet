@@ -338,6 +338,16 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Dokumente hochladen (Kaufvertrag, Versicherung)
 - [ ] Push-Benachrichtigungen
 
+### Einstellungen
+- [ ] Profil bearbeiten
+- [ ] Passwort ändern
+- [ ] Benachrichtigungen konfigurieren
+- [ ] Datenschutz & Datenexport
+- [ ] Über die App / Impressum
+- [ ] Projekt unterstützen (Spenden-Links)
+  - Bitcoin: `12QBn6eba71FtAUM4HFmSGgTY9iTPfRKLx`
+  - Buy Me a Coffee: https://www.buymeacoffee.com/snuppedelua
+
 ---
 
 ## Features - Tierarzt-App
@@ -391,6 +401,16 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Rechnungserstellung
 - [ ] Kommunikation mit Tierbesitzern
 - [ ] Notfall-Modus für Bereitschaftsdienst
+
+### Einstellungen
+- [ ] Praxis-Profil bearbeiten
+- [ ] Passwort ändern
+- [ ] Benachrichtigungen konfigurieren
+- [ ] Datenschutz & Datenexport
+- [ ] Über die App / Impressum
+- [ ] Projekt unterstützen (Spenden-Links)
+  - Bitcoin: `12QBn6eba71FtAUM4HFmSGgTY9iTPfRKLx`
+  - Buy Me a Coffee: https://www.buymeacoffee.com/snuppedelua
 
 ---
 
@@ -448,6 +468,16 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Kommunikation mit Tierbesitzern
 - [ ] Bewertungen / Referenzen
 - [ ] Online-Buchung durch Tierbesitzer
+
+### Einstellungen
+- [ ] Dienstleister-Profil bearbeiten
+- [ ] Passwort ändern
+- [ ] Benachrichtigungen konfigurieren
+- [ ] Datenschutz & Datenexport
+- [ ] Über die App / Impressum
+- [ ] Projekt unterstützen (Spenden-Links)
+  - Bitcoin: `12QBn6eba71FtAUM4HFmSGgTY9iTPfRKLx`
+  - Buy Me a Coffee: https://www.buymeacoffee.com/snuppedelua
 
 ---
 
