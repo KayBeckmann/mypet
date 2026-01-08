@@ -174,6 +174,17 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `verordnet_am`
 - `status` (aktiv / abgeschlossen / pausiert)
 
+### Medikations-Verabreichung (Tracking)
+- `id`
+- `medikation_id`
+- `geplant_am` (Datum + Uhrzeit der geplanten Einnahme)
+- `verabreicht` (boolean)
+- `verabreicht_am` (tatsächlicher Zeitpunkt)
+- `verabreicht_von` (Benutzer-ID, z.B. Besitzer)
+- `notizen` (z.B. "Tier hat sich gewehrt", "nur halbe Dosis genommen")
+- `übersprungen` (boolean, falls Dosis ausgelassen)
+- `grund_übersprungen` (z.B. "Tier hat erbrochen")
+
 ### Impfungen
 - `id`
 - `tier_id`
@@ -181,6 +192,44 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `datum`
 - `gültig_bis`
 - `tierarzt_id`
+
+### Futterplan
+- `id`
+- `tier_id`
+- `name` (z.B. "Hauptfutter", "Diätplan")
+- `aktiv` (boolean)
+- `erstellt_am`
+- `gültig_ab`
+- `gültig_bis` (optional, für temporäre Diäten)
+- `notizen` (z.B. "Tierarzt empfohlen wegen Übergewicht")
+
+### Futterplan-Mahlzeit
+- `id`
+- `futterplan_id`
+- `name` (z.B. "Frühstück", "Abendessen", "Mittagssnack")
+- `uhrzeit` (z.B. "08:00", "18:00")
+- `reihenfolge` (für Sortierung)
+
+### Futterplan-Komponente
+- `id`
+- `mahlzeit_id`
+- `futter_name` (z.B. "Royal Canin Adult", "Karotten")
+- `futter_typ` (Trockenfutter, Nassfutter, Frischfleisch, Gemüse, Leckerli, Nahrungsergänzung)
+- `menge`
+- `einheit` (g, ml, Stück, EL, TL)
+- `marke` (optional)
+- `notizen` (z.B. "kleingeschnitten", "mit Wasser mischen")
+
+### Fütterung-Protokoll
+- `id`
+- `tier_id`
+- `futterplan_mahlzeit_id` (optional, wenn nach Plan)
+- `gefüttert_am`
+- `gefüttert_von` (Benutzer-ID)
+- `menge_angepasst` (boolean)
+- `tatsächliche_menge` (falls abweichend)
+- `gefressen` (alles / teilweise / verweigert)
+- `notizen` (z.B. "hat nur Hälfte gefressen")
 
 ### Termine
 - `id`
@@ -260,14 +309,30 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Besitzerwechsel-Historie einsehbar
 
 ### Medikamenten-Verwaltung
-- [ ] Aktuelle Medikationen einsehen
-- [ ] Medikamenten-Erinnerungen
+- [ ] Verordnete Medikationen einsehen (vom Tierarzt)
+- [ ] Dosierung und Anweisungen anzeigen
+- [ ] Verabreichung als "gegeben" markieren
+- [ ] Notizen zur Verabreichung hinzufügen (z.B. Probleme)
+- [ ] Dosis als "übersprungen" markieren mit Begründung
+- [ ] Medikamenten-Erinnerungen (Push-Benachrichtigung)
+- [ ] Verabreichungs-Historie einsehen
 - [ ] Restmenge tracken (Nachkauf-Warnung)
-- [ ] Medikamenten-Historie
+- [ ] Medikamenten-Historie (alle vergangenen Medikationen)
+
+### Fütterungsmanagement
+- [ ] Futterplan erstellen/bearbeiten
+- [ ] Mehrere Mahlzeiten pro Tag definieren (Frühstück, Mittag, Abend)
+- [ ] Futter-Komponenten mit Mengen festlegen
+- [ ] Mischungsverhältnisse definieren (z.B. 60% Trockenfutter, 40% Nassfutter)
+- [ ] Fütterung als "erledigt" markieren
+- [ ] Protokollieren ob alles gefressen wurde
+- [ ] Fütterungs-Erinnerungen
+- [ ] Fütterungs-Historie einsehen
+- [ ] Diätpläne (zeitlich begrenzt)
+- [ ] Für Familie/Urlaubsvertretung: Sehen wer wann gefüttert hat
 
 ### Erweiterte Features
 - [ ] Gewichtsverlauf tracken
-- [ ] Fütterungsprotokoll
 - [ ] Notfallkontakte
 - [ ] QR-Code für Chip-Nummer
 - [ ] Dokumente hochladen (Kaufvertrag, Versicherung)
@@ -293,6 +358,14 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Anweisungen hinzufügen
 - [ ] Medikationshistorie des Tiers einsehen
 - [ ] Wechselwirkungen prüfen (optional)
+
+### Compliance-Überwachung
+- [ ] Verabreichungs-Protokoll des Besitzers einsehen
+- [ ] Sehen ob/wann Medikation gegeben wurde
+- [ ] Übersprungene Dosen und Gründe einsehen
+- [ ] Notizen des Besitzers zur Verabreichung lesen
+- [ ] Compliance-Übersicht (% der gegebenen Dosen)
+- [ ] Bei Problemen: Direkt Kontakt aufnehmen
 
 ### Terminbestätigung & Zugriff
 - [ ] Terminanfragen von Tierbesitzern erhalten
@@ -417,6 +490,13 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `PUT /medications/:id` - Medikation aktualisieren
 - `PUT /medications/:id/status` - Status ändern (aktiv/pausiert/abgeschlossen)
 
+### Medikations-Verabreichung (Tracking)
+- `GET /medications/:id/schedule` - Geplante Verabreichungen
+- `GET /medications/:id/administrations` - Verabreichungs-Historie
+- `POST /medications/:id/administer` - Als verabreicht markieren (Besitzer)
+- `POST /medications/:id/skip` - Als übersprungen markieren mit Grund (Besitzer)
+- `GET /pets/:id/compliance` - Compliance-Übersicht für Tierarzt
+
 ### Familien & Gruppen
 - `GET /families` - Eigene Familien/Gruppen
 - `POST /families` - Neue Familie erstellen
@@ -468,6 +548,18 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `POST /pets/:id/services` - Neue Dienstleistung dokumentieren
 - `GET /providers/:id/services` - Alle Leistungen eines Dienstleisters
 
+### Fütterung
+- `GET /pets/:id/feeding-plans` - Alle Futterpläne eines Tiers
+- `GET /pets/:id/feeding-plans/active` - Aktiver Futterplan
+- `POST /pets/:id/feeding-plans` - Neuen Futterplan erstellen
+- `PUT /feeding-plans/:id` - Futterplan aktualisieren
+- `DELETE /feeding-plans/:id` - Futterplan löschen
+- `POST /feeding-plans/:id/meals` - Mahlzeit hinzufügen
+- `PUT /meals/:id` - Mahlzeit aktualisieren
+- `POST /meals/:id/components` - Futter-Komponente hinzufügen
+- `GET /pets/:id/feeding-log` - Fütterungs-Protokoll
+- `POST /pets/:id/feeding-log` - Fütterung protokollieren
+
 ---
 
 ## Zukünftige Erweiterungen (Ideen)
@@ -498,7 +590,8 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Export für andere Systeme
 
 ### Tier-Gesundheit
-- [ ] Futter- und Allergiemanagement (Was darf das Tier nicht fressen?)
+- [ ] Allergiemanagement (Was darf das Tier nicht fressen?)
+- [ ] Unverträglichkeiten dokumentieren
 - [ ] Gewichtskurve mit Zielgewicht
 - [ ] Aktivitätstracking (optional, z.B. GPS-Tracker-Integration)
 
