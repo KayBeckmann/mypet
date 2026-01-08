@@ -257,3 +257,12 @@ Dieses Projekt ist Open Source. Lizenzdetails folgen.
 |----------|--------------|
 | [brainstorming.md](brainstorming.md) | Feature-Ideen, Datenmodelle, API-Entwürfe |
 | [roadmap.md](roadmap.md) | Entwicklungs-Roadmap mit Meilensteinen |
+
+---
+
+## Unterstützen
+
+Wenn dir dieses Projekt gefällt, kannst du die Entwicklung unterstützen:
+
+- **Bitcoin**: `12QBn6eba71FtAUM4HFmSGgTY9iTPfRKLx`
+- **Buy Me a Coffee**: [buymeacoffee.com/snuppedelua](https://www.buymeacoffee.com/snuppedelua)

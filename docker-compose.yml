@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Datenbank
+  db:
+    image: postgres:16-alpine
+    container_name: mypet-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mypet}
+      POSTGRES_USER: ${POSTGRES_USER:-mypet_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mypet_user} -d ${POSTGRES_DB:-mypet}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Dart Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mypet-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-mypet}
+      POSTGRES_USER: ${POSTGRES_USER:-mypet_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_EXPIRY: ${JWT_EXPIRY:-3600}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change-me-in-production}
+      UPLOAD_PATH: /app/uploads
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-10485760}
+    volumes:
+      - uploads:/app/uploads
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+
+  # Flutter Web - Tierbesitzer
+  web-owner:
+    build:
+      context: ./web_owner
+      dockerfile: Dockerfile
+    container_name: mypet-web-owner
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${OWNER_PORT:-3001}:80"
+
+  # Flutter Web - Tierarzt
+  web-vet:
+    build:
+      context: ./web_vet
+      dockerfile: Dockerfile
+    container_name: mypet-web-vet
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${VET_PORT:-3002}:80"
+
+  # Flutter Web - Dienstleister
+  web-provider:
+    build:
+      context: ./web_provider
+      dockerfile: Dockerfile
+    container_name: mypet-web-provider
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${PROVIDER_PORT:-3003}:80"
+
+volumes:
+  postgres-data:
+  uploads:

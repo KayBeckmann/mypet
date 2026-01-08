@@ -1,0 +1,88 @@
+# ===== Umgebungsvariablen =====
+.env
+.env.local
+.env.*.local
+
+# ===== Dart =====
+.dart_tool/
+.packages
+build/
+pubspec.lock
+
+# ===== Flutter =====
+**/android/
+**/ios/
+**/linux/
+**/macos/
+**/windows/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/generated_plugin_registrant.dart
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# ===== macOS =====
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ===== Windows =====
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ===== Linux =====
+*~
+.fuse_hidden*
+.nfs*
+
+# ===== Logs =====
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== Docker =====
+docker-compose.override.yml
+
+# ===== Datenbank =====
+*.db
+*.sqlite
+*.sqlite3
+data/
+postgres-data/
+
+# ===== Uploads =====
+uploads/
+temp/
+tmp/
+
+# ===== Test & Coverage =====
+coverage/
+.test_coverage/
+*.lcov
+
+# ===== Build Outputs =====
+dist/
+out/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# ===== Secrets =====
+*.pem
+*.key
+*.crt
+secrets/
+credentials/
