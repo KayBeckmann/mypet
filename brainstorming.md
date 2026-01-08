@@ -1,5 +1,7 @@
 # MyPet - Tierverwaltung
 
+> **Open Source Projekt** - Quellcode frei verfügbar
+
 ## Projektübersicht
 
 Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
@@ -23,6 +25,39 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - **App 2**: Tierarzt-App
 - **App 3**: Dienstleister-App (Hufschmied, Pfleger, Trainer, etc.)
 - **Lokale Datenbank**: SQLite / Hive / Isar (Offline-First für schnellen Zugriff)
+
+---
+
+## Sicherheit & Datenschutz
+
+### Verschlüsselung
+- **Datenbank**: Alle sensiblen Daten verschlüsselt speichern (AES-256)
+- **Übertragung**: TLS/HTTPS für alle API-Kommunikation
+- **Passwörter**: Bcrypt/Argon2 Hashing
+- **Lokale Daten**: Verschlüsselte lokale Datenbank auf Endgeräten
+- **Medien**: Verschlüsselte Speicherung von Röntgenbildern, Dokumenten, etc.
+
+### DSGVO & Datenschutz
+- **Konto-Löschung**: Bei Löschung des Benutzerkontos werden ALLE Benutzerdaten automatisch und vollständig gelöscht
+  - Eigene Tiere (wenn kein anderer Besitzer)
+  - Alle persönlichen Daten
+  - Hochgeladene Medien
+  - Berechtigungen und Freigaben
+- **Datenexport**: Benutzer können alle ihre Daten exportieren (DSGVO Art. 20)
+- **Einwilligungen**: Klare Zustimmung für Datenverarbeitung
+- **Datenminimierung**: Nur notwendige Daten erheben
+- **Transparenz**: Klare Datenschutzerklärung
+
+### Authentifizierung
+- [ ] Sichere Passwort-Anforderungen
+- [ ] Zwei-Faktor-Authentifizierung (2FA) optional
+- [ ] Session-Management
+- [ ] Passwort-Reset per E-Mail
+
+### Audit & Logging
+- [ ] Audit-Log für sensible Aktionen (Besitzerwechsel, Löschungen, etc.)
+- [ ] Login-Historie
+- [ ] Zugriffs-Protokollierung für medizinische Daten
 
 ---
 
@@ -351,6 +386,12 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `POST /auth/refresh`
 - `POST /auth/logout`
 
+### Benutzerkonto & DSGVO
+- `GET /account` - Eigene Kontodaten
+- `PUT /account` - Kontodaten aktualisieren
+- `DELETE /account` - Konto löschen (löscht ALLE Benutzerdaten)
+- `GET /account/export` - Alle eigenen Daten exportieren (DSGVO)
+
 ### Tiere
 - `GET /pets` - Alle Tiere des Besitzers
 - `GET /pets/:id` - Einzelnes Tier
@@ -426,6 +467,44 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `GET /pets/:id/services` - Alle Dienstleistungen eines Tiers
 - `POST /pets/:id/services` - Neue Dienstleistung dokumentieren
 - `GET /providers/:id/services` - Alle Leistungen eines Dienstleisters
+
+---
+
+## Zukünftige Erweiterungen (Ideen)
+
+### Geschäftlich / Finanzen
+- [ ] Preislisten für Tierärzte und Dienstleister
+- [ ] Rechnungen als PDF generieren
+- [ ] Kostenübersicht pro Tier (Was hat das Tier bisher "gekostet"?)
+- [ ] Versicherungsdaten des Tiers (Tierkrankenversicherung)
+
+### Kommunikation
+- [ ] Chat/Messaging zwischen Besitzer und Arzt/Dienstleister
+- [ ] Videosprechstunde für Tierärzte
+
+### Notfall & Sicherheit
+- [ ] Notfall-Modus: Schnellzugriff auf wichtige Infos (Allergien, Blutgruppe, Medikamente)
+- [ ] QR-Code Tier-Steckbrief für Finder (bei entlaufenem Tier)
+- [ ] Notfallkontakte schnell erreichbar
+
+### Erinnerungen & Automatisierung
+- [ ] Automatische Erinnerungen für regelmäßige Termine (Entwurmung alle 3 Monate)
+- [ ] Impf-Erinnerungen basierend auf Gültigkeitsdatum
+- [ ] Medikamenten-Nachkauf-Warnung
+
+### Integrationen
+- [ ] Tierregister-Anbindung (TASSO, Findefix, etc.)
+- [ ] Kalender-Integration (Google Calendar, Apple Calendar)
+- [ ] Export für andere Systeme
+
+### Tier-Gesundheit
+- [ ] Futter- und Allergiemanagement (Was darf das Tier nicht fressen?)
+- [ ] Gewichtskurve mit Zielgewicht
+- [ ] Aktivitätstracking (optional, z.B. GPS-Tracker-Integration)
+
+### Plattformen
+- [ ] Web-Version zusätzlich zu den Apps
+- [ ] Admin-Panel für Support und Verwaltung
 
 ---
 
