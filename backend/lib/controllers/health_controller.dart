@@ -1,9 +1,14 @@
 import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
+import '../database/database.dart';
 
 /// Controller für Health-Check Endpoints
 class HealthController {
+  final Database _db;
+
+  HealthController(this._db);
+
   Router get router {
     final router = Router();
 
@@ -31,10 +36,19 @@ class HealthController {
 
   /// Readiness Check - Server und Abhängigkeiten bereit
   Future<Response> _readinessCheck(Request request) async {
-    // TODO: Datenbank-Verbindung prüfen
+    bool dbHealthy = false;
+
+    try {
+      // Einfache Query zum Testen der DB-Verbindung
+      await _db.query('SELECT 1');
+      dbHealthy = true;
+    } catch (e) {
+      print('❌ Datenbank-Check fehlgeschlagen: $e');
+    }
+
     final checks = {
       'server': true,
-      'database': false, // Wird in M1.2 implementiert
+      'database': dbHealthy,
     };
 
     final allHealthy = checks.values.every((v) => v);
