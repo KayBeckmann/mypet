@@ -174,6 +174,17 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `verordnet_am`
 - `status` (aktiv / abgeschlossen / pausiert)
 
+### Medikations-Verabreichung (Tracking)
+- `id`
+- `medikation_id`
+- `geplant_am` (Datum + Uhrzeit der geplanten Einnahme)
+- `verabreicht` (boolean)
+- `verabreicht_am` (tatsächlicher Zeitpunkt)
+- `verabreicht_von` (Benutzer-ID, z.B. Besitzer)
+- `notizen` (z.B. "Tier hat sich gewehrt", "nur halbe Dosis genommen")
+- `übersprungen` (boolean, falls Dosis ausgelassen)
+- `grund_übersprungen` (z.B. "Tier hat erbrochen")
+
 ### Impfungen
 - `id`
 - `tier_id`
@@ -260,10 +271,15 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Besitzerwechsel-Historie einsehbar
 
 ### Medikamenten-Verwaltung
-- [ ] Aktuelle Medikationen einsehen
-- [ ] Medikamenten-Erinnerungen
+- [ ] Verordnete Medikationen einsehen (vom Tierarzt)
+- [ ] Dosierung und Anweisungen anzeigen
+- [ ] Verabreichung als "gegeben" markieren
+- [ ] Notizen zur Verabreichung hinzufügen (z.B. Probleme)
+- [ ] Dosis als "übersprungen" markieren mit Begründung
+- [ ] Medikamenten-Erinnerungen (Push-Benachrichtigung)
+- [ ] Verabreichungs-Historie einsehen
 - [ ] Restmenge tracken (Nachkauf-Warnung)
-- [ ] Medikamenten-Historie
+- [ ] Medikamenten-Historie (alle vergangenen Medikationen)
 
 ### Erweiterte Features
 - [ ] Gewichtsverlauf tracken
@@ -293,6 +309,14 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Anweisungen hinzufügen
 - [ ] Medikationshistorie des Tiers einsehen
 - [ ] Wechselwirkungen prüfen (optional)
+
+### Compliance-Überwachung
+- [ ] Verabreichungs-Protokoll des Besitzers einsehen
+- [ ] Sehen ob/wann Medikation gegeben wurde
+- [ ] Übersprungene Dosen und Gründe einsehen
+- [ ] Notizen des Besitzers zur Verabreichung lesen
+- [ ] Compliance-Übersicht (% der gegebenen Dosen)
+- [ ] Bei Problemen: Direkt Kontakt aufnehmen
 
 ### Terminbestätigung & Zugriff
 - [ ] Terminanfragen von Tierbesitzern erhalten
@@ -416,6 +440,13 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `POST /pets/:id/medications` - Neue Medikation verordnen (nur Tierarzt)
 - `PUT /medications/:id` - Medikation aktualisieren
 - `PUT /medications/:id/status` - Status ändern (aktiv/pausiert/abgeschlossen)
+
+### Medikations-Verabreichung (Tracking)
+- `GET /medications/:id/schedule` - Geplante Verabreichungen
+- `GET /medications/:id/administrations` - Verabreichungs-Historie
+- `POST /medications/:id/administer` - Als verabreicht markieren (Besitzer)
+- `POST /medications/:id/skip` - Als übersprungen markieren mit Grund (Besitzer)
+- `GET /pets/:id/compliance` - Compliance-Übersicht für Tierarzt
 
 ### Familien & Gruppen
 - `GET /families` - Eigene Familien/Gruppen
