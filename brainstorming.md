@@ -193,6 +193,44 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `gültig_bis`
 - `tierarzt_id`
 
+### Futterplan
+- `id`
+- `tier_id`
+- `name` (z.B. "Hauptfutter", "Diätplan")
+- `aktiv` (boolean)
+- `erstellt_am`
+- `gültig_ab`
+- `gültig_bis` (optional, für temporäre Diäten)
+- `notizen` (z.B. "Tierarzt empfohlen wegen Übergewicht")
+
+### Futterplan-Mahlzeit
+- `id`
+- `futterplan_id`
+- `name` (z.B. "Frühstück", "Abendessen", "Mittagssnack")
+- `uhrzeit` (z.B. "08:00", "18:00")
+- `reihenfolge` (für Sortierung)
+
+### Futterplan-Komponente
+- `id`
+- `mahlzeit_id`
+- `futter_name` (z.B. "Royal Canin Adult", "Karotten")
+- `futter_typ` (Trockenfutter, Nassfutter, Frischfleisch, Gemüse, Leckerli, Nahrungsergänzung)
+- `menge`
+- `einheit` (g, ml, Stück, EL, TL)
+- `marke` (optional)
+- `notizen` (z.B. "kleingeschnitten", "mit Wasser mischen")
+
+### Fütterung-Protokoll
+- `id`
+- `tier_id`
+- `futterplan_mahlzeit_id` (optional, wenn nach Plan)
+- `gefüttert_am`
+- `gefüttert_von` (Benutzer-ID)
+- `menge_angepasst` (boolean)
+- `tatsächliche_menge` (falls abweichend)
+- `gefressen` (alles / teilweise / verweigert)
+- `notizen` (z.B. "hat nur Hälfte gefressen")
+
 ### Termine
 - `id`
 - `tier_id`
@@ -281,9 +319,20 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Restmenge tracken (Nachkauf-Warnung)
 - [ ] Medikamenten-Historie (alle vergangenen Medikationen)
 
+### Fütterungsmanagement
+- [ ] Futterplan erstellen/bearbeiten
+- [ ] Mehrere Mahlzeiten pro Tag definieren (Frühstück, Mittag, Abend)
+- [ ] Futter-Komponenten mit Mengen festlegen
+- [ ] Mischungsverhältnisse definieren (z.B. 60% Trockenfutter, 40% Nassfutter)
+- [ ] Fütterung als "erledigt" markieren
+- [ ] Protokollieren ob alles gefressen wurde
+- [ ] Fütterungs-Erinnerungen
+- [ ] Fütterungs-Historie einsehen
+- [ ] Diätpläne (zeitlich begrenzt)
+- [ ] Für Familie/Urlaubsvertretung: Sehen wer wann gefüttert hat
+
 ### Erweiterte Features
 - [ ] Gewichtsverlauf tracken
-- [ ] Fütterungsprotokoll
 - [ ] Notfallkontakte
 - [ ] QR-Code für Chip-Nummer
 - [ ] Dokumente hochladen (Kaufvertrag, Versicherung)
@@ -499,6 +548,18 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `POST /pets/:id/services` - Neue Dienstleistung dokumentieren
 - `GET /providers/:id/services` - Alle Leistungen eines Dienstleisters
 
+### Fütterung
+- `GET /pets/:id/feeding-plans` - Alle Futterpläne eines Tiers
+- `GET /pets/:id/feeding-plans/active` - Aktiver Futterplan
+- `POST /pets/:id/feeding-plans` - Neuen Futterplan erstellen
+- `PUT /feeding-plans/:id` - Futterplan aktualisieren
+- `DELETE /feeding-plans/:id` - Futterplan löschen
+- `POST /feeding-plans/:id/meals` - Mahlzeit hinzufügen
+- `PUT /meals/:id` - Mahlzeit aktualisieren
+- `POST /meals/:id/components` - Futter-Komponente hinzufügen
+- `GET /pets/:id/feeding-log` - Fütterungs-Protokoll
+- `POST /pets/:id/feeding-log` - Fütterung protokollieren
+
 ---
 
 ## Zukünftige Erweiterungen (Ideen)
@@ -529,7 +590,8 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Export für andere Systeme
 
 ### Tier-Gesundheit
-- [ ] Futter- und Allergiemanagement (Was darf das Tier nicht fressen?)
+- [ ] Allergiemanagement (Was darf das Tier nicht fressen?)
+- [ ] Unverträglichkeiten dokumentieren
 - [ ] Gewichtskurve mit Zielgewicht
 - [ ] Aktivitätstracking (optional, z.B. GPS-Tracker-Integration)
 
