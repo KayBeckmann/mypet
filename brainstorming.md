@@ -22,6 +22,7 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - **App 1**: Tierbesitzer-App
 - **App 2**: Tierarzt-App
 - **App 3**: Dienstleister-App (Hufschmied, Pfleger, Trainer, etc.)
+- **Lokale Datenbank**: SQLite / Hive / Isar (Offline-First für schnellen Zugriff)
 
 ---
 
@@ -34,6 +35,29 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `name`
 - `rolle` (Besitzer / Tierarzt / Dienstleister)
 - `erstellt_am`
+
+### Familie / Gruppe
+- `id`
+- `name` (z.B. "Familie Müller")
+- `erstellt_von` (Benutzer-ID)
+- `erstellt_am`
+
+### Familien-Mitgliedschaft
+- `id`
+- `familie_id`
+- `benutzer_id`
+- `rolle` (Admin / Mitglied)
+- `beigetreten_am`
+
+### Zugriffsberechtigung (Urlaubsvertretung etc.)
+- `id`
+- `tier_id` (oder `null` für alle Tiere)
+- `gewährt_von` (Benutzer-ID)
+- `gewährt_an` (Benutzer-ID)
+- `berechtigung_typ` (Lesen / Schreiben / Verwalten)
+- `gültig_von`
+- `gültig_bis` (zeitlich begrenzt)
+- `notizen` (z.B. "Urlaubsvertretung Juli 2025")
 
 ### Tier
 - `id`
@@ -82,8 +106,25 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `datum`
 - `diagnose`
 - `behandlung`
-- `medikamente`
 - `notizen`
+
+### Medikation
+- `id`
+- `tier_id`
+- `tierarzt_id`
+- `medikament_name`
+- `wirkstoff`
+- `dosierung` (z.B. "10mg")
+- `einheit` (Tabletten, ml, Tropfen, etc.)
+- `anzahl_packungen`
+- `menge_pro_packung`
+- `einnahme_frequenz` (z.B. "2x täglich")
+- `einnahme_dauer` (z.B. "7 Tage", "dauerhaft")
+- `start_datum`
+- `end_datum`
+- `anweisungen` (z.B. "vor dem Füttern")
+- `verordnet_am`
+- `status` (aktiv / abgeschlossen / pausiert)
 
 ### Impfungen
 - `id`
@@ -119,6 +160,26 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Tierarzt-Suche in der Nähe
 - [ ] Dienstleister-Suche (Hufschmied, Trainer, etc.)
 
+### Offline & Synchronisation
+- [ ] Lokale Speicherung aller eigenen Tierdaten
+- [ ] Offline-Zugriff auf alle wichtigen Informationen
+- [ ] Automatische Synchronisation bei Internetverbindung
+- [ ] Konfliktauflösung bei gleichzeitigen Änderungen
+
+### Familie & Freigaben
+- [ ] Familie/Gruppe erstellen
+- [ ] Familienmitglieder einladen
+- [ ] Gemeinsamer Zugriff auf Haustiere innerhalb der Familie
+- [ ] Urlaubsvertretung: Zeitlich begrenzten Zugriff gewähren
+- [ ] Berechtigungen verwalten (Lesen / Bearbeiten)
+- [ ] Freigabe-Übersicht (wer hat Zugriff auf was)
+
+### Medikamenten-Verwaltung
+- [ ] Aktuelle Medikationen einsehen
+- [ ] Medikamenten-Erinnerungen
+- [ ] Restmenge tracken (Nachkauf-Warnung)
+- [ ] Medikamenten-Historie
+
 ### Erweiterte Features
 - [ ] Gewichtsverlauf tracken
 - [ ] Fütterungsprotokoll
@@ -139,6 +200,14 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Impfungen eintragen
 - [ ] Terminverwaltung
 - [ ] Rezepte ausstellen
+
+### Medikamenten-Verordnung
+- [ ] Medikamente verordnen (Name, Wirkstoff, Dosierung)
+- [ ] Anzahl und Menge festlegen
+- [ ] Einnahmeplan erstellen (Frequenz, Dauer)
+- [ ] Anweisungen hinzufügen
+- [ ] Medikationshistorie des Tiers einsehen
+- [ ] Wechselwirkungen prüfen (optional)
 
 ### Erweiterte Features
 - [ ] Kalenderansicht für Termine
@@ -213,6 +282,26 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 ### Medizinische Akten
 - `GET /pets/:id/records` - Alle Einträge eines Tiers
 - `POST /pets/:id/records` - Neuer Eintrag (nur Tierarzt)
+
+### Medikationen
+- `GET /pets/:id/medications` - Alle Medikationen eines Tiers
+- `GET /pets/:id/medications/active` - Aktive Medikationen
+- `POST /pets/:id/medications` - Neue Medikation verordnen (nur Tierarzt)
+- `PUT /medications/:id` - Medikation aktualisieren
+- `PUT /medications/:id/status` - Status ändern (aktiv/pausiert/abgeschlossen)
+
+### Familien & Gruppen
+- `GET /families` - Eigene Familien/Gruppen
+- `POST /families` - Neue Familie erstellen
+- `POST /families/:id/members` - Mitglied einladen
+- `DELETE /families/:id/members/:userId` - Mitglied entfernen
+- `PUT /families/:id/members/:userId` - Rolle ändern
+
+### Zugriffsberechtigungen
+- `GET /permissions` - Eigene erteilte/erhaltene Berechtigungen
+- `POST /permissions` - Neue Berechtigung erteilen (Urlaubsvertretung etc.)
+- `PUT /permissions/:id` - Berechtigung aktualisieren
+- `DELETE /permissions/:id` - Berechtigung widerrufen
 
 ### Impfungen
 - `GET /pets/:id/vaccinations`
@@ -293,6 +382,8 @@ mypet/
 4. **State Management (Flutter)**: Riverpod, Bloc oder Provider?
 5. **Deployment**: Docker? Cloud-Anbieter?
 6. **Shared Code**: Gemeinsames Package für Models zwischen Apps?
+7. **Offline-Sync**: Welche Strategie? (Last-Write-Wins, Merge, Conflict-Resolution-UI?)
+8. **Lokale DB (Flutter)**: Hive, Isar oder SQLite?
 
 ---
 
