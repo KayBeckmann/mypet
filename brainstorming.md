@@ -28,6 +28,8 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 
 ## Datenmodell (Erste Ideen)
 
+> **Wichtiges Prinzip**: Alle medizinischen und dienstleistungsbezogenen Daten gehören zum **Tier**, nicht zum Besitzer. Bei einem Besitzerwechsel bleiben alle Daten erhalten und gehen mit dem Tier zum neuen Besitzer über.
+
 ### Benutzer
 - `id`
 - `email`
@@ -67,8 +69,19 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `geburtsdatum`
 - `geschlecht`
 - `chip_nummer`
-- `besitzer_id`
+- `aktueller_besitzer_id`
 - `foto_url`
+
+### Besitzerwechsel (Historie)
+- `id`
+- `tier_id`
+- `alter_besitzer_id`
+- `neuer_besitzer_id`
+- `wechsel_datum`
+- `grund` (Verkauf, Schenkung, Erbschaft, etc.)
+- `notizen`
+- `bestätigt_von_neuem_besitzer` (boolean)
+- `bestätigt_am`
 
 ### Tierarzt-Praxis
 - `id`
@@ -137,10 +150,39 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 ### Termine
 - `id`
 - `tier_id`
-- `tierarzt_id`
+- `anbieter_typ` (Tierarzt / Dienstleister)
+- `anbieter_id` (tierarzt_id oder dienstleister_id)
+- `gebucht_von` (Benutzer-ID)
 - `datum_zeit`
 - `grund`
-- `status` (geplant, abgeschlossen, abgesagt)
+- `status` (angefragt / bestätigt / abgeschlossen / abgesagt)
+- `zugriff_gewährt` (boolean, automatisch bei Bestätigung)
+- `zugriff_typ` (medizinisch / dienstleistung)
+
+### Medien / Dokumente
+- `id`
+- `tier_id`
+- `hochgeladen_von` (Benutzer-ID)
+- `typ` (Röntgenbild, Laborbericht, Ultraschall, Foto, Dokument, etc.)
+- `datei_url`
+- `datei_name`
+- `beschreibung`
+- `verknüpft_mit` (medizinische_akte_id, nullable)
+- `hochgeladen_am`
+
+### Professionelle Notizen (Ärzte & Dienstleister)
+- `id`
+- `tier_id`
+- `besitzer_id` (optional, für Notizen zum Besitzer)
+- `erstellt_von` (Benutzer-ID)
+- `ersteller_typ` (Tierarzt / Dienstleister)
+- `inhalt`
+- `sichtbarkeit` (privat / kollegial)
+  - **privat**: Nur für den Ersteller sichtbar
+  - **kollegial**: Für alle Ärzte ODER alle Dienstleister sichtbar (je nach Ersteller-Typ)
+  - **NIE für Tierbesitzer sichtbar!**
+- `erstellt_am`
+- `aktualisiert_am`
 
 ---
 
@@ -173,6 +215,14 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Urlaubsvertretung: Zeitlich begrenzten Zugriff gewähren
 - [ ] Berechtigungen verwalten (Lesen / Bearbeiten)
 - [ ] Freigabe-Übersicht (wer hat Zugriff auf was)
+
+### Besitzerwechsel
+- [ ] Tier zum Verkauf/Übergabe freigeben
+- [ ] Neuen Besitzer einladen (per E-Mail/Code)
+- [ ] Alle Daten werden automatisch übertragen
+- [ ] Medizinische Historie bleibt beim Tier
+- [ ] Alter Besitzer verliert Zugriff nach Bestätigung
+- [ ] Besitzerwechsel-Historie einsehbar
 
 ### Medikamenten-Verwaltung
 - [ ] Aktuelle Medikationen einsehen
@@ -209,11 +259,28 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Medikationshistorie des Tiers einsehen
 - [ ] Wechselwirkungen prüfen (optional)
 
+### Terminbestätigung & Zugriff
+- [ ] Terminanfragen von Tierbesitzern erhalten
+- [ ] Bei Bestätigung: Automatischer Zugriff auf medizinische Unterlagen
+- [ ] Zugriff endet nach Termin-Abschluss (oder konfigurierbar)
+
+### Medien-Upload
+- [ ] Röntgenbilder hochladen
+- [ ] Ultraschallbilder hochladen
+- [ ] Laborberichte anhängen
+- [ ] Bilder mit medizinischer Akte verknüpfen
+- [ ] Bildarchiv pro Tier
+
+### Professionelle Notizen
+- [ ] Private Notizen zu Tier anlegen (nur selbst sichtbar)
+- [ ] Kollegiale Notizen (für alle Tierärzte sichtbar)
+- [ ] Notizen zum Tierbesitzer (z.B. "zahlt immer pünktlich", "Compliance-Probleme")
+- [ ] **Notizen sind NIE für Tierbesitzer sichtbar**
+
 ### Erweiterte Features
 - [ ] Kalenderansicht für Termine
 - [ ] Statistiken und Berichte
 - [ ] Rechnungserstellung
-- [ ] Labor-Ergebnisse anhängen
 - [ ] Kommunikation mit Tierbesitzern
 - [ ] Notfall-Modus für Bereitschaftsdienst
 
@@ -255,6 +322,18 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Übungen für zuhause
 - [ ] Zusammenarbeit mit Tierarzt (Verordnungen)
 
+### Terminbestätigung & Zugriff
+- [ ] Terminanfragen von Tierbesitzern erhalten
+- [ ] Bei Bestätigung: Automatischer Zugriff auf bisherige Dienstleistungen
+- [ ] **KEIN Zugriff auf medizinische Daten** (nur eigene Dienstleistungskategorie)
+- [ ] Zugriff endet nach Termin-Abschluss
+
+### Professionelle Notizen
+- [ ] Private Notizen zu Tier anlegen (nur selbst sichtbar)
+- [ ] Kollegiale Notizen (für alle Dienstleister sichtbar)
+- [ ] Notizen zum Tierbesitzer
+- [ ] **Notizen sind NIE für Tierbesitzer sichtbar**
+
 ### Erweiterte Features
 - [ ] Rechnungserstellung
 - [ ] Statistiken (Umsatz, Kunden, etc.)
@@ -278,6 +357,13 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `POST /pets` - Neues Tier anlegen
 - `PUT /pets/:id` - Tier aktualisieren
 - `DELETE /pets/:id` - Tier löschen
+
+### Besitzerwechsel
+- `POST /pets/:id/transfer` - Besitzerwechsel initiieren
+- `GET /transfers/pending` - Ausstehende Übernahmen
+- `POST /transfers/:id/confirm` - Übernahme bestätigen
+- `POST /transfers/:id/reject` - Übernahme ablehnen
+- `GET /pets/:id/ownership-history` - Besitzerhistorie
 
 ### Medizinische Akten
 - `GET /pets/:id/records` - Alle Einträge eines Tiers
@@ -308,10 +394,27 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `POST /pets/:id/vaccinations` (nur Tierarzt)
 
 ### Termine
-- `GET /appointments`
-- `POST /appointments`
-- `PUT /appointments/:id`
-- `DELETE /appointments/:id`
+- `GET /appointments` - Eigene Termine
+- `POST /appointments` - Termin anfragen (Besitzer)
+- `PUT /appointments/:id` - Termin aktualisieren
+- `PUT /appointments/:id/confirm` - Termin bestätigen (Arzt/Dienstleister) → Zugriff wird gewährt
+- `PUT /appointments/:id/complete` - Termin abschließen
+- `DELETE /appointments/:id` - Termin absagen
+
+### Medien / Dokumente
+- `GET /pets/:id/media` - Alle Medien eines Tiers
+- `POST /pets/:id/media` - Medium hochladen (Röntgen, Labor, etc.)
+- `GET /media/:id` - Einzelnes Medium abrufen
+- `DELETE /media/:id` - Medium löschen
+- `PUT /media/:id` - Medium-Metadaten aktualisieren
+
+### Professionelle Notizen
+- `GET /pets/:id/notes` - Notizen zu einem Tier (nur für Profis)
+- `GET /users/:id/notes` - Notizen zu einem Besitzer (nur für Profis)
+- `POST /notes` - Neue Notiz anlegen
+- `PUT /notes/:id` - Notiz bearbeiten
+- `DELETE /notes/:id` - Notiz löschen
+- `PUT /notes/:id/visibility` - Sichtbarkeit ändern (privat ↔ kollegial)
 
 ### Dienstleister
 - `GET /providers` - Alle Dienstleister (mit Filter)
