@@ -2,9 +2,10 @@
 
 ## Projektübersicht
 
-Eine Plattform zur Verwaltung von Tieren mit zwei Benutzergruppen:
+Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - **Tierbesitzer**: Verwalten ihre eigenen Tiere
 - **Tierärzte**: Zugriff auf Patientendaten und medizinische Dokumentation
+- **Dienstleister**: Hufschmiede, Tierpfleger, Trainer, Physiotherapeuten, etc.
 
 ---
 
@@ -20,6 +21,7 @@ Eine Plattform zur Verwaltung von Tieren mit zwei Benutzergruppen:
 - **Framework**: Flutter (Cross-Platform)
 - **App 1**: Tierbesitzer-App
 - **App 2**: Tierarzt-App
+- **App 3**: Dienstleister-App (Hufschmied, Pfleger, Trainer, etc.)
 
 ---
 
@@ -30,7 +32,7 @@ Eine Plattform zur Verwaltung von Tieren mit zwei Benutzergruppen:
 - `email`
 - `passwort_hash`
 - `name`
-- `rolle` (Besitzer / Tierarzt)
+- `rolle` (Besitzer / Tierarzt / Dienstleister)
 - `erstellt_am`
 
 ### Tier
@@ -50,6 +52,28 @@ Eine Plattform zur Verwaltung von Tieren mit zwei Benutzergruppen:
 - `adresse`
 - `telefon`
 - `öffnungszeiten`
+
+### Dienstleister
+- `id`
+- `benutzer_id`
+- `firmenname`
+- `dienstleister_typ` (Hufschmied, Tierpfleger, Trainer, Physiotherapeut, Hundefriseur, etc.)
+- `beschreibung`
+- `adresse`
+- `telefon`
+- `mobil` (oft mobiler Service)
+- `arbeitsgebiet_radius`
+- `spezialisierung` (z.B. "Pferde", "Hunde", "Exoten")
+
+### Dienstleistung
+- `id`
+- `dienstleister_id`
+- `tier_id`
+- `datum`
+- `leistung_typ`
+- `beschreibung`
+- `notizen`
+- `nächster_termin`
 
 ### Medizinische Akte
 - `id`
@@ -88,9 +112,12 @@ Eine Plattform zur Verwaltung von Tieren mit zwei Benutzergruppen:
 - [ ] Foto-Upload für Tiere
 - [ ] Impfpass digital einsehen
 - [ ] Medizinische Historie einsehen
+- [ ] Dienstleistungs-Historie einsehen (Hufschmied, Pflege, etc.)
 - [ ] Termine bei Tierärzten buchen
+- [ ] Termine bei Dienstleistern buchen
 - [ ] Erinnerungen (Impfungen, Termine, Medikamente)
 - [ ] Tierarzt-Suche in der Nähe
+- [ ] Dienstleister-Suche (Hufschmied, Trainer, etc.)
 
 ### Erweiterte Features
 - [ ] Gewichtsverlauf tracken
@@ -123,6 +150,51 @@ Eine Plattform zur Verwaltung von Tieren mit zwei Benutzergruppen:
 
 ---
 
+## Features - Dienstleister-App
+
+### Kernfunktionen
+- [ ] Registrierung / Login
+- [ ] Profil mit Dienstleistungstyp anlegen
+- [ ] Kundenliste (Tierbesitzer + deren Tiere)
+- [ ] Leistungen dokumentieren
+- [ ] Terminverwaltung / Kalender
+- [ ] Fahrtrouten-Planung (mobiler Service)
+- [ ] Erinnerungen für wiederkehrende Termine
+
+### Spezifische Features je nach Typ
+
+#### Hufschmied
+- [ ] Beschlag-Historie pro Pferd
+- [ ] Hufzustand dokumentieren (mit Fotos)
+- [ ] Intervall-Empfehlungen (alle X Wochen)
+- [ ] Material-Verwaltung (Hufeisen, Nägel, etc.)
+
+#### Tierpfleger / Hundefriseur
+- [ ] Pflegehistorie
+- [ ] Fell-/Hautzustand dokumentieren
+- [ ] Vorher/Nachher Fotos
+- [ ] Stammkunden-Rabatte
+
+#### Trainer
+- [ ] Trainingsfortschritt dokumentieren
+- [ ] Übungspläne erstellen
+- [ ] Video-Uploads von Trainingseinheiten
+- [ ] Ziele und Meilensteine
+
+#### Physiotherapeut
+- [ ] Behandlungsverlauf
+- [ ] Übungen für zuhause
+- [ ] Zusammenarbeit mit Tierarzt (Verordnungen)
+
+### Erweiterte Features
+- [ ] Rechnungserstellung
+- [ ] Statistiken (Umsatz, Kunden, etc.)
+- [ ] Kommunikation mit Tierbesitzern
+- [ ] Bewertungen / Referenzen
+- [ ] Online-Buchung durch Tierbesitzer
+
+---
+
 ## API-Endpunkte (Entwurf)
 
 ### Authentifizierung
@@ -152,6 +224,17 @@ Eine Plattform zur Verwaltung von Tieren mit zwei Benutzergruppen:
 - `PUT /appointments/:id`
 - `DELETE /appointments/:id`
 
+### Dienstleister
+- `GET /providers` - Alle Dienstleister (mit Filter)
+- `GET /providers/:id` - Einzelner Dienstleister
+- `POST /providers` - Dienstleister-Profil anlegen
+- `PUT /providers/:id` - Profil aktualisieren
+
+### Dienstleistungen
+- `GET /pets/:id/services` - Alle Dienstleistungen eines Tiers
+- `POST /pets/:id/services` - Neue Dienstleistung dokumentieren
+- `GET /providers/:id/services` - Alle Leistungen eines Dienstleisters
+
 ---
 
 ## Projektstruktur
@@ -179,6 +262,15 @@ mypet/
 │   └── pubspec.yaml
 │
 ├── app_vet/            # Flutter App für Tierärzte
+│   ├── lib/
+│   │   ├── models/
+│   │   ├── screens/
+│   │   ├── widgets/
+│   │   ├── services/
+│   │   └── providers/
+│   └── pubspec.yaml
+│
+├── app_provider/       # Flutter App für Dienstleister
 │   ├── lib/
 │   │   ├── models/
 │   │   ├── screens/
