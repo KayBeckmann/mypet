@@ -6,29 +6,29 @@
 
 ## Phase 0: Projekt-Infrastruktur
 
-### M0.1 - Repository-Grundstruktur
-- [ ] Ordnerstruktur anlegen (backend/, web_owner/, web_vet/, web_provider/, shared/)
-- [ ] Root `.gitignore` erstellen
-- [ ] `README.md` mit Projektbeschreibung
+### M0.1 - Repository-Grundstruktur ✅
+- [x] Ordnerstruktur anlegen (backend/, web_owner/, web_vet/, web_provider/, shared/)
+- [x] Root `.gitignore` erstellen
+- [x] `README.md` mit Projektbeschreibung
 
-### M0.2 - Docker-Setup
-- [ ] `Dockerfile` für Backend (Dart)
-- [ ] `Dockerfile` für Web-Frontends (Flutter Web)
-- [ ] `docker-compose.yml` mit allen Services
-- [ ] PostgreSQL-Container konfigurieren
-- [ ] Nginx als Reverse-Proxy (optional)
+### M0.2 - Docker-Setup ✅
+- [x] `Dockerfile` für Backend (Dart)
+- [x] `Dockerfile` für Web-Frontends (Flutter Web)
+- [x] `docker-compose.yml` mit allen Services
+- [x] PostgreSQL-Container konfigurieren
+- [x] Nginx als Reverse-Proxy (in Frontend-Containern integriert)
 
-### M0.3 - Konfiguration
-- [ ] `.env.example` mit allen Umgebungsvariablen
-- [ ] `.env` zu `.gitignore` hinzufügen
+### M0.3 - Konfiguration ✅
+- [x] `.env.example` mit allen Umgebungsvariablen
+- [x] `.env` zu `.gitignore` hinzufügen
 - [ ] Konfigurationsklasse im Backend für .env-Variablen
-- [ ] Dokumentation der Umgebungsvariablen
+- [x] Dokumentation der Umgebungsvariablen
 
-### M0.4 - Entwicklungsumgebung
-- [ ] Docker Compose für Entwicklung (`docker-compose.dev.yml`)
+### M0.4 - Entwicklungsumgebung ✅
+- [x] Docker Compose für Entwicklung (`docker-compose.dev.yml`)
 - [ ] Hot-Reload für Backend einrichten
-- [ ] Lokale PostgreSQL-Instanz
-- [ ] Basis-Skripte (`start.sh`, `stop.sh`, `reset-db.sh`)
+- [x] Lokale PostgreSQL-Instanz
+- [x] Basis-Skripte (`start-dev.sh`, `stop-dev.sh`, `reset-db.sh`)
 
 ---
 
