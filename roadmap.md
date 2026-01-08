@@ -41,11 +41,11 @@
 - [x] CORS-Middleware
 - [x] Request-Logging
 
-### M1.2 - Datenbank-Anbindung
-- [ ] PostgreSQL-Verbindung einrichten
-- [ ] Datenbank-Migrationen-System
-- [ ] Connection-Pooling
-- [ ] Erste Migration: Benutzer-Tabelle
+### M1.2 - Datenbank-Anbindung ✅
+- [x] PostgreSQL-Verbindung einrichten
+- [x] Datenbank-Migrationen-System
+- [x] Connection-Pooling
+- [x] Erste Migration: Benutzer-Tabelle
 
 ### M1.3 - Authentifizierung (Teil 1)
 - [ ] Benutzer-Model erstellen
