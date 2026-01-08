@@ -21,7 +21,7 @@
 ### M0.3 - Konfiguration ✅
 - [x] `.env.example` mit allen Umgebungsvariablen
 - [x] `.env` zu `.gitignore` hinzufügen
-- [ ] Konfigurationsklasse im Backend für .env-Variablen
+- [x] Konfigurationsklasse im Backend für .env-Variablen
 - [x] Dokumentation der Umgebungsvariablen
 
 ### M0.4 - Entwicklungsumgebung ✅
@@ -34,12 +34,12 @@
 
 ## Phase 1: Backend-Grundlagen
 
-### M1.1 - Dart Backend Setup
-- [ ] Dart-Projekt initialisieren
-- [ ] Backend-Framework wählen und einrichten (Shelf/Dart Frog/Serverpod)
-- [ ] Basis-Server mit Health-Check Endpoint (`GET /health`)
-- [ ] CORS-Middleware
-- [ ] Request-Logging
+### M1.1 - Dart Backend Setup ✅
+- [x] Dart-Projekt initialisieren
+- [x] Backend-Framework wählen und einrichten (Shelf)
+- [x] Basis-Server mit Health-Check Endpoint (`GET /health`)
+- [x] CORS-Middleware
+- [x] Request-Logging
 
 ### M1.2 - Datenbank-Anbindung
 - [ ] PostgreSQL-Verbindung einrichten
