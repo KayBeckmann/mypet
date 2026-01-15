@@ -118,24 +118,82 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `bestätigt_von_neuem_besitzer` (boolean)
 - `bestätigt_am`
 
-### Tierarzt-Praxis
-- `id`
-- `name`
-- `adresse`
-- `telefon`
-- `öffnungszeiten`
+### Organisation (Praxis / Firma)
+> **Multi-User-System**: Tierärzte und Dienstleister können Organisationen mit mehreren Mitarbeitern erstellen. Jede Organisation hat eigene Admins und Berechtigungsgruppen.
 
-### Dienstleister
 - `id`
-- `benutzer_id`
-- `firmenname`
-- `dienstleister_typ` (Hufschmied, Tierpfleger, Trainer, Physiotherapeut, Hundefriseur, etc.)
+- `name` (z.B. "Tierarztpraxis Dr. Müller", "Hufbeschlag Schmidt GmbH")
+- `typ` (Tierarztpraxis / Dienstleister-Firma)
+- `dienstleister_typ` (nur bei Dienstleister: Hufschmied, Tierpfleger, etc.)
 - `beschreibung`
 - `adresse`
 - `telefon`
 - `mobil` (oft mobiler Service)
-- `arbeitsgebiet_radius`
+- `email`
+- `website`
+- `öffnungszeiten`
+- `arbeitsgebiet_radius` (für mobile Dienstleister)
 - `spezialisierung` (z.B. "Pferde", "Hunde", "Exoten")
+- `erstellt_von` (Benutzer-ID des Gründers)
+- `erstellt_am`
+
+### Organisations-Mitgliedschaft
+- `id`
+- `organisation_id`
+- `benutzer_id`
+- `rolle` (Admin / Mitarbeiter / Nur-Lesen)
+- `position` (z.B. "Tierarzt", "TFA", "Auszubildende", "Hufschmied-Geselle")
+- `berechtigungsgruppe_id` (optional, für feinere Steuerung)
+- `eingeladen_von` (Benutzer-ID)
+- `beigetreten_am`
+- `aktiv` (boolean)
+
+### Organisations-Berechtigungsgruppe
+> Ermöglicht fein-granulare Zugriffssteuerung innerhalb einer Organisation
+
+- `id`
+- `organisation_id`
+- `name` (z.B. "Tierärzte", "TFA", "Azubis", "Buchhaltung")
+- `beschreibung`
+- `berechtigungen` (JSON mit einzelnen Rechten)
+  - `patienten_lesen` (boolean)
+  - `patienten_schreiben` (boolean)
+  - `medizin_lesen` (boolean)
+  - `medizin_schreiben` (boolean)
+  - `termine_lesen` (boolean)
+  - `termine_verwalten` (boolean)
+  - `medien_hochladen` (boolean)
+  - `rechnungen_erstellen` (boolean)
+  - `notizen_kollegial_lesen` (boolean)
+  - `mitarbeiter_verwalten` (boolean)
+  - `organisation_verwalten` (boolean)
+- `erstellt_am`
+
+### Organisations-Einladung
+- `id`
+- `organisation_id`
+- `email`
+- `rolle` (Admin / Mitarbeiter / Nur-Lesen)
+- `berechtigungsgruppe_id` (optional)
+- `einladungs_code` (UUID, für den Einladungslink)
+- `eingeladen_von` (Benutzer-ID)
+- `eingeladen_am`
+- `gültig_bis`
+- `status` (ausstehend / angenommen / abgelehnt / abgelaufen)
+
+### Standard-Berechtigungsgruppen (Vorlagen)
+
+**Für Tierarztpraxen:**
+- **Praxis-Admin**: Voller Zugriff auf alle Praxis-Funktionen
+- **Tierarzt**: Medizinische Akten, Termine, Medien, kollegiale Notizen
+- **TFA (Tiermedizinische Fachangestellte)**: Termine, Patienten-Stammdaten, eingeschränkte med. Akten
+- **Auszubildende**: Nur Lesen, keine sensiblen Daten
+- **Buchhaltung**: Rechnungen, keine medizinischen Daten
+
+**Für Dienstleister:**
+- **Firmen-Admin**: Voller Zugriff auf alle Firmen-Funktionen
+- **Mitarbeiter**: Kunden, Termine, Leistungen dokumentieren
+- **Azubi/Praktikant**: Eingeschränkter Zugriff
 
 ### Dienstleistung
 - `id`
@@ -361,6 +419,20 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Terminverwaltung
 - [ ] Rezepte ausstellen
 
+### Multi-User / Praxisverwaltung
+- [ ] Praxis erstellen (wird automatisch Praxis-Admin)
+- [ ] Mitarbeiter per E-Mail einladen
+- [ ] Einladungslink generieren
+- [ ] Berechtigungsgruppen erstellen und verwalten
+  - Vordefiniert: Tierarzt, TFA, Azubi, Buchhaltung
+  - Eigene Gruppen möglich
+- [ ] Mitarbeiter einer Berechtigungsgruppe zuordnen
+- [ ] Mitarbeiter-Rollen ändern (Admin / Mitarbeiter / Nur-Lesen)
+- [ ] Mitarbeiter deaktivieren oder entfernen
+- [ ] Praxis-Übersicht: Alle Mitarbeiter sehen
+- [ ] Aktivitäts-Log: Wer hat was wann gemacht (für Admins)
+- [ ] Mehrere Praxen möglich (z.B. Hauptpraxis + Zweigstelle)
+
 ### Medikamenten-Verordnung
 - [ ] Medikamente verordnen (Name, Wirkstoff, Dosierung)
 - [ ] Anzahl und Menge festlegen
@@ -424,6 +496,21 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - [ ] Terminverwaltung / Kalender
 - [ ] Fahrtrouten-Planung (mobiler Service)
 - [ ] Erinnerungen für wiederkehrende Termine
+
+### Multi-User / Firmenverwaltung
+- [ ] Firma erstellen (wird automatisch Firmen-Admin)
+- [ ] Mitarbeiter per E-Mail einladen
+- [ ] Einladungslink generieren
+- [ ] Berechtigungsgruppen erstellen und verwalten
+  - Vordefiniert: Mitarbeiter, Azubi/Praktikant
+  - Eigene Gruppen möglich
+- [ ] Mitarbeiter einer Berechtigungsgruppe zuordnen
+- [ ] Mitarbeiter-Rollen ändern (Admin / Mitarbeiter / Nur-Lesen)
+- [ ] Mitarbeiter deaktivieren oder entfernen
+- [ ] Firmen-Übersicht: Alle Mitarbeiter sehen
+- [ ] Aktivitäts-Log: Wer hat was wann gemacht (für Admins)
+- [ ] Kunden können von allen Mitarbeitern der Firma betreut werden
+- [ ] Termin-Zuweisung an bestimmte Mitarbeiter
 
 ### Spezifische Features je nach Typ
 
@@ -567,11 +654,32 @@ Eine Plattform zur Verwaltung von Tieren mit drei Benutzergruppen:
 - `DELETE /notes/:id` - Notiz löschen
 - `PUT /notes/:id/visibility` - Sichtbarkeit ändern (privat ↔ kollegial)
 
-### Dienstleister
-- `GET /providers` - Alle Dienstleister (mit Filter)
-- `GET /providers/:id` - Einzelner Dienstleister
-- `POST /providers` - Dienstleister-Profil anlegen
-- `PUT /providers/:id` - Profil aktualisieren
+### Organisationen (Praxen & Firmen)
+- `GET /organizations` - Eigene Organisationen (als Admin oder Mitarbeiter)
+- `GET /organizations/:id` - Einzelne Organisation
+- `POST /organizations` - Neue Organisation erstellen (wird automatisch Admin)
+- `PUT /organizations/:id` - Organisation aktualisieren (nur Admin)
+- `DELETE /organizations/:id` - Organisation löschen (nur Gründer)
+
+### Organisations-Mitglieder
+- `GET /organizations/:id/members` - Alle Mitglieder der Organisation
+- `POST /organizations/:id/members/invite` - Mitglied einladen (per E-Mail)
+- `GET /organizations/:id/invitations` - Ausstehende Einladungen
+- `DELETE /organizations/:id/invitations/:invitationId` - Einladung zurückziehen
+- `PUT /organizations/:id/members/:userId` - Rolle/Berechtigung ändern
+- `DELETE /organizations/:id/members/:userId` - Mitglied entfernen
+- `POST /invitations/:code/accept` - Einladung annehmen
+- `POST /invitations/:code/reject` - Einladung ablehnen
+
+### Berechtigungsgruppen
+- `GET /organizations/:id/permission-groups` - Alle Gruppen der Organisation
+- `POST /organizations/:id/permission-groups` - Neue Gruppe erstellen
+- `PUT /permission-groups/:id` - Gruppe aktualisieren
+- `DELETE /permission-groups/:id` - Gruppe löschen
+
+### Dienstleister (öffentliche Suche)
+- `GET /providers` - Alle Dienstleister/Praxen (mit Filter)
+- `GET /providers/:id` - Einzelner Dienstleister/Praxis
 
 ### Dienstleistungen
 - `GET /pets/:id/services` - Alle Dienstleistungen eines Tiers
