@@ -66,6 +66,46 @@
 - [ ] `DELETE /account` - Konto löschen (DSGVO)
 - [ ] Passwort ändern
 
+### M1.6 - Organisationen (Praxen & Firmen)
+> Multi-User-System für Tierärzte und Dienstleister
+
+- [ ] Migration: Organisation-Tabelle
+- [ ] Migration: Organisations-Mitgliedschaft-Tabelle
+- [ ] Migration: Berechtigungsgruppen-Tabelle
+- [ ] Migration: Einladungen-Tabelle
+- [ ] Organisation-Model erstellen
+- [ ] `POST /organizations` - Organisation erstellen (Ersteller wird Admin)
+- [ ] `GET /organizations` - Eigene Organisationen abrufen
+- [ ] `PUT /organizations/:id` - Organisation aktualisieren (nur Admin)
+- [ ] `DELETE /organizations/:id` - Organisation löschen (nur Gründer)
+
+### M1.7 - Organisations-Mitglieder
+- [ ] Mitgliedschafts-Model erstellen
+- [ ] `GET /organizations/:id/members` - Alle Mitglieder
+- [ ] `POST /organizations/:id/members/invite` - Einladung per E-Mail
+- [ ] Einladungs-E-Mail versenden
+- [ ] `POST /invitations/:code/accept` - Einladung annehmen
+- [ ] `POST /invitations/:code/reject` - Einladung ablehnen
+- [ ] `PUT /organizations/:id/members/:userId` - Rolle ändern
+- [ ] `DELETE /organizations/:id/members/:userId` - Mitglied entfernen
+
+### M1.8 - Berechtigungsgruppen
+- [ ] Berechtigungsgruppen-Model erstellen
+- [ ] Standard-Gruppen bei Organisation-Erstellung anlegen
+  - Tierarztpraxis: Admin, Tierarzt, TFA, Azubi, Buchhaltung
+  - Dienstleister: Admin, Mitarbeiter, Azubi
+- [ ] `GET /organizations/:id/permission-groups`
+- [ ] `POST /organizations/:id/permission-groups`
+- [ ] `PUT /permission-groups/:id`
+- [ ] `DELETE /permission-groups/:id`
+- [ ] Berechtigungs-Middleware: Prüfung bei jedem Request
+
+### M1.9 - Organisations-Kontext
+- [ ] Aktive Organisation im JWT-Token speichern
+- [ ] Organisation wechseln (für Benutzer in mehreren Orgs)
+- [ ] Alle Daten werden im Kontext der aktiven Organisation gefiltert
+- [ ] Audit-Log für Organisations-Aktionen
+
 ---
 
 ## Phase 2: Tier-Verwaltung (Backend)
@@ -209,25 +249,35 @@
 - [ ] Gemeinsame Komponenten aus shared/
 - [ ] Auth-Flow (wie Besitzer-App)
 
-### M7.2 - Praxis-Profil
-- [ ] Praxis-Registrierung
+### M7.2 - Praxis-Profil & Organisation
+- [ ] Praxis/Organisation erstellen
 - [ ] Praxis-Profil bearbeiten
+- [ ] Organisations-Übersicht (alle eigenen Praxen)
 
-### M7.3 - Patienten-Liste
+### M7.3 - Mitarbeiter-Verwaltung (Praxis-Admin)
+- [ ] Mitarbeiter-Liste anzeigen
+- [ ] Mitarbeiter einladen (E-Mail oder Link)
+- [ ] Einladung als neuer Benutzer annehmen
+- [ ] Berechtigungsgruppen verwalten
+- [ ] Mitarbeiter einer Gruppe zuordnen
+- [ ] Mitarbeiter-Rolle ändern
+- [ ] Mitarbeiter deaktivieren/entfernen
+
+### M7.4 - Patienten-Liste
 - [ ] Tiere mit Zugriff anzeigen
 - [ ] Suche/Filter
 
-### M7.4 - Medizinische Akte führen
+### M7.5 - Medizinische Akte führen
 - [ ] Akte-Einträge anzeigen
 - [ ] Neuer Eintrag erstellen
 - [ ] Diagnose und Behandlung dokumentieren
 
-### M7.5 - Impfungen eintragen
+### M7.6 - Impfungen eintragen
 - [ ] Impfungen anzeigen
 - [ ] Neue Impfung eintragen
 - [ ] Gültigkeitsdatum setzen
 
-### M7.6 - Medikamente verordnen
+### M7.7 - Medikamente verordnen
 - [ ] Medikation erstellen
 - [ ] Dosierung und Anweisungen
 - [ ] Einnahmeplan erstellen
@@ -308,17 +358,33 @@
 - [ ] Auth-Flow
 - [ ] Dienstleister-Profil
 
-### M12.2 - Kunden-Liste
+### M12.2 - Firmen-Profil & Organisation
+- [ ] Firma/Organisation erstellen
+- [ ] Firmen-Profil bearbeiten
+- [ ] Organisations-Übersicht (alle eigenen Firmen)
+
+### M12.3 - Mitarbeiter-Verwaltung (Firmen-Admin)
+- [ ] Mitarbeiter-Liste anzeigen
+- [ ] Mitarbeiter einladen (E-Mail oder Link)
+- [ ] Einladung als neuer Benutzer annehmen
+- [ ] Berechtigungsgruppen verwalten
+- [ ] Mitarbeiter einer Gruppe zuordnen
+- [ ] Mitarbeiter-Rolle ändern
+- [ ] Mitarbeiter deaktivieren/entfernen
+- [ ] Termine an Mitarbeiter zuweisen
+
+### M12.4 - Kunden-Liste
 - [ ] Kunden mit Zugriff anzeigen
 - [ ] Tiere pro Kunde
 
-### M12.3 - Leistungen dokumentieren
+### M12.5 - Leistungen dokumentieren
 - [ ] Neue Leistung erfassen
 - [ ] Leistungs-Historie
 
-### M12.4 - Termine verwalten
+### M12.6 - Termine verwalten
 - [ ] Terminanfragen
 - [ ] Kalenderansicht
+- [ ] Termine an Mitarbeiter zuweisen
 
 ---
 
