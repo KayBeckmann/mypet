@@ -271,7 +271,7 @@ class _AddAnimalScreenState extends State<AddAnimalScreen> {
     }
   }
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
     final weight = double.tryParse(_weightController.text.replaceAll(',', '.'));
@@ -288,20 +288,31 @@ class _AddAnimalScreenState extends State<AddAnimalScreen> {
           : null,
     );
 
-    context.read<PetProvider>().addPet(pet);
+    final success = await context.read<PetProvider>().addPet(pet);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${pet.name} wurde hinzugefügt!'),
-        backgroundColor: LivingLedgerTheme.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusMd),
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${pet.name} wurde hinzugefügt!'),
+          backgroundColor: LivingLedgerTheme.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusMd),
+          ),
         ),
-      ),
-    );
-
-    context.go('/animals/${pet.id}');
+      );
+      context.go('/animals');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Fehler beim Hinzufügen'),
+          backgroundColor: LivingLedgerTheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   String _speciesLabel(PetSpecies species) {

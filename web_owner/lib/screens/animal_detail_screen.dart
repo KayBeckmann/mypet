@@ -364,10 +364,10 @@ class AnimalDetailScreen extends StatelessWidget {
             child: const Text('Abbrechen'),
           ),
           ElevatedButton(
-            onPressed: () {
-              context.read<PetProvider>().removePet(pet.id);
-              Navigator.of(ctx).pop();
-              context.go('/animals');
+            onPressed: () async {
+              await context.read<PetProvider>().removePet(pet.id);
+              if (ctx.mounted) Navigator.of(ctx).pop();
+              if (context.mounted) context.go('/animals');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: LivingLedgerTheme.error,

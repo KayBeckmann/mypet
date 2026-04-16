@@ -18,6 +18,8 @@ class Pet {
   final String? microchipId;
   final String? ownerName;
 
+  final String? notes;
+
   const Pet({
     required this.id,
     required this.name,
@@ -31,7 +33,48 @@ class Pet {
     this.feedingNote,
     this.microchipId,
     this.ownerName,
+    this.notes,
   });
+
+  /// Erstellt ein Pet aus der Backend-API-Response
+  factory Pet.fromJson(Map<String, dynamic> json) {
+    return Pet(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      breed: json['breed'] as String? ?? '',
+      species: _parseSpecies(json['species'] as String? ?? 'other'),
+      birthDate: json['birth_date'] != null
+          ? DateTime.tryParse(json['birth_date'] as String)
+          : null,
+      weightKg: json['weight_kg'] != null
+          ? (json['weight_kg'] as num).toDouble()
+          : null,
+      imageUrl: json['image_url'] as String?,
+      microchipId: json['microchip_id'] as String?,
+      notes: json['notes'] as String?,
+    );
+  }
+
+  /// Konvertiert zu JSON für die Backend-API
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'species': species.name,
+      'breed': breed,
+      if (birthDate != null)
+        'birth_date': birthDate!.toIso8601String().split('T').first,
+      if (weightKg != null) 'weight_kg': weightKg,
+      if (microchipId != null) 'microchip_id': microchipId,
+      if (notes != null) 'notes': notes,
+    };
+  }
+
+  static PetSpecies _parseSpecies(String value) {
+    return PetSpecies.values.firstWhere(
+      (s) => s.name == value,
+      orElse: () => PetSpecies.other,
+    );
+  }
 
   String get speciesLabel {
     switch (species) {

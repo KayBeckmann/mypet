@@ -11,35 +11,67 @@ void main() {
   runApp(const MyPetOwnerApp());
 }
 
-class MyPetOwnerApp extends StatelessWidget {
+class MyPetOwnerApp extends StatefulWidget {
   const MyPetOwnerApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final apiService = ApiService();
+  State<MyPetOwnerApp> createState() => _MyPetOwnerAppState();
+}
 
+class _MyPetOwnerAppState extends State<MyPetOwnerApp> {
+  final _apiService = ApiService();
+
+  @override
+  Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => AuthProvider(api: apiService),
+          create: (_) => AuthProvider(api: _apiService),
         ),
         ChangeNotifierProvider(
-          create: (_) => PetProvider(),
+          create: (_) => PetProvider(api: _apiService),
         ),
       ],
-      child: Builder(
-        builder: (context) {
-          final authProvider = context.watch<AuthProvider>();
-          final router = createRouter(authProvider);
+      child: const _AppWithAuth(),
+    );
+  }
+}
 
-          return MaterialApp.router(
-            title: 'MyPet - Living Ledger',
-            debugShowCheckedModeBanner: false,
-            theme: LivingLedgerTheme.themeData,
-            routerConfig: router,
-          );
-        },
-      ),
+class _AppWithAuth extends StatefulWidget {
+  const _AppWithAuth();
+
+  @override
+  State<_AppWithAuth> createState() => _AppWithAuthState();
+}
+
+class _AppWithAuthState extends State<_AppWithAuth> {
+  bool _petsLoaded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final petProvider = context.read<PetProvider>();
+
+    // Tiere laden, sobald der Benutzer angemeldet ist
+    if (authProvider.isAuthenticated && !_petsLoaded) {
+      _petsLoaded = true;
+      if (authProvider.isDemoMode) {
+        petProvider.loadDemo();
+      } else {
+        petProvider.loadPets();
+      }
+    }
+    if (!authProvider.isAuthenticated && _petsLoaded) {
+      _petsLoaded = false;
+    }
+
+    final router = createRouter(authProvider);
+
+    return MaterialApp.router(
+      title: 'MyPet - Living Ledger',
+      debugShowCheckedModeBanner: false,
+      theme: LivingLedgerTheme.themeData,
+      routerConfig: router,
     );
   }
 }
