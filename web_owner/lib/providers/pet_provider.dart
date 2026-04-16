@@ -193,6 +193,61 @@ class PetProvider extends ChangeNotifier {
     }
   }
 
+  /// Foto für ein Tier hochladen
+  Future<bool> uploadPhoto(String petId, List<int> bytes, String filename) async {
+    if (_useDemoData) return true;
+
+    try {
+      final response = await _api.uploadFile(
+        '/pets/$petId/photo',
+        bytes: bytes,
+        filename: filename,
+      );
+      final updated = Pet.fromJson(response['pet'] as Map<String, dynamic>);
+      final index = _pets.indexWhere((p) => p.id == petId);
+      if (index != -1) {
+        _pets[index] = updated;
+        notifyListeners();
+      }
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Foto-Upload fehlgeschlagen';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Foto eines Tieres löschen
+  Future<bool> deletePhoto(String petId) async {
+    if (_useDemoData) return true;
+
+    try {
+      final response = await _api.delete('/pets/$petId/photo');
+      final updated = Pet.fromJson(response['pet'] as Map<String, dynamic>);
+      final index = _pets.indexWhere((p) => p.id == petId);
+      if (index != -1) {
+        _pets[index] = updated;
+        notifyListeners();
+      }
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Foto konnte nicht gelöscht werden';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// API Basis-URL für Bild-URLs
+  String get apiBaseUrl => _api.baseUrl;
+
   Pet? getPetById(String id) {
     try {
       return _pets.firstWhere((p) => p.id == id);

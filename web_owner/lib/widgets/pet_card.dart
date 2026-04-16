@@ -5,8 +5,9 @@ import '../models/pet.dart';
 class PetCard extends StatefulWidget {
   final Pet pet;
   final VoidCallback? onTap;
+  final String? imageBaseUrl;
 
-  const PetCard({super.key, required this.pet, this.onTap});
+  const PetCard({super.key, required this.pet, this.onTap, this.imageBaseUrl});
 
   @override
   State<PetCard> createState() => _PetCardState();
@@ -51,11 +52,28 @@ class _PetCardState extends State<PetCard> {
                       shape: BoxShape.circle,
                       color: LivingLedgerTheme.surfaceContainerLow,
                     ),
-                    child: Center(
-                      child: Text(
-                        widget.pet.speciesIcon,
-                        style: const TextStyle(fontSize: 28),
-                      ),
+                    child: ClipOval(
+                      child: widget.pet.imageUrl != null &&
+                              widget.pet.imageUrl!.isNotEmpty &&
+                              widget.imageBaseUrl != null
+                          ? Image.network(
+                              '${widget.imageBaseUrl}${widget.pet.imageUrl}',
+                              fit: BoxFit.cover,
+                              width: 56,
+                              height: 56,
+                              errorBuilder: (_, __, ___) => Center(
+                                child: Text(
+                                  widget.pet.speciesIcon,
+                                  style: const TextStyle(fontSize: 28),
+                                ),
+                              ),
+                            )
+                          : Center(
+                              child: Text(
+                                widget.pet.speciesIcon,
+                                style: const TextStyle(fontSize: 28),
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(width: 14),

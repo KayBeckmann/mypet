@@ -73,6 +73,7 @@ class AnimalsScreen extends StatelessWidget {
                     final pet = pets[index];
                     return PetCard(
                       pet: pet,
+                      imageBaseUrl: petProvider.apiBaseUrl,
                       onTap: () => context.go('/animals/${pet.id}'),
                     );
                   },

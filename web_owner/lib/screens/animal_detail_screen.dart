@@ -1,18 +1,28 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../models/pet.dart';
 import '../providers/pet_provider.dart';
+import '../services/file_picker_service.dart';
 
-class AnimalDetailScreen extends StatelessWidget {
+class AnimalDetailScreen extends StatefulWidget {
   final String petId;
 
   const AnimalDetailScreen({super.key, required this.petId});
 
   @override
+  State<AnimalDetailScreen> createState() => _AnimalDetailScreenState();
+}
+
+class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
+  bool _isUploadingPhoto = false;
+
+  @override
   Widget build(BuildContext context) {
-    final pet = context.watch<PetProvider>().getPetById(petId);
+    final petProvider = context.watch<PetProvider>();
+    final pet = petProvider.getPetById(widget.petId);
 
     if (pet == null) {
       return Center(
@@ -34,6 +44,11 @@ class AnimalDetailScreen extends StatelessWidget {
       );
     }
 
+    final hasPhoto = pet.imageUrl != null && pet.imageUrl!.isNotEmpty;
+    final photoUrl = hasPhoto
+        ? '${petProvider.apiBaseUrl}${pet.imageUrl}'
+        : null;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(40, 24, 40, 40),
       child: Column(
@@ -52,21 +67,7 @@ class AnimalDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Pet Image
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: LivingLedgerTheme.surfaceContainerLow,
-                  boxShadow: LivingLedgerTheme.ambientShadow,
-                ),
-                child: Center(
-                  child: Text(
-                    pet.speciesIcon,
-                    style: const TextStyle(fontSize: 56),
-                  ),
-                ),
-              ),
+              _buildPetImage(pet, photoUrl),
               const SizedBox(width: 32),
 
               // Pet Info
@@ -344,6 +345,98 @@ class AnimalDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildPetImage(Pet pet, String? photoUrl) {
+    return Stack(
+      children: [
+        Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: LivingLedgerTheme.surfaceContainerLow,
+            boxShadow: LivingLedgerTheme.ambientShadow,
+          ),
+          child: ClipOval(
+            child: photoUrl != null
+                ? Image.network(
+                    photoUrl,
+                    fit: BoxFit.cover,
+                    width: 120,
+                    height: 120,
+                    errorBuilder: (_, __, ___) => Center(
+                      child: Text(
+                        pet.speciesIcon,
+                        style: const TextStyle(fontSize: 56),
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Text(
+                      pet.speciesIcon,
+                      style: const TextStyle(fontSize: 56),
+                    ),
+                  ),
+          ),
+        ),
+        if (_isUploadingPhoto)
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: LivingLedgerTheme.onSurface.withValues(alpha: 0.5),
+            ),
+            child: const Center(
+              child: SizedBox(
+                width: 32,
+                height: 32,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 3,
+                ),
+              ),
+            ),
+          ),
+        if (!_isUploadingPhoto)
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: () => _pickAndUploadPhoto(pet.id),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: LivingLedgerTheme.primary,
+                  boxShadow: LivingLedgerTheme.cardShadow,
+                ),
+                child: const Icon(
+                  Icons.camera_alt_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _pickAndUploadPhoto(String petId) async {
+    final result = await FilePickerService.pickImage();
+    if (result == null) return;
+
+    setState(() => _isUploadingPhoto = true);
+
+    final petProvider = context.read<PetProvider>();
+    await petProvider.uploadPhoto(petId, result.bytes, result.name);
+
+    if (mounted) {
+      setState(() => _isUploadingPhoto = false);
+    }
   }
 
   void _showDeleteDialog(BuildContext context, Pet pet) {

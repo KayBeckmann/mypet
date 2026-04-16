@@ -13,6 +13,8 @@ import 'package:mypet_backend/controllers/health_controller.dart';
 import 'package:mypet_backend/controllers/auth_controller.dart';
 import 'package:mypet_backend/controllers/account_controller.dart';
 import 'package:mypet_backend/controllers/pet_controller.dart';
+import 'package:mypet_backend/services/upload_service.dart';
+import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
 void main(List<String> args) async {
   // Konfiguration laden
@@ -65,6 +67,10 @@ void main(List<String> args) async {
     exit(0);
   }
 
+  // Upload-Verzeichnis sicherstellen
+  final uploadService = UploadService();
+  await uploadService.ensureUploadDir();
+
   // Router erstellen
   final app = Router();
 
@@ -91,6 +97,15 @@ void main(List<String> args) async {
     const Pipeline()
         .addMiddleware(authMiddleware())
         .addHandler(petController.router.call),
+  );
+
+  // Static Files für Uploads (öffentlich, Bilder über URL abrufbar)
+  app.mount(
+    '/uploads/',
+    staticFilesHandler(
+      basePath: config.uploadPath,
+      urlPrefix: '/uploads',
+    ),
   );
 
   // Root Route
@@ -149,6 +164,11 @@ void main(List<String> args) async {
   print('   POST   /pets      - Tier anlegen');
   print('   PUT    /pets/:id  - Tier aktualisieren');
   print('   DELETE /pets/:id  - Tier löschen');
+  print('   POST   /pets/:id/photo - Foto hochladen');
+  print('   DELETE /pets/:id/photo - Foto löschen');
+  print('');
+  print('📁 Uploads:');
+  print('   GET  /uploads/...  - Hochgeladene Dateien');
   print('');
   print('🔧 Befehle:');
   print('   --migrate, -m   Migrationen ausführen');

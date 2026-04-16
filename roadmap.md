@@ -122,11 +122,11 @@
 - [x] `PUT /pets/:id` - Tier aktualisieren
 - [x] `DELETE /pets/:id` - Tier löschen
 
-### M2.3 - Foto-Upload für Tiere
-- [ ] Datei-Upload-Endpoint
-- [ ] Bild-Speicherung (lokal oder S3-kompatibel)
-- [ ] Bild-URL im Tier-Profil speichern
-- [ ] Bild-Größen-Validierung
+### M2.3 - Foto-Upload für Tiere ✅
+- [x] Datei-Upload-Endpoint
+- [x] Bild-Speicherung (lokal oder S3-kompatibel)
+- [x] Bild-URL im Tier-Profil speichern
+- [x] Bild-Größen-Validierung
 
 ---
 
@@ -159,7 +159,7 @@
 
 ### M3.5 - Tier hinzufügen ✅
 - [x] Formular: Tier anlegen
-- [ ] Foto-Upload
+- [x] Foto-Upload
 - [x] Validierung
 - [x] Erfolgs-/Fehlermeldungen
 

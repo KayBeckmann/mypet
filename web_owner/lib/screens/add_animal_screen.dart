@@ -1,9 +1,12 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../models/pet.dart';
 import '../providers/pet_provider.dart';
+import '../widgets/photo_upload.dart';
+import '../services/file_picker_service.dart';
 
 class AddAnimalScreen extends StatefulWidget {
   const AddAnimalScreen({super.key});
@@ -20,6 +23,9 @@ class _AddAnimalScreenState extends State<AddAnimalScreen> {
   final _microchipController = TextEditingController();
   PetSpecies _selectedSpecies = PetSpecies.dog;
   DateTime? _birthDate;
+  Uint8List? _selectedImageBytes;
+  String? _selectedImageName;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -109,6 +115,23 @@ class _AddAnimalScreenState extends State<AddAnimalScreen> {
                         ),
                       );
                     }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Photo Upload
+                  Text('Foto (optional)',
+                      style: Theme.of(context).textTheme.labelLarge),
+                  const SizedBox(height: 8),
+                  PhotoUpload(
+                    selectedBytes: _selectedImageBytes,
+                    selectedFileName: _selectedImageName,
+                    onPickImage: _pickImage,
+                    onRemoveImage: _selectedImageBytes != null
+                        ? () => setState(() {
+                              _selectedImageBytes = null;
+                              _selectedImageName = null;
+                            })
+                        : null,
                   ),
                   const SizedBox(height: 24),
 
@@ -222,7 +245,7 @@ class _AddAnimalScreenState extends State<AddAnimalScreen> {
                         child: SizedBox(
                           height: 48,
                           child: OutlinedButton(
-                            onPressed: () => context.go('/animals'),
+                            onPressed: _isSubmitting ? null : () => context.go('/animals'),
                             child: const Text('Abbrechen'),
                           ),
                         ),
@@ -233,7 +256,7 @@ class _AddAnimalScreenState extends State<AddAnimalScreen> {
                         child: SizedBox(
                           height: 48,
                           child: ElevatedButton(
-                            onPressed: _handleSubmit,
+                            onPressed: _isSubmitting ? null : _handleSubmit,
                             child: const Text('Tier hinzufügen'),
                           ),
                         ),
@@ -271,10 +294,23 @@ class _AddAnimalScreenState extends State<AddAnimalScreen> {
     }
   }
 
+  Future<void> _pickImage() async {
+    final result = await FilePickerService.pickImage();
+    if (result != null) {
+      setState(() {
+        _selectedImageBytes = result.bytes;
+        _selectedImageName = result.name;
+      });
+    }
+  }
+
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _isSubmitting = true);
+
     final weight = double.tryParse(_weightController.text.replaceAll(',', '.'));
+    final petProvider = context.read<PetProvider>();
 
     final pet = Pet(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -288,11 +324,26 @@ class _AddAnimalScreenState extends State<AddAnimalScreen> {
           : null,
     );
 
-    final success = await context.read<PetProvider>().addPet(pet);
+    final success = await petProvider.addPet(pet);
 
     if (!mounted) return;
 
     if (success) {
+      // Foto hochladen, falls ausgewählt
+      if (_selectedImageBytes != null && _selectedImageName != null) {
+        // Pet-ID aus der Liste holen (die vom Backend generierte)
+        final newPet = petProvider.pets.isNotEmpty ? petProvider.pets.first : null;
+        if (newPet != null) {
+          await petProvider.uploadPhoto(
+            newPet.id,
+            _selectedImageBytes!,
+            _selectedImageName!,
+          );
+        }
+      }
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${pet.name} wurde hinzugefügt!'),
@@ -305,6 +356,7 @@ class _AddAnimalScreenState extends State<AddAnimalScreen> {
       );
       context.go('/animals');
     } else {
+      setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Fehler beim Hinzufügen'),

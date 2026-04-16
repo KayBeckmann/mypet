@@ -58,6 +58,34 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  /// Datei-Upload via Multipart
+  Future<Map<String, dynamic>> uploadFile(
+    String path, {
+    required List<int> bytes,
+    required String filename,
+    String fieldName = 'photo',
+  }) async {
+    final uri = Uri.parse('$_baseUrl$path');
+    final request = http.MultipartRequest('POST', uri);
+
+    if (_authToken != null) {
+      request.headers['Authorization'] = 'Bearer $_authToken';
+    }
+
+    request.files.add(http.MultipartFile.fromBytes(
+      fieldName,
+      bytes,
+      filename: filename,
+    ));
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    return _handleResponse(response);
+  }
+
+  /// Basis-URL für Bild-URLs
+  String get baseUrl => _baseUrl;
+
   Map<String, dynamic> _handleResponse(http.Response response) {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode >= 200 && response.statusCode < 300) {
