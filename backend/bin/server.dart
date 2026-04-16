@@ -8,7 +8,13 @@ import 'package:mypet_backend/config/config.dart';
 import 'package:mypet_backend/database/database.dart';
 import 'package:mypet_backend/database/migrator.dart';
 import 'package:mypet_backend/middleware/logging_middleware.dart';
+import 'package:mypet_backend/middleware/auth_middleware.dart';
 import 'package:mypet_backend/controllers/health_controller.dart';
+import 'package:mypet_backend/controllers/auth_controller.dart';
+import 'package:mypet_backend/controllers/account_controller.dart';
+import 'package:mypet_backend/controllers/pet_controller.dart';
+import 'package:mypet_backend/services/upload_service.dart';
+import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
 void main(List<String> args) async {
   // Konfiguration laden
@@ -61,17 +67,51 @@ void main(List<String> args) async {
     exit(0);
   }
 
+  // Upload-Verzeichnis sicherstellen
+  final uploadService = UploadService();
+  await uploadService.ensureUploadDir();
+
   // Router erstellen
   final app = Router();
 
-  // Health-Check Routes
+  // Health-Check Routes (öffentlich)
   final healthController = HealthController(db);
   app.mount('/health', healthController.router.call);
+
+  // Auth Routes (öffentlich)
+  final authController = AuthController(db);
+  app.mount('/auth', authController.router.call);
+
+  // Geschützte Routes mit Auth-Middleware
+  final accountController = AccountController(db);
+  final petController = PetController(db);
+
+  app.mount(
+    '/account',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addHandler(accountController.router.call),
+  );
+  app.mount(
+    '/pets',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addHandler(petController.router.call),
+  );
+
+  // Static Files für Uploads (öffentlich, Bilder über URL abrufbar)
+  app.mount(
+    '/uploads/',
+    staticFilesHandler(
+      basePath: config.uploadPath,
+      urlPrefix: '/uploads',
+    ),
+  );
 
   // Root Route
   app.get('/', (Request request) {
     return Response.ok(
-      '{"message": "MyPet API", "version": "0.1.0"}',
+      '{"message": "MyPet API", "version": "0.2.0"}',
       headers: {'Content-Type': 'application/json'},
     );
   });
@@ -105,6 +145,30 @@ void main(List<String> args) async {
   print('   GET  /              - API Info');
   print('   GET  /health        - Health Check');
   print('   GET  /health/ready  - Readiness Check');
+  print('');
+  print('🔐 Auth:');
+  print('   POST /auth/register - Registrierung');
+  print('   POST /auth/login    - Login');
+  print('   POST /auth/refresh  - Token erneuern');
+  print('   POST /auth/logout   - Logout');
+  print('');
+  print('👤 Account (authentifiziert):');
+  print('   GET    /account          - Eigene Daten');
+  print('   PUT    /account          - Profil aktualisieren');
+  print('   DELETE /account          - Konto löschen');
+  print('   PUT    /account/password - Passwort ändern');
+  print('');
+  print('🐾 Tiere (authentifiziert):');
+  print('   GET    /pets      - Alle Tiere');
+  print('   GET    /pets/:id  - Einzelnes Tier');
+  print('   POST   /pets      - Tier anlegen');
+  print('   PUT    /pets/:id  - Tier aktualisieren');
+  print('   DELETE /pets/:id  - Tier löschen');
+  print('   POST   /pets/:id/photo - Foto hochladen');
+  print('   DELETE /pets/:id/photo - Foto löschen');
+  print('');
+  print('📁 Uploads:');
+  print('   GET  /uploads/...  - Hochgeladene Dateien');
   print('');
   print('🔧 Befehle:');
   print('   --migrate, -m   Migrationen ausführen');

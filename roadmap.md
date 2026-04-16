@@ -47,24 +47,24 @@
 - [x] Connection-Pooling
 - [x] Erste Migration: Benutzer-Tabelle
 
-### M1.3 - Authentifizierung (Teil 1)
-- [ ] Benutzer-Model erstellen
-- [ ] Passwort-Hashing (Argon2/Bcrypt)
-- [ ] `POST /auth/register` - Registrierung
-- [ ] `POST /auth/login` - Login mit JWT
-- [ ] JWT-Generierung und Validierung
+### M1.3 - Authentifizierung (Teil 1) ✅
+- [x] Benutzer-Model erstellen
+- [x] Passwort-Hashing (Argon2/Bcrypt)
+- [x] `POST /auth/register` - Registrierung
+- [x] `POST /auth/login` - Login mit JWT
+- [x] JWT-Generierung und Validierung
 
-### M1.4 - Authentifizierung (Teil 2)
-- [ ] `POST /auth/refresh` - Token erneuern
-- [ ] `POST /auth/logout` - Logout
-- [ ] Auth-Middleware für geschützte Routen
-- [ ] Rollen-System (Besitzer/Tierarzt/Dienstleister)
+### M1.4 - Authentifizierung (Teil 2) ✅
+- [x] `POST /auth/refresh` - Token erneuern
+- [x] `POST /auth/logout` - Logout
+- [x] Auth-Middleware für geschützte Routen
+- [x] Rollen-System (Besitzer/Tierarzt/Dienstleister)
 
-### M1.5 - Benutzer-Verwaltung
-- [ ] `GET /account` - Eigene Daten abrufen
-- [ ] `PUT /account` - Profil aktualisieren
-- [ ] `DELETE /account` - Konto löschen (DSGVO)
-- [ ] Passwort ändern
+### M1.5 - Benutzer-Verwaltung ✅
+- [x] `GET /account` - Eigene Daten abrufen
+- [x] `PUT /account` - Profil aktualisieren
+- [x] `DELETE /account` - Konto löschen (DSGVO)
+- [x] Passwort ändern
 
 ### M1.6 - Organisationen (Praxen & Firmen)
 > Multi-User-System für Tierärzte und Dienstleister
@@ -110,63 +110,63 @@
 
 ## Phase 2: Tier-Verwaltung (Backend)
 
-### M2.1 - Tier-Model
-- [ ] Migration: Tier-Tabelle
-- [ ] Tier-Model mit allen Feldern
-- [ ] Validierung der Eingaben
+### M2.1 - Tier-Model ✅
+- [x] Migration: Tier-Tabelle
+- [x] Tier-Model mit allen Feldern
+- [x] Validierung der Eingaben
 
-### M2.2 - Tier-CRUD
-- [ ] `GET /pets` - Alle eigenen Tiere
-- [ ] `GET /pets/:id` - Einzelnes Tier
-- [ ] `POST /pets` - Tier anlegen
-- [ ] `PUT /pets/:id` - Tier aktualisieren
-- [ ] `DELETE /pets/:id` - Tier löschen
+### M2.2 - Tier-CRUD ✅
+- [x] `GET /pets` - Alle eigenen Tiere
+- [x] `GET /pets/:id` - Einzelnes Tier
+- [x] `POST /pets` - Tier anlegen
+- [x] `PUT /pets/:id` - Tier aktualisieren
+- [x] `DELETE /pets/:id` - Tier löschen
 
-### M2.3 - Foto-Upload für Tiere
-- [ ] Datei-Upload-Endpoint
-- [ ] Bild-Speicherung (lokal oder S3-kompatibel)
-- [ ] Bild-URL im Tier-Profil speichern
-- [ ] Bild-Größen-Validierung
+### M2.3 - Foto-Upload für Tiere ✅
+- [x] Datei-Upload-Endpoint
+- [x] Bild-Speicherung (lokal oder S3-kompatibel)
+- [x] Bild-URL im Tier-Profil speichern
+- [x] Bild-Größen-Validierung
 
 ---
 
 ## Phase 3: Web-Frontend Tierbesitzer (Basis)
 
-### M3.1 - Flutter Web Setup
-- [ ] Flutter Web-Projekt initialisieren
-- [ ] Ordnerstruktur (screens/, widgets/, services/, providers/)
-- [ ] Theme und Styling-Grundlagen
-- [ ] Router einrichten (go_router)
+### M3.1 - Flutter Web Setup ✅
+- [x] Flutter Web-Projekt initialisieren
+- [x] Ordnerstruktur (screens/, widgets/, services/, providers/)
+- [x] Theme und Styling-Grundlagen
+- [x] Router einrichten (go_router)
 
-### M3.2 - Authentifizierung UI
-- [ ] Login-Screen
-- [ ] Registrierungs-Screen
-- [ ] Token-Speicherung (secure storage)
-- [ ] Auth-State-Management
-- [ ] Logout-Funktion
+### M3.2 - Authentifizierung UI ✅
+- [x] Login-Screen
+- [x] Registrierungs-Screen
+- [x] Token-Speicherung (secure storage)
+- [x] Auth-State-Management
+- [x] Logout-Funktion
 
-### M3.3 - API-Service
-- [ ] HTTP-Client einrichten (dio/http)
-- [ ] Base-URL aus Konfiguration
-- [ ] Auth-Token automatisch anhängen
-- [ ] Error-Handling
+### M3.3 - API-Service ✅
+- [x] HTTP-Client einrichten (dio/http)
+- [x] Base-URL aus Konfiguration
+- [x] Auth-Token automatisch anhängen
+- [x] Error-Handling
 
-### M3.4 - Tier-Liste
-- [ ] Tier-Liste Screen
-- [ ] Tier-Karte Widget
+### M3.4 - Tier-Liste ✅
+- [x] Tier-Liste Screen
+- [x] Tier-Karte Widget
 - [ ] Pull-to-Refresh
-- [ ] Leerer Zustand (keine Tiere)
+- [x] Leerer Zustand (keine Tiere)
 
-### M3.5 - Tier hinzufügen
-- [ ] Formular: Tier anlegen
-- [ ] Foto-Upload
-- [ ] Validierung
-- [ ] Erfolgs-/Fehlermeldungen
+### M3.5 - Tier hinzufügen ✅
+- [x] Formular: Tier anlegen
+- [x] Foto-Upload
+- [x] Validierung
+- [x] Erfolgs-/Fehlermeldungen
 
-### M3.6 - Tier-Detail
-- [ ] Tier-Detail Screen
+### M3.6 - Tier-Detail ✅
+- [x] Tier-Detail Screen
 - [ ] Tier bearbeiten
-- [ ] Tier löschen (mit Bestätigung)
+- [x] Tier löschen (mit Bestätigung)
 
 ---
 

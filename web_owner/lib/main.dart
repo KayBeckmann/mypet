@@ -1,0 +1,77 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'config/theme.dart';
+import 'config/routes.dart';
+import 'providers/auth_provider.dart';
+import 'providers/pet_provider.dart';
+import 'services/api_service.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MyPetOwnerApp());
+}
+
+class MyPetOwnerApp extends StatefulWidget {
+  const MyPetOwnerApp({super.key});
+
+  @override
+  State<MyPetOwnerApp> createState() => _MyPetOwnerAppState();
+}
+
+class _MyPetOwnerAppState extends State<MyPetOwnerApp> {
+  final _apiService = ApiService();
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => PetProvider(api: _apiService),
+        ),
+      ],
+      child: const _AppWithAuth(),
+    );
+  }
+}
+
+class _AppWithAuth extends StatefulWidget {
+  const _AppWithAuth();
+
+  @override
+  State<_AppWithAuth> createState() => _AppWithAuthState();
+}
+
+class _AppWithAuthState extends State<_AppWithAuth> {
+  bool _petsLoaded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final petProvider = context.read<PetProvider>();
+
+    // Tiere laden, sobald der Benutzer angemeldet ist
+    if (authProvider.isAuthenticated && !_petsLoaded) {
+      _petsLoaded = true;
+      if (authProvider.isDemoMode) {
+        petProvider.loadDemo();
+      } else {
+        petProvider.loadPets();
+      }
+    }
+    if (!authProvider.isAuthenticated && _petsLoaded) {
+      _petsLoaded = false;
+    }
+
+    final router = createRouter(authProvider);
+
+    return MaterialApp.router(
+      title: 'MyPet - Living Ledger',
+      debugShowCheckedModeBanner: false,
+      theme: LivingLedgerTheme.themeData,
+      routerConfig: router,
+    );
+  }
+}
