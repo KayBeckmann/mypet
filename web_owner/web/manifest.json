@@ -1,0 +1,11 @@
+{
+  "name": "MyPet",
+  "short_name": "MyPet",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f9faf4",
+  "theme_color": "#204e2b",
+  "description": "MyPet - Tierbesitzer App",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}
