@@ -13,74 +13,97 @@ class AnimalsScreen extends StatelessWidget {
     final petProvider = context.watch<PetProvider>();
     final pets = petProvider.pets;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(40, 24, 40, 40),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Deine Tiere',
-                    style: Theme.of(context).textTheme.displaySmall,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${pets.length} Tiere registriert',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: LivingLedgerTheme.onSurfaceVariant,
-                        ),
-                  ),
-                ],
-              ),
-              ElevatedButton.icon(
-                onPressed: () => context.go('/animals/add'),
-                icon: const Icon(Icons.add, size: 20),
-                label: const Text('Tier hinzufügen'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-
-          // Animals Grid or Empty State
-          if (pets.isEmpty)
-            _EmptyState()
-          else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                int crossAxisCount = 1;
-                if (constraints.maxWidth > 1000) {
-                  crossAxisCount = 3;
-                } else if (constraints.maxWidth > 600) {
-                  crossAxisCount = 2;
-                }
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: 20,
-                    mainAxisSpacing: 20,
-                    childAspectRatio: 1.6,
-                  ),
-                  itemCount: pets.length,
-                  itemBuilder: (context, index) {
-                    final pet = pets[index];
-                    return PetCard(
-                      pet: pet,
-                      imageBaseUrl: petProvider.apiBaseUrl,
-                      onTap: () => context.go('/animals/${pet.id}'),
-                    );
-                  },
-                );
-              },
+    return RefreshIndicator(
+      onRefresh: () => petProvider.loadPets(),
+      color: LivingLedgerTheme.primary,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(40, 24, 40, 40),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Deine Tiere',
+                      style: Theme.of(context).textTheme.displaySmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${pets.length} Tiere registriert',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: LivingLedgerTheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      tooltip: 'Aktualisieren',
+                      onPressed: petProvider.isLoading
+                          ? null
+                          : () => petProvider.loadPets(),
+                      icon: petProvider.isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.refresh),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () => context.go('/animals/add'),
+                      icon: const Icon(Icons.add, size: 20),
+                      label: const Text('Tier hinzufügen'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-        ],
+            const SizedBox(height: 32),
+
+            // Animals Grid or Empty State
+            if (pets.isEmpty)
+              _EmptyState()
+            else
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  int crossAxisCount = 1;
+                  if (constraints.maxWidth > 1000) {
+                    crossAxisCount = 3;
+                  } else if (constraints.maxWidth > 600) {
+                    crossAxisCount = 2;
+                  }
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20,
+                      childAspectRatio: 1.6,
+                    ),
+                    itemCount: pets.length,
+                    itemBuilder: (context, index) {
+                      final pet = pets[index];
+                      return PetCard(
+                        pet: pet,
+                        imageBaseUrl: petProvider.apiBaseUrl,
+                        onTap: () => context.go('/animals/${pet.id}'),
+                      );
+                    },
+                  );
+                },
+              ),
+          ],
+        ),
       ),
     );
   }

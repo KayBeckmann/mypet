@@ -30,3 +30,5 @@ dependencies:
 dev_dependencies:
   lints: ^3.0.0
   test: ^1.24.9
+  # Hot-Reload für die Entwicklung: `dart pub global activate hotreloader`
+  hotreloader: ^4.2.0

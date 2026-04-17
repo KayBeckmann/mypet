@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -112,10 +111,10 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
                     Row(
                       children: [
                         OutlinedButton.icon(
-                          onPressed: () {},
-                          icon:
-                              const Icon(Icons.picture_as_pdf_rounded, size: 18),
-                          label: const Text('Export PDF'),
+                          onPressed: () =>
+                              context.go('/animals/${pet.id}/edit'),
+                          icon: const Icon(Icons.edit_rounded, size: 18),
+                          label: const Text('Bearbeiten'),
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton.icon(

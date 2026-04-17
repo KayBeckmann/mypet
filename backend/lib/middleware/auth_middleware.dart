@@ -25,11 +25,18 @@ Middleware authMiddleware() {
         final jwt = JWT.verify(token, SecretKey(config.jwtSecret));
         final payload = jwt.payload as Map<String, dynamic>;
 
+        // Header-Override für aktive Organisation
+        final activeOrgHeader = request.headers['x-active-organization'];
+        final activeOrgId = activeOrgHeader?.trim().isNotEmpty == true
+            ? activeOrgHeader
+            : payload['active_organization_id'] as String?;
+
         // Benutzer-Daten in Request-Context weiterreichen
         final updatedRequest = request.change(context: {
           'userId': payload['sub'] as String,
           'userEmail': payload['email'] as String,
           'userRole': payload['role'] as String,
+          if (activeOrgId != null) 'activeOrganizationId': activeOrgId,
         });
 
         return innerHandler(updatedRequest);
@@ -74,6 +81,7 @@ String generateToken({
   required String userId,
   required String email,
   required String role,
+  String? activeOrganizationId,
 }) {
   final config = Config();
 
@@ -82,6 +90,8 @@ String generateToken({
       'sub': userId,
       'email': email,
       'role': role,
+      if (activeOrganizationId != null)
+        'active_organization_id': activeOrganizationId,
       'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
     },
   );

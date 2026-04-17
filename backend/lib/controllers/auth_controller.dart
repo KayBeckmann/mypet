@@ -20,8 +20,74 @@ class AuthController {
     router.post('/login', _login);
     router.post('/refresh', _refresh);
     router.post('/logout', _logout);
+    router.post('/switch-organization', _switchOrganization);
 
     return router;
+  }
+
+  /// POST /auth/switch-organization - Aktive Organisation ändern
+  /// Erwartet Auth-Header mit aktuellem JWT-Token
+  Future<Response> _switchOrganization(Request request) async {
+    try {
+      final authHeader = request.headers['authorization'];
+      if (authHeader == null || !authHeader.startsWith('Bearer ')) {
+        return _error(401, 'Authentifizierung erforderlich');
+      }
+      final currentToken = authHeader.substring(7);
+
+      final config = Config();
+      JWT jwt;
+      try {
+        jwt = JWT.verify(currentToken, SecretKey(config.jwtSecret));
+      } on JWTException {
+        return _error(401, 'Ungültiger Token');
+      }
+
+      final payload = jwt.payload as Map<String, dynamic>;
+      final userId = payload['sub'] as String;
+
+      final body =
+          jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+      final orgId = body['organization_id'] as String?;
+
+      String? activeOrgId;
+
+      if (orgId != null && orgId.isNotEmpty) {
+        // Prüfen ob Benutzer Mitglied dieser Organisation ist
+        final membership = await _db.queryOne(
+          '''
+          SELECT id FROM organization_members
+          WHERE organization_id = @org_id::uuid
+            AND user_id = @user_id::uuid
+            AND is_active = true
+          ''',
+          parameters: {'org_id': orgId, 'user_id': userId},
+        );
+        if (membership == null) {
+          return _error(403, 'Keine Mitgliedschaft in dieser Organisation');
+        }
+        activeOrgId = orgId;
+      }
+
+      // Neuen Token mit aktiver Organisation
+      final newToken = generateToken(
+        userId: userId,
+        email: payload['email'] as String,
+        role: payload['role'] as String,
+        activeOrganizationId: activeOrgId,
+      );
+
+      return Response.ok(
+        jsonEncode({
+          'token': newToken,
+          'active_organization_id': activeOrgId,
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Switch-Organization-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
   }
 
   /// POST /auth/register - Neuen Benutzer registrieren
