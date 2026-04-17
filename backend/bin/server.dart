@@ -13,10 +13,15 @@ import 'package:mypet_backend/controllers/health_controller.dart';
 import 'package:mypet_backend/controllers/auth_controller.dart';
 import 'package:mypet_backend/controllers/account_controller.dart';
 import 'package:mypet_backend/controllers/pet_controller.dart';
+import 'package:mypet_backend/controllers/organization_controller.dart';
+import 'package:mypet_backend/controllers/invitation_controller.dart';
+import 'package:mypet_backend/controllers/permission_group_controller.dart';
+import 'package:mypet_backend/controllers/family_controller.dart';
+import 'package:mypet_backend/controllers/permission_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
-void main(List<String> args) async {
+Future<void> main(List<String> args) async {
   // Konfiguration laden
   final config = Config();
 
@@ -85,6 +90,11 @@ void main(List<String> args) async {
   // Geschützte Routes mit Auth-Middleware
   final accountController = AccountController(db);
   final petController = PetController(db);
+  final organizationController = OrganizationController(db);
+  final invitationController = InvitationController(db);
+  final permissionGroupController = PermissionGroupController(db);
+  final familyController = FamilyController(db);
+  final permissionController = PermissionController(db);
 
   app.mount(
     '/account',
@@ -97,6 +107,36 @@ void main(List<String> args) async {
     const Pipeline()
         .addMiddleware(authMiddleware())
         .addHandler(petController.router.call),
+  );
+  app.mount(
+    '/organizations',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addHandler(organizationController.router.call),
+  );
+  app.mount(
+    '/invitations',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addHandler(invitationController.router.call),
+  );
+  app.mount(
+    '/permission-groups',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addHandler(permissionGroupController.router.call),
+  );
+  app.mount(
+    '/families',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addHandler(familyController.router.call),
+  );
+  app.mount(
+    '/permissions',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addHandler(permissionController.router.call),
   );
 
   // Static Files für Uploads (öffentlich, Bilder über URL abrufbar)
@@ -166,6 +206,30 @@ void main(List<String> args) async {
   print('   DELETE /pets/:id  - Tier löschen');
   print('   POST   /pets/:id/photo - Foto hochladen');
   print('   DELETE /pets/:id/photo - Foto löschen');
+  print('');
+  print('🏢 Organisationen (authentifiziert):');
+  print('   GET/POST       /organizations');
+  print('   GET/PUT/DELETE /organizations/:id');
+  print('   GET            /organizations/:id/members');
+  print('   POST           /organizations/:id/members/invite');
+  print('   PUT/DELETE     /organizations/:id/members/:userId');
+  print('   GET/POST       /organizations/:id/permission-groups');
+  print('   PUT/DELETE     /permission-groups/:id');
+  print('');
+  print('✉️  Einladungen (authentifiziert):');
+  print('   GET  /invitations');
+  print('   POST /invitations/:code/accept');
+  print('   POST /invitations/:code/reject');
+  print('');
+  print('👪 Familien (authentifiziert):');
+  print('   GET/POST       /families');
+  print('   GET/PUT/DELETE /families/:id');
+  print('   GET/POST       /families/:id/members');
+  print('   DELETE         /families/:id/members/:userId');
+  print('');
+  print('🔐 Zugriffsberechtigungen (authentifiziert):');
+  print('   GET/POST       /permissions');
+  print('   PUT/DELETE     /permissions/:id');
   print('');
   print('📁 Uploads:');
   print('   GET  /uploads/...  - Hochgeladene Dateien');

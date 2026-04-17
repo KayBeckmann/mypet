@@ -6,6 +6,7 @@ import '../screens/dashboard_screen.dart';
 import '../screens/animals_screen.dart';
 import '../screens/animal_detail_screen.dart';
 import '../screens/add_animal_screen.dart';
+import '../screens/edit_animal_screen.dart';
 import '../screens/feeding_screen.dart';
 import '../screens/records_screen.dart';
 import '../screens/marketplace_screen.dart';
@@ -63,6 +64,15 @@ GoRouter createRouter(AuthProvider authProvider) {
                   final id = state.pathParameters['id']!;
                   return AnimalDetailScreen(petId: id);
                 },
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      return EditAnimalScreen(petId: id);
+                    },
+                  ),
+                ],
               ),
             ],
           ),

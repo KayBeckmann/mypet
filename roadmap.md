@@ -26,7 +26,7 @@
 
 ### M0.4 - Entwicklungsumgebung ✅
 - [x] Docker Compose für Entwicklung (`docker-compose.dev.yml`)
-- [ ] Hot-Reload für Backend einrichten
+- [x] Hot-Reload für Backend einrichten (`bin/dev_server.dart` + `hotreloader`)
 - [x] Lokale PostgreSQL-Instanz
 - [x] Basis-Skripte (`start-dev.sh`, `stop-dev.sh`, `reset-db.sh`)
 
@@ -66,45 +66,46 @@
 - [x] `DELETE /account` - Konto löschen (DSGVO)
 - [x] Passwort ändern
 
-### M1.6 - Organisationen (Praxen & Firmen)
+### M1.6 - Organisationen (Praxen & Firmen) ✅
 > Multi-User-System für Tierärzte und Dienstleister
 
-- [ ] Migration: Organisation-Tabelle
-- [ ] Migration: Organisations-Mitgliedschaft-Tabelle
-- [ ] Migration: Berechtigungsgruppen-Tabelle
-- [ ] Migration: Einladungen-Tabelle
-- [ ] Organisation-Model erstellen
-- [ ] `POST /organizations` - Organisation erstellen (Ersteller wird Admin)
-- [ ] `GET /organizations` - Eigene Organisationen abrufen
-- [ ] `PUT /organizations/:id` - Organisation aktualisieren (nur Admin)
-- [ ] `DELETE /organizations/:id` - Organisation löschen (nur Gründer)
+- [x] Migration: Organisation-Tabelle
+- [x] Migration: Organisations-Mitgliedschaft-Tabelle
+- [x] Migration: Berechtigungsgruppen-Tabelle
+- [x] Migration: Einladungen-Tabelle
+- [x] Organisation-Model erstellen
+- [x] `POST /organizations` - Organisation erstellen (Ersteller wird Admin)
+- [x] `GET /organizations` - Eigene Organisationen abrufen
+- [x] `PUT /organizations/:id` - Organisation aktualisieren (nur Admin)
+- [x] `DELETE /organizations/:id` - Organisation löschen (nur Gründer)
 
-### M1.7 - Organisations-Mitglieder
-- [ ] Mitgliedschafts-Model erstellen
-- [ ] `GET /organizations/:id/members` - Alle Mitglieder
-- [ ] `POST /organizations/:id/members/invite` - Einladung per E-Mail
-- [ ] Einladungs-E-Mail versenden
-- [ ] `POST /invitations/:code/accept` - Einladung annehmen
-- [ ] `POST /invitations/:code/reject` - Einladung ablehnen
-- [ ] `PUT /organizations/:id/members/:userId` - Rolle ändern
-- [ ] `DELETE /organizations/:id/members/:userId` - Mitglied entfernen
+### M1.7 - Organisations-Mitglieder ✅
+- [x] Mitgliedschafts-Model erstellen
+- [x] `GET /organizations/:id/members` - Alle Mitglieder
+- [x] `POST /organizations/:id/members/invite` - Einladung per E-Mail
+- [ ] Einladungs-E-Mail versenden (SMTP-Setup offen)
+- [x] `POST /invitations/:code/accept` - Einladung annehmen
+- [x] `POST /invitations/:code/reject` - Einladung ablehnen
+- [x] `PUT /organizations/:id/members/:userId` - Rolle ändern
+- [x] `DELETE /organizations/:id/members/:userId` - Mitglied entfernen
 
-### M1.8 - Berechtigungsgruppen
-- [ ] Berechtigungsgruppen-Model erstellen
-- [ ] Standard-Gruppen bei Organisation-Erstellung anlegen
+### M1.8 - Berechtigungsgruppen ✅
+- [x] Berechtigungsgruppen-Model erstellen
+- [x] Standard-Gruppen bei Organisation-Erstellung anlegen
   - Tierarztpraxis: Admin, Tierarzt, TFA, Azubi, Buchhaltung
   - Dienstleister: Admin, Mitarbeiter, Azubi
-- [ ] `GET /organizations/:id/permission-groups`
-- [ ] `POST /organizations/:id/permission-groups`
-- [ ] `PUT /permission-groups/:id`
-- [ ] `DELETE /permission-groups/:id`
-- [ ] Berechtigungs-Middleware: Prüfung bei jedem Request
+- [x] `GET /organizations/:id/permission-groups`
+- [x] `POST /organizations/:id/permission-groups`
+- [x] `PUT /permission-groups/:id`
+- [x] `DELETE /permission-groups/:id`
+- [ ] Berechtigungs-Middleware: Prüfung bei jedem Request (Folge-Tickets bei Einbindung in Phase 7/12)
 
-### M1.9 - Organisations-Kontext
-- [ ] Aktive Organisation im JWT-Token speichern
-- [ ] Organisation wechseln (für Benutzer in mehreren Orgs)
-- [ ] Alle Daten werden im Kontext der aktiven Organisation gefiltert
-- [ ] Audit-Log für Organisations-Aktionen
+### M1.9 - Organisations-Kontext ✅
+- [x] Aktive Organisation im JWT-Token speichern
+- [x] Organisation wechseln (für Benutzer in mehreren Orgs) via `POST /auth/switch-organization`
+- [x] Header `X-Active-Organization` als Override unterstützt
+- [ ] Alle Daten werden im Kontext der aktiven Organisation gefiltert (offen, je Endpunkt)
+- [ ] Audit-Log für Organisations-Aktionen (siehe M17.3)
 
 ---
 
@@ -154,7 +155,7 @@
 ### M3.4 - Tier-Liste ✅
 - [x] Tier-Liste Screen
 - [x] Tier-Karte Widget
-- [ ] Pull-to-Refresh
+- [x] Pull-to-Refresh
 - [x] Leerer Zustand (keine Tiere)
 
 ### M3.5 - Tier hinzufügen ✅
@@ -165,34 +166,34 @@
 
 ### M3.6 - Tier-Detail ✅
 - [x] Tier-Detail Screen
-- [ ] Tier bearbeiten
+- [x] Tier bearbeiten
 - [x] Tier löschen (mit Bestätigung)
 
 ---
 
 ## Phase 4: Familien & Freigaben (Backend)
 
-### M4.1 - Familien-Model
-- [ ] Migration: Familie-Tabelle
-- [ ] Migration: Familien-Mitgliedschaft-Tabelle
-- [ ] Models erstellen
+### M4.1 - Familien-Model ✅
+- [x] Migration: Familie-Tabelle
+- [x] Migration: Familien-Mitgliedschaft-Tabelle
+- [x] Models erstellen
 
-### M4.2 - Familien-API
-- [ ] `GET /families` - Eigene Familien
-- [ ] `POST /families` - Familie erstellen
-- [ ] `POST /families/:id/members` - Mitglied einladen
-- [ ] `DELETE /families/:id/members/:userId` - Mitglied entfernen
+### M4.2 - Familien-API ✅
+- [x] `GET /families` - Eigene Familien
+- [x] `POST /families` - Familie erstellen
+- [x] `POST /families/:id/members` - Mitglied einladen
+- [x] `DELETE /families/:id/members/:userId` - Mitglied entfernen
 
-### M4.3 - Zugriffsberechtigung-Model
-- [ ] Migration: Zugriffsberechtigung-Tabelle
-- [ ] Model erstellen
-- [ ] Berechtigungs-Prüfung implementieren
+### M4.3 - Zugriffsberechtigung-Model ✅
+- [x] Migration: Zugriffsberechtigung-Tabelle
+- [x] Model erstellen
+- [ ] Berechtigungs-Prüfung implementieren (offen, je Endpunkt)
 
-### M4.4 - Zugriffsberechtigung-API
-- [ ] `GET /permissions` - Eigene Berechtigungen
-- [ ] `POST /permissions` - Berechtigung erteilen
-- [ ] `PUT /permissions/:id` - Berechtigung aktualisieren
-- [ ] `DELETE /permissions/:id` - Berechtigung widerrufen
+### M4.4 - Zugriffsberechtigung-API ✅
+- [x] `GET /permissions` - Eigene Berechtigungen
+- [x] `POST /permissions` - Berechtigung erteilen
+- [x] `PUT /permissions/:id` - Berechtigung aktualisieren
+- [x] `DELETE /permissions/:id` - Berechtigung widerrufen
 
 ---
 
