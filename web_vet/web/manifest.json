@@ -1,0 +1,11 @@
+{
+  "name": "MyPet Vet",
+  "short_name": "MyPet Vet",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f9faf4",
+  "theme_color": "#2c5f7c",
+  "description": "MyPet - Tierarzt Web App",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}

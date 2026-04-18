@@ -61,8 +61,8 @@ services:
   # Flutter Web - Tierarzt
   web-vet:
     build:
-      context: ./web_vet
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: web_vet/Dockerfile
     container_name: mypet-web-vet
     restart: unless-stopped
     depends_on:
@@ -73,8 +73,8 @@ services:
   # Flutter Web - Dienstleister
   web-provider:
     build:
-      context: ./web_provider
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: web_provider/Dockerfile
     container_name: mypet-web-provider
     restart: unless-stopped
     depends_on:
