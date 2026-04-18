@@ -1,0 +1,11 @@
+{
+  "name": "MyPet Provider",
+  "short_name": "MyPet Provider",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f9faf4",
+  "theme_color": "#D4782F",
+  "description": "MyPet - Dienstleister Portal",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}

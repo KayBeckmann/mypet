@@ -246,9 +246,9 @@
 ## Phase 7: Web-Frontend Tierarzt (Basis)
 
 ### M7.1 - Projekt-Setup
-- [ ] Flutter Web-Projekt für Tierärzte
-- [ ] Gemeinsame Komponenten aus shared/
-- [ ] Auth-Flow (wie Besitzer-App)
+- [x] Flutter Web-Projekt für Tierärzte
+- [x] Gemeinsame Komponenten aus shared/
+- [x] Auth-Flow (wie Besitzer-App)
 
 ### M7.2 - Praxis-Profil & Organisation
 - [ ] Praxis/Organisation erstellen
@@ -355,9 +355,9 @@
 ## Phase 12: Web-Frontend Dienstleister (Basis)
 
 ### M12.1 - Projekt-Setup
-- [ ] Flutter Web-Projekt für Dienstleister
-- [ ] Auth-Flow
-- [ ] Dienstleister-Profil
+- [x] Flutter Web-Projekt für Dienstleister
+- [x] Auth-Flow
+- [x] Dienstleister-Profil (Dashboard-Grundgerüst)
 
 ### M12.2 - Firmen-Profil & Organisation
 - [ ] Firma/Organisation erstellen
