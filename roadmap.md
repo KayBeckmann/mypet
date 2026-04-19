@@ -430,16 +430,17 @@
 
 ## Phase 16: Besitzerwechsel
 
-### M16.1 - Backend
-- [ ] Migration: Besitzerwechsel-Tabelle
-- [ ] Transfer initiieren
-- [ ] Transfer bestätigen/ablehnen
-- [ ] Daten übertragen
+### M16.1 - Backend ✅
+- [x] Migration 020: ownership_transfers mit transfer_status ENUM
+- [x] TransferController: POST initiieren, DELETE abbrechen, GET auflisten
+- [x] Token-basierte Annahme/Ablehnung (POST /transfers/:token/accept|reject)
+- [x] Besitzerwechsel: pets.owner_id auf neuen Benutzer aktualisiert
 
-### M16.2 - Frontend
-- [ ] Transfer starten
-- [ ] Einladung senden
-- [ ] Transfer bestätigen
+### M16.2 - Frontend ✅
+- [x] TransferProvider (initiate, cancel, accept, reject)
+- [x] "Besitz übertragen" Dialog in AnimalDetailScreen
+- [x] TransferScreen mit Token-Eingabe zum Annehmen/Ablehnen
+- [x] TRANSFER Nav-Item in Sidebar
 
 ---
 

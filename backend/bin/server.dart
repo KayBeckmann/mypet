@@ -26,6 +26,7 @@ import 'package:mypet_backend/controllers/appointment_controller.dart';
 import 'package:mypet_backend/controllers/feeding_controller.dart';
 import 'package:mypet_backend/controllers/media_controller.dart';
 import 'package:mypet_backend/controllers/note_controller.dart';
+import 'package:mypet_backend/controllers/transfer_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
@@ -121,6 +122,9 @@ Future<void> main(List<String> args) async {
   // Notizen Controller
   final noteController = NoteController(db);
 
+  // Transfer Controller
+  final transferController = TransferController(db);
+
   app.mount(
     '/account',
     const Pipeline()
@@ -137,6 +141,7 @@ Future<void> main(List<String> args) async {
       .add(feedingController.router.call)
       .add(mediaController.router.call)
       .add(noteController.router.call)
+      .add(transferController.router.call)
       .handler;
   app.mount(
     '/pets',
@@ -181,6 +186,13 @@ Future<void> main(List<String> args) async {
     const Pipeline()
         .addMiddleware(authMiddleware())
         .addHandler(appointmentController.router.call),
+  );
+
+  app.mount(
+    '/transfers',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addHandler(transferController.tokenRouter.call),
   );
 
   // Admin Routes (nur superadmin)

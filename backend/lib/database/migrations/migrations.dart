@@ -21,6 +21,7 @@ const List<Migration> migrations = [
   _migration017CreateFeedingLog,
   _migration018CreateMedia,
   _migration019CreatePetNotes,
+  _migration020CreateOwnershipTransfers,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -666,6 +667,37 @@ const _migration017CreateFeedingLog = Migration(
 );
 
 /// Migration 018: Medien-Tabelle
+const _migration020CreateOwnershipTransfers = Migration(
+  version: 20,
+  name: 'create_ownership_transfers_table',
+  up: '''
+    CREATE TYPE transfer_status AS ENUM (
+      'pending', 'accepted', 'rejected', 'cancelled'
+    );
+
+    CREATE TABLE ownership_transfers (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      from_owner_id UUID NOT NULL REFERENCES users(id),
+      to_email VARCHAR(255) NOT NULL,
+      to_user_id UUID REFERENCES users(id),
+      status transfer_status NOT NULL DEFAULT 'pending',
+      message TEXT,
+      token VARCHAR(100) NOT NULL UNIQUE,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      responded_at TIMESTAMP
+    );
+
+    CREATE INDEX idx_transfers_pet ON ownership_transfers(pet_id);
+    CREATE INDEX idx_transfers_from ON ownership_transfers(from_owner_id);
+    CREATE INDEX idx_transfers_token ON ownership_transfers(token);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS ownership_transfers;
+    DROP TYPE IF EXISTS transfer_status;
+  ''',
+);
+
 const _migration019CreatePetNotes = Migration(
   version: 19,
   name: 'create_pet_notes_table',

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../models/pet.dart';
 import '../providers/pet_provider.dart';
+import '../providers/transfer_provider.dart';
 import '../services/file_picker_service.dart';
 
 class AnimalDetailScreen extends StatefulWidget {
@@ -328,18 +329,29 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
 
           const SizedBox(height: 32),
 
-          // Delete button
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: () => _showDeleteDialog(context, pet),
-              icon: Icon(Icons.delete_outline_rounded,
-                  size: 18, color: LivingLedgerTheme.error),
-              label: Text(
-                'Tier löschen',
-                style: TextStyle(color: LivingLedgerTheme.error),
+          // Transfer & Delete buttons
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: () => _showTransferDialog(context, pet),
+                icon: Icon(Icons.swap_horiz_rounded,
+                    size: 18, color: LivingLedgerTheme.secondary),
+                label: Text(
+                  'Besitz übertragen',
+                  style: TextStyle(color: LivingLedgerTheme.secondary),
+                ),
               ),
-            ),
+              const SizedBox(width: 16),
+              TextButton.icon(
+                onPressed: () => _showDeleteDialog(context, pet),
+                icon: Icon(Icons.delete_outline_rounded,
+                    size: 18, color: LivingLedgerTheme.error),
+                label: Text(
+                  'Tier löschen',
+                  style: TextStyle(color: LivingLedgerTheme.error),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -436,6 +448,135 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
     if (mounted) {
       setState(() => _isUploadingPhoto = false);
     }
+  }
+
+  Future<void> _showTransferDialog(BuildContext context, Pet pet) async {
+    final emailCtrl = TextEditingController();
+    final messageCtrl = TextEditingController();
+    final transferProvider = context.read<TransferProvider>();
+
+    // Load existing transfers
+    await transferProvider.loadForPet(pet.id);
+    final transfers = transferProvider.transfersForPet(pet.id);
+    final pending = transfers.where((t) => t.status == 'pending').toList();
+
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.swap_horiz_rounded, size: 20),
+              const SizedBox(width: 8),
+              Text('${pet.name} übertragen'),
+            ],
+          ),
+          content: SizedBox(
+            width: 440,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (pending.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Ausstehender Transfer:',
+                            style:
+                                TextStyle(fontWeight: FontWeight.w600)),
+                        ...pending.map((t) => Row(
+                              children: [
+                                Expanded(
+                                    child: Text(
+                                        'An: ${t.toEmail}',
+                                        style: const TextStyle(
+                                            fontSize: 13))),
+                                TextButton(
+                                  onPressed: () async {
+                                    await transferProvider.cancel(
+                                        pet.id, t.id);
+                                    setDs(() {});
+                                  },
+                                  child: const Text('Abbrechen'),
+                                ),
+                              ],
+                            )),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (pending.isEmpty) ...[
+                  Text(
+                    'Übertrage "${pet.name}" an eine andere Person. '
+                    'Diese erhält eine Einladung per E-Mail.',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: emailCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'E-Mail des neuen Besitzers *',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: messageCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Nachricht (optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Schließen'),
+            ),
+            if (pending.isEmpty)
+              FilledButton(
+                onPressed: () async {
+                  if (emailCtrl.text.trim().isEmpty) return;
+                  final ok = await transferProvider.initiate(
+                    pet.id,
+                    toEmail: emailCtrl.text.trim(),
+                    message: messageCtrl.text,
+                  );
+                  if (ok && ctx.mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                              'Übertragungsanfrage gesendet.')),
+                    );
+                  } else if (!ok && ctx.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content:
+                              Text(transferProvider.error ?? 'Fehler')),
+                    );
+                  }
+                },
+                child: const Text('Übertragung starten'),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showDeleteDialog(BuildContext context, Pet pet) {
