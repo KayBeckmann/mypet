@@ -22,6 +22,7 @@ const List<Migration> migrations = [
   _migration018CreateMedia,
   _migration019CreatePetNotes,
   _migration020CreateOwnershipTransfers,
+  _migration021CreateAuditLog,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -667,6 +668,29 @@ const _migration017CreateFeedingLog = Migration(
 );
 
 /// Migration 018: Medien-Tabelle
+const _migration021CreateAuditLog = Migration(
+  version: 21,
+  name: 'create_audit_log_table',
+  up: '''
+    CREATE TABLE audit_log (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      action VARCHAR(100) NOT NULL,
+      resource_type VARCHAR(50),
+      resource_id UUID,
+      details JSONB,
+      ip_address VARCHAR(45),
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_audit_log_user ON audit_log(user_id);
+    CREATE INDEX idx_audit_log_action ON audit_log(action);
+    CREATE INDEX idx_audit_log_resource ON audit_log(resource_type, resource_id);
+    CREATE INDEX idx_audit_log_created ON audit_log(created_at DESC);
+  ''',
+  down: 'DROP TABLE IF EXISTS audit_log;',
+);
+
 const _migration020CreateOwnershipTransfers = Migration(
   version: 20,
   name: 'create_ownership_transfers_table',

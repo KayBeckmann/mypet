@@ -446,19 +446,20 @@
 
 ## Phase 17: DSGVO & Sicherheit
 
-### M17.1 - Datenexport
-- [ ] `GET /account/export`
-- [ ] Alle Daten als JSON/ZIP
-- [ ] Download-Link generieren
+### M17.1 - Datenexport ✅
+- [x] `GET /account/export` — Benutzer, Tiere, Termine, Berechtigungen, Transfers als JSON
+- [x] Content-Disposition Header für direkten Download
+- [x] SettingsScreen mit Export-Button in owner app
 
 ### M17.2 - Verschlüsselung
-- [ ] Sensible Felder verschlüsseln
-- [ ] Medien verschlüsselt speichern
+- [ ] Sensible Felder verschlüsseln (offen)
+- [ ] Medien verschlüsselt speichern (offen)
 
-### M17.3 - Audit-Log
-- [ ] Migration: Audit-Log-Tabelle
-- [ ] Sensible Aktionen protokollieren
-- [ ] Log-Ansicht für Benutzer
+### M17.3 - Audit-Log ✅
+- [x] Migration 021: audit_log-Tabelle
+- [x] AuditService für einfaches Logging
+- [x] `GET /account/audit-log` — eigene Einträge abrufen
+- [x] Audit-Log-Ansicht in SettingsScreen
 
 ---
 

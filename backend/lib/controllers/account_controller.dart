@@ -19,6 +19,8 @@ class AccountController {
     router.put('/', _updateAccount);
     router.delete('/', _deleteAccount);
     router.put('/password', _changePassword);
+    router.get('/export', _exportData);
+    router.get('/audit-log', _getAuditLog);
 
     return router;
   }
@@ -195,6 +197,136 @@ class AccountController {
       );
     } catch (e) {
       print('❌ Passwort-Änderungs-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// GET /account/audit-log — Eigenes Audit-Log abrufen
+  Future<Response> _getAuditLog(Request request) async {
+    try {
+      final userId = request.context['userId'] as String;
+      final params = request.requestedUri.queryParameters;
+      final limit =
+          int.tryParse(params['limit'] ?? '') ?? 50;
+
+      final entries = await _db.queryAll(
+        '''
+        SELECT id, action, resource_type, resource_id, details, ip_address, created_at
+        FROM audit_log
+        WHERE user_id = @user_id::uuid
+        ORDER BY created_at DESC
+        LIMIT @limit
+        ''',
+        parameters: {'user_id': userId, 'limit': limit},
+      );
+
+      return Response.ok(
+        jsonEncode({
+          'audit_log': entries.map((e) => {
+            'id': e['id'].toString(),
+            'action': e['action'],
+            'resource_type': e['resource_type'],
+            'resource_id': e['resource_id']?.toString(),
+            'details': e['details'],
+            'ip_address': e['ip_address'],
+            'created_at': (e['created_at'] as DateTime).toIso8601String(),
+          }).toList(),
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ getAuditLog Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// GET /account/export — DSGVO-Datenexport (alle Daten als JSON)
+  Future<Response> _exportData(Request request) async {
+    try {
+      final userId = request.context['userId'] as String;
+
+      // Benutzerdaten
+      final user = await _db.queryOne(
+        'SELECT id, email, name, role, is_active, email_verified, created_at FROM users WHERE id = @id::uuid',
+        parameters: {'id': userId},
+      );
+      if (user == null) return _error(404, 'Benutzer nicht gefunden');
+
+      // Tiere
+      final pets = await _db.queryAll(
+        'SELECT id, name, species, breed, date_of_birth, microchip_id, created_at FROM pets WHERE owner_id = @id::uuid',
+        parameters: {'id': userId},
+      );
+
+      // Termine
+      final appointments = await _db.queryAll(
+        'SELECT id, title, scheduled_at, status, notes, created_at FROM appointments WHERE owner_id = @id::uuid ORDER BY scheduled_at DESC',
+        parameters: {'id': userId},
+      );
+
+      // Zugriffsberechtigungen
+      final permissions = await _db.queryAll(
+        'SELECT id, pet_id, grantee_id, access_level, valid_from, valid_until, created_at FROM access_permissions WHERE grantor_id = @id::uuid OR grantee_id = @id::uuid',
+        parameters: {'id': userId},
+      );
+
+      // Transfers
+      final transfers = await _db.queryAll(
+        'SELECT id, pet_id, to_email, status, created_at FROM ownership_transfers WHERE from_owner_id = @id::uuid',
+        parameters: {'id': userId},
+      );
+
+      final exportData = {
+        'export_date': DateTime.now().toIso8601String(),
+        'user': {
+          'id': user['id'].toString(),
+          'email': user['email'],
+          'name': user['name'],
+          'role': user['role'].toString(),
+          'created_at': (user['created_at'] as DateTime).toIso8601String(),
+        },
+        'pets': pets.map((p) => {
+          'id': p['id'].toString(),
+          'name': p['name'],
+          'species': p['species'],
+          'breed': p['breed'],
+          'date_of_birth': p['date_of_birth']?.toString(),
+          'microchip_id': p['microchip_id'],
+          'created_at': (p['created_at'] as DateTime).toIso8601String(),
+        }).toList(),
+        'appointments': appointments.map((a) => {
+          'id': a['id'].toString(),
+          'title': a['title'],
+          'scheduled_at': (a['scheduled_at'] as DateTime).toIso8601String(),
+          'status': a['status'].toString(),
+          'notes': a['notes'],
+        }).toList(),
+        'access_permissions': permissions.map((p) => {
+          'id': p['id'].toString(),
+          'pet_id': p['pet_id'].toString(),
+          'access_level': p['access_level'].toString(),
+          'valid_from': p['valid_from']?.toString(),
+          'valid_until': p['valid_until']?.toString(),
+        }).toList(),
+        'ownership_transfers': transfers.map((t) => {
+          'id': t['id'].toString(),
+          'pet_id': t['pet_id'].toString(),
+          'to_email': t['to_email'],
+          'status': t['status'].toString(),
+          'created_at': (t['created_at'] as DateTime).toIso8601String(),
+        }).toList(),
+      };
+
+      return Response.ok(
+        jsonEncode(exportData),
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Disposition':
+              'attachment; filename="mypet-export-${DateTime.now().millisecondsSinceEpoch}.json"',
+        },
+      );
+    } catch (e) {
+      print('❌ exportData Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }

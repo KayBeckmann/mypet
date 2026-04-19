@@ -16,6 +16,7 @@ import '../screens/appointments_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/register_screen.dart';
 import '../screens/transfer_screen.dart';
+import '../screens/settings_screen.dart';
 import '../widgets/app_shell.dart';
 
 GoRouter createRouter(AuthProvider authProvider) {
@@ -107,6 +108,10 @@ GoRouter createRouter(AuthProvider authProvider) {
           GoRoute(
             path: '/transfer',
             builder: (context, state) => const TransferScreen(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
           ),
         ],
       ),

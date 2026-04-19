@@ -56,6 +56,10 @@ class Sidebar extends StatelessWidget {
         label: 'TRANSFER',
         icon: Icons.swap_horiz_rounded,
         route: '/transfer'),
+    SidebarItem(
+        label: 'SETTINGS',
+        icon: Icons.settings_rounded,
+        route: '/settings'),
   ];
 
   @override
