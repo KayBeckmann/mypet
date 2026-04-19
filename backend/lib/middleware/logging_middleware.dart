@@ -1,9 +1,11 @@
 import 'package:shelf/shelf.dart';
+import '../controllers/health_controller.dart';
 
 /// Middleware für Request-Logging
 Middleware loggingMiddleware() {
   return (Handler innerHandler) {
     return (Request request) async {
+      HealthController.incrementRequests();
       final stopwatch = Stopwatch()..start();
       final method = request.method;
       final path = request.requestedUri.path;

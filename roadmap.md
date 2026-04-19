@@ -502,20 +502,20 @@
 
 ## Phase 20: Produktion
 
-### M20.1 - Produktion-Docker
-- [ ] Optimierte Dockerfiles (multi-stage builds)
-- [ ] `docker-compose.prod.yml`
-- [ ] SSL/TLS Zertifikate
+### M20.1 - Produktion-Docker ✅
+- [x] Optimierte Dockerfiles (multi-stage builds)
+- [x] `docker-compose.prod.yml`
+- [ ] SSL/TLS Zertifikate (erfordert externe Zertifikate / Reverse Proxy)
 
-### M20.2 - CI/CD
-- [ ] GitHub Actions für Tests
-- [ ] Automatische Builds
-- [ ] Deployment-Pipeline
+### M20.2 - CI/CD ✅
+- [x] GitHub Actions für Tests (.github/workflows/ci.yml)
+- [x] Automatische Builds (Dart AOT + Flutter Web)
+- [ ] Deployment-Pipeline (erfordert Cloud-Infrastruktur)
 
-### M20.3 - Monitoring
-- [ ] Logging-System
-- [ ] Health-Checks
-- [ ] Metriken
+### M20.3 - Monitoring ✅
+- [x] Logging-System (Request-Logging mit Timing in logging_middleware.dart)
+- [x] Health-Checks (GET /health, GET /health/ready)
+- [x] Metriken (GET /health/metrics – uptime, requests, memory, DB stats)
 
 ---
 
