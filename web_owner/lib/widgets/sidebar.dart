@@ -29,6 +29,10 @@ class Sidebar extends StatelessWidget {
     SidebarItem(label: 'DASHBOARD', icon: Icons.dashboard_rounded, route: '/'),
     SidebarItem(label: 'ANIMALS', icon: Icons.pets_rounded, route: '/animals'),
     SidebarItem(
+        label: 'FAMILY',
+        icon: Icons.family_restroom_rounded,
+        route: '/families'),
+    SidebarItem(
         label: 'FEEDING',
         icon: Icons.restaurant_rounded,
         route: '/feeding'),

@@ -199,14 +199,14 @@
 
 ## Phase 5: Familien & Freigaben (Frontend)
 
-### M5.1 - Familie erstellen
-- [ ] Familie erstellen Screen
-- [ ] Familien-Übersicht
+### M5.1 - Familie erstellen ✅
+- [x] Familie erstellen Screen (Dialog)
+- [x] Familien-Übersicht
 
-### M5.2 - Mitglieder verwalten
-- [ ] Mitglieder einladen (per E-Mail)
-- [ ] Mitglieder-Liste
-- [ ] Mitglied entfernen
+### M5.2 - Mitglieder verwalten ✅
+- [x] Mitglieder einladen (per E-Mail)
+- [x] Mitglieder-Liste
+- [x] Mitglied entfernen
 
 ### M5.3 - Urlaubsvertretung
 - [ ] Berechtigung erteilen Screen

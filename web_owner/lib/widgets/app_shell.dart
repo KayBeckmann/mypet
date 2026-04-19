@@ -44,6 +44,7 @@ class AppShell extends StatelessWidget {
   String _matchRoute(String route) {
     if (route == '/' || route.isEmpty) return '/';
     if (route.startsWith('/animals')) return '/animals';
+    if (route.startsWith('/families')) return '/families';
     if (route.startsWith('/feeding')) return '/feeding';
     if (route.startsWith('/marketplace')) return '/marketplace';
     if (route.startsWith('/records')) return '/records';
