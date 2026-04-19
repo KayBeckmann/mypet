@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/pet_provider.dart';
+import '../providers/appointment_provider.dart';
+import '../models/appointment.dart';
 import '../widgets/pet_card.dart';
 import '../widgets/appointment_card.dart';
 import '../widgets/quick_action_chip.dart';
@@ -15,6 +17,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final petProvider = context.watch<PetProvider>();
+    final appointmentProvider = context.watch<AppointmentProvider>();
     final userName = auth.user?.name ?? 'Tierfreund';
 
     return SingleChildScrollView(
@@ -123,7 +126,7 @@ class DashboardScreen extends StatelessWidget {
           SizedBox(
             width: 300,
             child: _AppointmentsPanel(
-              appointments: petProvider.appointments,
+              appointments: appointmentProvider.upcoming,
             ),
           ),
         ],
@@ -140,7 +143,7 @@ class DashboardScreen extends StatelessWidget {
 }
 
 class _AppointmentsPanel extends StatelessWidget {
-  final List appointments;
+  final List<Appointment> appointments;
 
   const _AppointmentsPanel({required this.appointments});
 

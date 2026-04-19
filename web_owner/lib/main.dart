@@ -67,14 +67,16 @@ class _AppWithAuthState extends State<_AppWithAuth> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final petProvider = context.read<PetProvider>();
+    final appointmentProvider = context.read<AppointmentProvider>();
 
-    // Tiere laden, sobald der Benutzer angemeldet ist
+    // Daten laden, sobald der Benutzer angemeldet ist
     if (authProvider.isAuthenticated && !_petsLoaded) {
       _petsLoaded = true;
       if (authProvider.isDemoMode) {
         petProvider.loadDemo();
       } else {
         petProvider.loadPets();
+        appointmentProvider.load();
       }
     }
     if (!authProvider.isAuthenticated && _petsLoaded) {

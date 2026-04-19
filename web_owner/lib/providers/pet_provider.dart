@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/pet.dart';
-import '../models/appointment.dart';
 import '../services/api_service.dart';
 
 class PetProvider extends ChangeNotifier {
   final ApiService _api;
   List<Pet> _pets = [];
-  List<Appointment> _appointments = [];
   bool _isLoading = false;
   String? _error;
   bool _useDemoData = false;
@@ -14,7 +12,6 @@ class PetProvider extends ChangeNotifier {
   PetProvider({required ApiService api}) : _api = api;
 
   List<Pet> get pets => _pets;
-  List<Appointment> get appointments => _appointments;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -84,31 +81,6 @@ class PetProvider extends ChangeNotifier {
         feedingStatus: FeedingStatus.done,
         weightKg: 480,
         microchipId: 'DE-276-02-789012',
-      ),
-    ];
-
-    final now = DateTime.now();
-    _appointments = [
-      Appointment(
-        id: '1',
-        title: 'Tierarzt Routinecheck',
-        petName: 'Luna',
-        dateTime: DateTime(now.year, now.month, now.day + 1, 10, 30),
-        status: AppointmentStatus.confirmed,
-      ),
-      Appointment(
-        id: '2',
-        title: 'Hufpflege & Beschlag',
-        petName: 'Storm',
-        dateTime: DateTime(now.year, now.month, now.day + 8, 8, 0),
-        status: AppointmentStatus.upcoming,
-      ),
-      Appointment(
-        id: '3',
-        title: 'Jährliche Impfung',
-        petName: 'Bello',
-        dateTime: DateTime(now.year, now.month, now.day + 14, 14, 0),
-        status: AppointmentStatus.upcoming,
       ),
     ];
   }
