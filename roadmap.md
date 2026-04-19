@@ -483,9 +483,9 @@
 
 ## Phase 19: Erweiterte Features
 
-### M19.1 - Compliance-Überwachung (Tierarzt)
-- [ ] Verabreichungs-Protokoll anzeigen
-- [ ] Compliance-Statistik
+### M19.1 - Compliance-Überwachung (Tierarzt) ✅
+- [x] Verabreichungs-Protokoll anzeigen
+- [x] Compliance-Statistik
 
 ### M19.2 - Gewichtsverlauf ✅
 - [x] Migration 022: weight_history Tabelle

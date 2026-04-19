@@ -7,6 +7,7 @@ class MedicalProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _records = [];
   List<Map<String, dynamic>> _vaccinations = [];
   List<Map<String, dynamic>> _medications = [];
+  final Map<String, List<Map<String, dynamic>>> _schedules = {};
   bool _isLoading = false;
   String? _error;
   String? _currentPetId;
@@ -16,6 +17,7 @@ class MedicalProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get records => _records;
   List<Map<String, dynamic>> get vaccinations => _vaccinations;
   List<Map<String, dynamic>> get medications => _medications;
+  Map<String, List<Map<String, dynamic>>> get schedules => _schedules;
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get currentPetId => _currentPetId;
@@ -104,11 +106,23 @@ class MedicalProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> loadSchedule(String petId, String medId) async {
+    try {
+      final response =
+          await _api.get('/pets/$petId/medications/$medId/schedule');
+      _schedules[medId] =
+          (response['schedule'] as List<dynamic>? ?? [])
+              .cast<Map<String, dynamic>>();
+      notifyListeners();
+    } catch (_) {}
+  }
+
   void reset() {
     _currentPetId = null;
     _records = [];
     _vaccinations = [];
     _medications = [];
+    _schedules.clear();
     notifyListeners();
   }
 

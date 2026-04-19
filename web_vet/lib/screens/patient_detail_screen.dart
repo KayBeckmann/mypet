@@ -24,7 +24,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 5, vsync: this);
+    _tabs = TabController(length: 6, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MedicalProvider>().loadForPet(widget.petId);
       context.read<VetMediaProvider>().loadForPet(widget.petId);
@@ -370,6 +370,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
             Tab(text: 'Medikamente'),
             Tab(text: 'Bildarchiv'),
             Tab(text: 'Notizen'),
+            Tab(text: 'Compliance'),
           ],
         ),
       ),
@@ -391,6 +392,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
                     onAdd: _addMedication),
                 _MediaTab(provider: mediaProvider, petId: widget.petId),
                 _NotesTab(provider: notesProvider),
+                _ComplianceTab(medical: medical, petId: widget.petId),
               ],
             ),
     );
@@ -1196,6 +1198,231 @@ class _VisibilityChip extends StatelessWidget {
         label,
         style: TextStyle(
             fontSize: 11, fontWeight: FontWeight.w600, color: color),
+      ),
+    );
+  }
+}
+
+// ── Compliance Tab ──
+class _ComplianceTab extends StatefulWidget {
+  final MedicalProvider medical;
+  final String petId;
+
+  const _ComplianceTab({required this.medical, required this.petId});
+
+  @override
+  State<_ComplianceTab> createState() => _ComplianceTabState();
+}
+
+class _ComplianceTabState extends State<_ComplianceTab> {
+  @override
+  void initState() {
+    super.initState();
+    // Load schedules for all active medications
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (final med in widget.medical.medications) {
+        if (med['is_active'] == true) {
+          final id = med['id'] as String?;
+          if (id != null) {
+            widget.medical.loadSchedule(widget.petId, id);
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = widget.medical.medications
+        .where((m) => m['is_active'] == true)
+        .toList();
+
+    if (active.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle_outline,
+                size: 56, color: VetTheme.secondary),
+            SizedBox(height: 16),
+            Text('Keine aktiven Medikamente',
+                style: TextStyle(fontSize: 16, color: VetTheme.onSurfaceVariant)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(VetTheme.spacingMd),
+      itemCount: active.length,
+      separatorBuilder: (_, __) => const SizedBox(height: VetTheme.spacingMd),
+      itemBuilder: (_, i) {
+        final med = active[i];
+        final medId = med['id'] as String? ?? '';
+        final schedule = widget.medical.schedules[medId] ?? [];
+        return _ComplianceCard(med: med, schedule: schedule);
+      },
+    );
+  }
+}
+
+class _ComplianceCard extends StatelessWidget {
+  final Map<String, dynamic> med;
+  final List<Map<String, dynamic>> schedule;
+
+  const _ComplianceCard({required this.med, required this.schedule});
+
+  @override
+  Widget build(BuildContext context) {
+    final given = schedule.where((s) => s['was_given'] == true).length;
+    final total = schedule.length;
+    final adherence = total > 0 ? (given / total * 100).round() : null;
+
+    final Color adherenceColor;
+    if (adherence == null) {
+      adherenceColor = VetTheme.onSurfaceVariant;
+    } else if (adherence >= 80) {
+      adherenceColor = VetTheme.secondary;
+    } else if (adherence >= 50) {
+      adherenceColor = Colors.orange;
+    } else {
+      adherenceColor = VetTheme.tertiary;
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(VetTheme.spacingMd),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              children: [
+                const Icon(Icons.medication, size: 20, color: VetTheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        med['name'] as String? ?? '',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 15),
+                      ),
+                      if (med['dosage'] != null)
+                        Text(
+                          med['dosage'] as String,
+                          style: const TextStyle(
+                              fontSize: 12,
+                              color: VetTheme.onSurfaceVariant),
+                        ),
+                    ],
+                  ),
+                ),
+                if (adherence != null)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: adherenceColor.withValues(alpha: 0.1),
+                      borderRadius:
+                          BorderRadius.circular(VetTheme.radiusFull),
+                    ),
+                    child: Text(
+                      '$adherence%',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: adherenceColor,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            if (total > 0) ...[
+              const SizedBox(height: 12),
+              // Progress bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: given / total,
+                  minHeight: 6,
+                  backgroundColor: VetTheme.outlineVariant,
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(adherenceColor),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '$given von $total Gaben verabreicht',
+                style: const TextStyle(
+                    fontSize: 12, color: VetTheme.onSurfaceVariant),
+              ),
+            ] else ...[
+              const SizedBox(height: 8),
+              const Text(
+                'Kein Verabreichungsprotokoll vorhanden',
+                style: TextStyle(
+                    fontSize: 12, color: VetTheme.onSurfaceVariant),
+              ),
+            ],
+
+            // Last 7 schedule entries
+            if (schedule.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 8),
+              Text('Letzte Einträge',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: VetTheme.onSurfaceVariant,
+                      letterSpacing: 0.5)),
+              const SizedBox(height: 6),
+              ...schedule.take(7).map((s) {
+                final wasGiven = s['was_given'] == true;
+                final scheduled = s['scheduled_at'] as String?;
+                DateTime? dt;
+                try {
+                  if (scheduled != null) dt = DateTime.parse(scheduled);
+                } catch (_) {}
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    children: [
+                      Icon(
+                        wasGiven
+                            ? Icons.check_circle_rounded
+                            : Icons.cancel_rounded,
+                        size: 16,
+                        color: wasGiven ? VetTheme.secondary : VetTheme.tertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        dt != null
+                            ? '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}'
+                            : scheduled ?? '—',
+                        style:
+                            const TextStyle(fontSize: 12),
+                      ),
+                      const Spacer(),
+                      Text(
+                        wasGiven ? 'Gegeben' : 'Ausgelassen',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: wasGiven
+                              ? VetTheme.secondary
+                              : VetTheme.tertiary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -26,8 +26,10 @@ class Migrator {
       print('   ⏳ Migration ${migration.version}: ${migration.name}');
 
       await _db.transaction((tx) async {
-        // Migration ausführen
-        await tx.execute(migration.up);
+        // Split multi-statement SQL, respecting dollar-quoted blocks ($$...$$)
+        for (final stmt in _splitSql(migration.up)) {
+          await tx.execute(stmt);
+        }
 
         // Migration als ausgeführt markieren
         await tx.execute(
@@ -84,7 +86,9 @@ class Migrator {
     print('⏪ Rollback Migration $version: $name');
 
     await _db.transaction((tx) async {
-      await tx.execute(migration.down);
+      for (final stmt in _splitSql(migration.down)) {
+        await tx.execute(stmt);
+      }
       await tx.execute(
         Sql.named('DELETE FROM _migrations WHERE version = @version'),
         parameters: {'version': version},
@@ -108,6 +112,41 @@ class Migrator {
     print('=========================');
     print('');
   }
+}
+
+/// Split a SQL script into individual statements, respecting dollar-quoted
+/// blocks (e.g. $$ ... $$ used in PL/pgSQL functions).
+List<String> _splitSql(String sql) {
+  final statements = <String>[];
+  final buf = StringBuffer();
+  bool inDollarQuote = false;
+  int i = 0;
+
+  while (i < sql.length) {
+    // Check for start/end of $$ dollar-quote
+    if (i + 1 < sql.length && sql[i] == r'$' && sql[i + 1] == r'$') {
+      inDollarQuote = !inDollarQuote;
+      buf.write(r'$$');
+      i += 2;
+      continue;
+    }
+
+    final ch = sql[i];
+    if (ch == ';' && !inDollarQuote) {
+      final stmt = buf.toString().trim();
+      if (stmt.isNotEmpty) statements.add(stmt);
+      buf.clear();
+    } else {
+      buf.write(ch);
+    }
+    i++;
+  }
+
+  // Remaining text after last semicolon
+  final remaining = buf.toString().trim();
+  if (remaining.isNotEmpty) statements.add(remaining);
+
+  return statements;
 }
 
 /// Migration Basis-Klasse

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:postgres/postgres.dart';
 import '../config/config.dart';
 
@@ -68,7 +69,7 @@ class Database {
   }) async {
     final result = await query(sql, parameters: parameters);
     if (result.isEmpty) return null;
-    return result.first.toColumnMap();
+    return _decodeRow(result.first.toColumnMap());
   }
 
   /// Alle Zeilen abrufen
@@ -77,7 +78,32 @@ class Database {
     Map<String, dynamic>? parameters,
   }) async {
     final result = await query(sql, parameters: parameters);
-    return result.map((row) => row.toColumnMap()).toList();
+    return result.map((row) => _decodeRow(row.toColumnMap())).toList();
+  }
+
+  /// Decode UndecodedBytes (enum values returned by postgres 3.x) as UTF-8 strings.
+  /// In postgres 3.x, UndecodedBytes is a class with a `bytes` field (List<int>).
+  Map<String, dynamic> _decodeRow(Map<String, dynamic> row) {
+    return row.map((key, value) {
+      if (value == null || value is bool || value is num ||
+          value is String || value is DateTime || value is Map) {
+        return MapEntry(key, value);
+      }
+      // Try to access .bytes property (UndecodedBytes in postgres 3.x)
+      try {
+        final dynamic d = value;
+        final bytes = d.bytes as List<int>;
+        return MapEntry(key, utf8.decode(bytes));
+      } catch (_) {}
+      // Fallback: try treating it as List<int> directly
+      if (value is List) {
+        try {
+          return MapEntry(
+              key, utf8.decode(value.map((e) => e as int).toList()));
+        } catch (_) {}
+      }
+      return MapEntry(key, value);
+    });
   }
 
   /// Transaktion ausführen
