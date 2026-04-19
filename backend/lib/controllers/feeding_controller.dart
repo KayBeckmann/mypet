@@ -3,6 +3,7 @@ import 'package:postgres/postgres.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import '../database/database.dart';
+import '../utils/pet_access.dart';
 
 /// Controller für Fütterungspläne und Protokoll
 /// Routen werden unter /pets/:petId/ gemountet
@@ -45,6 +46,14 @@ class FeedingController {
 
   Future<Response> _listPlans(Request request, String petId) async {
     try {
+      final userId = request.context['userId'] as String;
+      final userRole = request.context['userRole'] as String;
+      final orgId = request.context['activeOrganizationId'] as String?;
+
+      if (!await petHasAccess(_db, petId, userId, userRole, orgId: orgId)) {
+        return _error(403, 'Kein Zugriff auf dieses Tier');
+      }
+
       final plans = await _db.queryAll(
         '''
         SELECT fp.*, COUNT(fm.id) AS meal_count

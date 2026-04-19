@@ -6,6 +6,7 @@ import 'package:shelf_router/shelf_router.dart';
 import 'package:mime/mime.dart';
 import '../database/database.dart';
 import '../services/upload_service.dart';
+import '../utils/pet_access.dart';
 
 /// Controller für Medien/Dokumente zu Tieren
 /// Routen werden unter /pets/:petId/ gemountet (via Cascade)
@@ -29,6 +30,12 @@ class MediaController {
     try {
       final userId = request.context['userId'] as String;
       final userRole = request.context['userRole'] as String;
+      final orgId = request.context['activeOrganizationId'] as String?;
+
+      if (!await petHasAccess(_db, petId, userId, userRole, orgId: orgId)) {
+        return _error(403, 'Kein Zugriff auf dieses Tier');
+      }
+
       final params = request.requestedUri.queryParameters;
       final typeFilter = params['type'];
 
@@ -77,6 +84,13 @@ class MediaController {
   Future<Response> _uploadMedia(Request request, String petId) async {
     try {
       final userId = request.context['userId'] as String;
+      final userRole = request.context['userRole'] as String;
+      final orgId = request.context['activeOrganizationId'] as String?;
+
+      if (!await petHasAccess(_db, petId, userId, userRole, requireWrite: true, orgId: orgId)) {
+        return _error(403, 'Keine Schreibberechtigung für dieses Tier');
+      }
+
       final contentType = request.headers['content-type'] ?? '';
 
       if (!contentType.contains('multipart/form-data')) {
