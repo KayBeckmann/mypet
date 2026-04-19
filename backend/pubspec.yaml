@@ -27,6 +27,10 @@ dependencies:
   # E-Mail
   mailer: ^6.1.0
 
+  # Verschlüsselung
+  encrypt: ^5.0.3
+  crypto: ^3.0.3
+
   # Validierung
   validators: ^3.0.0
 

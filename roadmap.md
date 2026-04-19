@@ -451,9 +451,9 @@
 - [x] Content-Disposition Header für direkten Download
 - [x] SettingsScreen mit Export-Button in owner app
 
-### M17.2 - Verschlüsselung
-- [ ] Sensible Felder verschlüsseln (offen)
-- [ ] Medien verschlüsselt speichern (offen)
+### M17.2 - Verschlüsselung ✅
+- [x] Sensible Felder verschlüsseln: pet_notes.content via AES-256-CBC (EncryptionService)
+- [ ] Medien verschlüsselt speichern (offen – erfordert Storage-Backend-Änderung)
 
 ### M17.3 - Audit-Log ✅
 - [x] Migration 021: audit_log-Tabelle

@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import '../database/database.dart';
+import '../services/encryption_service.dart';
 
 /// Controller für professionelle Notizen
 /// Routen: /pets/:petId/notes
 class NoteController {
   final Database _db;
+  final _enc = EncryptionService();
 
   NoteController(this._db);
 
@@ -107,10 +109,11 @@ class NoteController {
         return _error(400, 'Ungültige Sichtbarkeit');
       }
 
+      final encryptedContent = _enc.encrypt(content);
       final note = await _db.queryOne(
         '''
-        INSERT INTO pet_notes (pet_id, author_id, organization_id, title, content, visibility)
-        VALUES (@pet_id::uuid, @author_id::uuid, @org_id::uuid, @title, @content, @visibility::note_visibility)
+        INSERT INTO pet_notes (pet_id, author_id, organization_id, title, content, visibility, is_encrypted)
+        VALUES (@pet_id::uuid, @author_id::uuid, @org_id::uuid, @title, @content, @visibility::note_visibility, true)
         RETURNING *
         ''',
         parameters: {
@@ -118,7 +121,7 @@ class NoteController {
           'author_id': userId,
           'org_id': orgId,
           'title': title,
-          'content': content,
+          'content': encryptedContent,
           'visibility': visibility,
         },
       );
@@ -164,7 +167,8 @@ class NoteController {
       }
       if (content != null && content.trim().isNotEmpty) {
         sets.add('content = @content');
-        params['content'] = content;
+        sets.add('is_encrypted = true');
+        params['content'] = _enc.encrypt(content);
       }
       if (visibility != null) {
         sets.add('visibility = @visibility::note_visibility');
@@ -213,6 +217,9 @@ class NoteController {
   }
 
   Map<String, dynamic> _sanitize(Map<String, dynamic> n) {
+    final rawContent = n['content'] as String? ?? '';
+    final isEncrypted = n['is_encrypted'] == true;
+    final content = isEncrypted ? (_enc.decrypt(rawContent) ?? rawContent) : rawContent;
     return {
       'id': n['id'].toString(),
       'pet_id': n['pet_id'].toString(),
@@ -221,7 +228,7 @@ class NoteController {
       'organization_id': n['organization_id']?.toString(),
       'organization_name': n['organization_name'],
       'title': n['title'],
-      'content': n['content'],
+      'content': content,
       'visibility': n['visibility'].toString(),
       'created_at': (n['created_at'] as DateTime).toIso8601String(),
       'updated_at': (n['updated_at'] as DateTime).toIso8601String(),

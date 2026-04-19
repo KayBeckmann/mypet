@@ -25,6 +25,7 @@ const List<Migration> migrations = [
   _migration021CreateAuditLog,
   _migration022CreateWeightHistory,
   _migration023CreateReminders,
+  _migration024AddEncryptionColumns,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -844,5 +845,19 @@ const _migration023CreateReminders = Migration(
     DROP TABLE IF EXISTS reminders;
     DROP TYPE IF EXISTS reminder_status;
     DROP TYPE IF EXISTS reminder_type;
+  ''',
+);
+
+/// Migration 024: Verschlüsselungs-Flags für sensible Felder
+const _migration024AddEncryptionColumns = Migration(
+  version: 24,
+  name: 'add_encryption_columns',
+  up: '''
+    ALTER TABLE pet_notes ADD COLUMN IF NOT EXISTS is_encrypted BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE medical_records ADD COLUMN IF NOT EXISTS is_encrypted BOOLEAN NOT NULL DEFAULT false;
+  ''',
+  down: '''
+    ALTER TABLE pet_notes DROP COLUMN IF EXISTS is_encrypted;
+    ALTER TABLE medical_records DROP COLUMN IF EXISTS is_encrypted;
   ''',
 );
