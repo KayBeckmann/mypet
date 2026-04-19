@@ -30,7 +30,6 @@ import 'package:mypet_backend/controllers/transfer_controller.dart';
 import 'package:mypet_backend/controllers/weight_controller.dart';
 import 'package:mypet_backend/controllers/reminder_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
-import 'package:mypet_backend/services/email_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
 Future<void> main(List<String> args) async {
@@ -131,9 +130,8 @@ Future<void> main(List<String> args) async {
   // Gewichts Controller
   final weightController = WeightController(db);
 
-  // Email + Reminder Controller
-  final emailService = EmailService(config: config);
-  final reminderController = ReminderController(db: db, email: emailService);
+  // Reminder Controller
+  final reminderController = ReminderController(db: db);
 
   app.mount(
     '/account',

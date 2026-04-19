@@ -6,11 +6,9 @@ import '../services/email_service.dart';
 
 class ReminderController {
   final Database _db;
-  final EmailService _email;
+  final EmailService _email = EmailService();
 
-  ReminderController({required Database db, required EmailService email})
-      : _db = db,
-        _email = email;
+  ReminderController({required Database db}) : _db = db;
 
   Router get router {
     final r = Router();

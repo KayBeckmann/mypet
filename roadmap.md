@@ -83,7 +83,7 @@
 - [x] Mitgliedschafts-Model erstellen
 - [x] `GET /organizations/:id/members` - Alle Mitglieder
 - [x] `POST /organizations/:id/members/invite` - Einladung per E-Mail
-- [ ] Einladungs-E-Mail versenden (SMTP-Setup offen)
+- [x] Einladungs-E-Mail versenden (via EmailService, fire-and-forget wenn SMTP konfiguriert)
 - [x] `POST /invitations/:code/accept` - Einladung annehmen
 - [x] `POST /invitations/:code/reject` - Einladung ablehnen
 - [x] `PUT /organizations/:id/members/:userId` - Rolle ändern

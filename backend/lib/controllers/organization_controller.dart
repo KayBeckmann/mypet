@@ -3,11 +3,13 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'package:postgres/postgres.dart';
 import '../database/database.dart';
+import '../services/email_service.dart';
 
 /// Controller für Organisationen (Praxen & Dienstleister-Firmen)
 /// Alle Routen sind authentifiziert (auth-Middleware im Server)
 class OrganizationController {
   final Database _db;
+  final EmailService _email = EmailService();
 
   OrganizationController(this._db);
 
@@ -563,7 +565,20 @@ class OrganizationController {
         },
       );
 
-      // TODO: E-Mail-Versand wenn SMTP konfiguriert ist
+      // E-Mail-Versand (fire-and-forget)
+      if (_email.isConfigured) {
+        final org = await _db.queryOne(
+          'SELECT name FROM organizations WHERE id = @id::uuid',
+          parameters: {'id': id},
+        );
+        final orgName = org?['name'] as String? ?? 'Unbekannte Organisation';
+        final code = invitation!['invitation_code'].toString();
+        _email.sendInvitationEmail(
+          toEmail: email.toLowerCase().trim(),
+          orgName: orgName,
+          invitationCode: code,
+        );
+      }
 
       return Response(
         201,

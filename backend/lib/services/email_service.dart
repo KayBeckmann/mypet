@@ -3,9 +3,11 @@ import 'package:mailer/smtp_server.dart';
 import '../config/config.dart';
 
 class EmailService {
-  final Config _config;
+  static final EmailService _instance = EmailService._internal();
+  factory EmailService() => _instance;
+  EmailService._internal();
 
-  EmailService({required Config config}) : _config = config;
+  final Config _config = Config();
 
   bool get isConfigured =>
       (_config.smtpHost?.isNotEmpty ?? false) &&
@@ -73,6 +75,52 @@ class EmailService {
     final dateStr =
         '${remindAt.day.toString().padLeft(2, '0')}.${remindAt.month.toString().padLeft(2, '0')}.${remindAt.year}';
     return 'Hallo $name,\n\nErinnerung für $dateStr:\n$title\n${message.isNotEmpty ? message : ''}\n\n-- MyPet';
+  }
+
+  Future<bool> sendInvitationEmail({
+    required String toEmail,
+    required String orgName,
+    required String invitationCode,
+  }) async {
+    if (!isConfigured) {
+      print('⚠️  SMTP nicht konfiguriert – Einladungs-E-Mail nicht gesendet');
+      return false;
+    }
+
+    final smtpServer = SmtpServer(
+      _config.smtpHost!,
+      port: _config.smtpPort ?? 587,
+      ssl: false,
+      username: _config.smtpUser,
+      password: _config.smtpPassword,
+    );
+
+    final envelope = Message()
+      ..from = Address(_config.smtpFrom ?? _config.smtpUser!, 'MyPet')
+      ..recipients.add(Address(toEmail))
+      ..subject = '🐾 Einladung zu $orgName'
+      ..html = '''
+<!DOCTYPE html>
+<html>
+<body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+  <h2 style="color:#4CAF50;">🐾 MyPet Einladung</h2>
+  <p>Du wurdest eingeladen, der Organisation <strong>${_htmlEscape(orgName)}</strong> beizutreten.</p>
+  <p>Dein Einladungscode: <strong style="font-size:18px;letter-spacing:2px;">${_htmlEscape(invitationCode)}</strong></p>
+  <p>Melde dich in der MyPet-App an und gib diesen Code ein, um der Organisation beizutreten.</p>
+  <p style="color:#888;font-size:12px;">Diese Einladung ist 7 Tage gültig.</p>
+</body>
+</html>
+'''
+      ..text =
+          'Einladung zu $orgName\n\nDein Code: $invitationCode\n\nMelde dich in MyPet an und gib diesen Code ein.';
+
+    try {
+      await send(envelope, smtpServer);
+      return true;
+    } catch (e) {
+      print('❌ Einladungs-E-Mail-Fehler: $e');
+      return false;
+    }
   }
 
   String _htmlEscape(String s) => s
