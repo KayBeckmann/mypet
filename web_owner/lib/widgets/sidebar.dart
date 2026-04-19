@@ -37,6 +37,10 @@ class Sidebar extends StatelessWidget {
         icon: Icons.share_rounded,
         route: '/permissions'),
     SidebarItem(
+        label: 'TERMINE',
+        icon: Icons.calendar_month_rounded,
+        route: '/appointments'),
+    SidebarItem(
         label: 'FEEDING',
         icon: Icons.restaurant_rounded,
         route: '/feeding'),

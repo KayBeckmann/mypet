@@ -305,9 +305,9 @@
 ## Phase 9: Termine (Frontend)
 
 ### M9.1 - Termine buchen (Besitzer)
-- [ ] Tierarzt/Dienstleister suchen
-- [ ] Termin anfragen
-- [ ] Eigene Termine anzeigen
+- [x] Tierarzt/Dienstleister suchen
+- [x] Termin anfragen
+- [x] Eigene Termine anzeigen
 
 ### M9.2 - Termine verwalten (Tierarzt)
 - [ ] Terminanfragen anzeigen
