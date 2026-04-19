@@ -25,8 +25,9 @@ class VaccinationController {
     try {
       final userId = request.context['userId'] as String;
       final userRole = request.context['userRole'] as String;
+      final orgId = request.context['activeOrganizationId'] as String?;
 
-      if (!await _hasAccess(petId, userId, userRole)) {
+      if (!await _hasAccess(petId, userId, userRole, orgId: orgId)) {
         return _error(403, 'Kein Zugriff auf dieses Tier');
       }
 
@@ -57,8 +58,9 @@ class VaccinationController {
     try {
       final userId = request.context['userId'] as String;
       final userRole = request.context['userRole'] as String;
+      final orgId = request.context['activeOrganizationId'] as String?;
 
-      if (!await _hasAccess(petId, userId, userRole, requireWrite: true)) {
+      if (!await _hasAccess(petId, userId, userRole, requireWrite: true, orgId: orgId)) {
         return _error(403, 'Keine Schreibberechtigung für dieses Tier');
       }
 
@@ -68,8 +70,6 @@ class VaccinationController {
       if (vaccineName == null || vaccineName.trim().isEmpty) {
         return _error(400, 'Impfstoff-Name ist erforderlich');
       }
-
-      final orgId = request.context['activeOrganizationId'] as String?;
 
       final vaccination = await _db.queryOne(
         '''
@@ -145,6 +145,7 @@ class VaccinationController {
     String userId,
     String userRole, {
     bool requireWrite = false,
+    String? orgId,
   }) async {
     if (userRole == 'superadmin') return true;
 
@@ -157,18 +158,26 @@ class VaccinationController {
 
     final permLevel =
         requireWrite ? "'write', 'manage'" : "'read', 'write', 'manage'";
+    final orgCondition = orgId != null
+        ? "OR (subject_type = 'organization' AND subject_organization_id = @org_id::uuid)"
+        : '';
+    final params = <String, dynamic>{'pet_id': petId, 'user_id': userId};
+    if (orgId != null) params['org_id'] = orgId;
+
     final perm = await _db.queryOne(
       '''
       SELECT id FROM access_permissions
       WHERE pet_id = @pet_id::uuid
-        AND subject_type = 'user'
-        AND subject_user_id = @user_id::uuid
         AND permission IN ($permLevel)
         AND is_active = true
         AND (starts_at IS NULL OR starts_at <= NOW())
         AND (ends_at IS NULL OR ends_at >= NOW())
+        AND (
+          (subject_type = 'user' AND subject_user_id = @user_id::uuid)
+          $orgCondition
+        )
       ''',
-      parameters: {'pet_id': petId, 'user_id': userId},
+      parameters: params,
     );
     return perm != null;
   }

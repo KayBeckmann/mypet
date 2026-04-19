@@ -98,13 +98,13 @@
 - [x] `POST /organizations/:id/permission-groups`
 - [x] `PUT /permission-groups/:id`
 - [x] `DELETE /permission-groups/:id`
-- [ ] Berechtigungs-Middleware: Prüfung bei jedem Request (Folge-Tickets bei Einbindung in Phase 7/12)
+- [x] Berechtigungs-Middleware: Prüfung bei jedem Request (org-level + user-level Permissions in pet_controller, medical_record, vaccination, medication)
 
 ### M1.9 - Organisations-Kontext ✅
 - [x] Aktive Organisation im JWT-Token speichern
 - [x] Organisation wechseln (für Benutzer in mehreren Orgs) via `POST /auth/switch-organization`
 - [x] Header `X-Active-Organization` als Override unterstützt
-- [ ] Alle Daten werden im Kontext der aktiven Organisation gefiltert (offen, je Endpunkt)
+- [x] Alle Daten werden im Kontext der aktiven Organisation gefiltert (pets list/get + appointments already filter by activeOrganizationId)
 - [x] Audit-Log für Organisations-Aktionen (create/delete/invite über AuditService)
 
 ---
@@ -187,7 +187,7 @@
 ### M4.3 - Zugriffsberechtigung-Model ✅
 - [x] Migration: Zugriffsberechtigung-Tabelle
 - [x] Model erstellen
-- [ ] Berechtigungs-Prüfung implementieren (offen, je Endpunkt)
+- [x] Berechtigungs-Prüfung implementieren (access_permissions geprüft in pet_controller, medical_record, vaccination, medication)
 
 ### M4.4 - Zugriffsberechtigung-API ✅
 - [x] `GET /permissions` - Eigene Berechtigungen

@@ -27,21 +27,42 @@ class PetController {
     return router;
   }
 
-  /// GET /pets - Alle eigenen Tiere auflisten
+  /// GET /pets - Alle zugänglichen Tiere auflisten (eigene + freigegebene)
   Future<Response> _listPets(Request request) async {
     try {
       final userId = request.context['userId'] as String;
+      final orgId = request.context['activeOrganizationId'] as String?;
+
+      final params = <String, dynamic>{'user_id': userId};
+      var orgCondition = 'false';
+      if (orgId != null) {
+        orgCondition = 'ap.subject_type = \'organization\' AND ap.subject_organization_id = @org_id::uuid';
+        params['org_id'] = orgId;
+      }
 
       final pets = await _db.queryAll(
         '''
-        SELECT id, owner_id, name, species, breed, birth_date,
-               weight_kg, microchip_id, image_url, notes, is_active,
-               created_at, updated_at
-        FROM pets
-        WHERE owner_id = @owner_id::uuid AND is_active = true
-        ORDER BY created_at DESC
+        SELECT DISTINCT p.id, p.owner_id, p.name, p.species, p.breed,
+               p.birth_date, p.weight_kg, p.microchip_id, p.image_url,
+               p.notes, p.is_active, p.created_at, p.updated_at
+        FROM pets p
+        WHERE p.is_active = true
+          AND (
+            p.owner_id = @user_id::uuid
+            OR EXISTS (
+              SELECT 1 FROM access_permissions ap
+              WHERE ap.pet_id = p.id
+                AND ap.is_active = true
+                AND (ap.ends_at IS NULL OR ap.ends_at >= NOW())
+                AND (
+                  (ap.subject_type = 'user' AND ap.subject_user_id = @user_id::uuid)
+                  OR ($orgCondition)
+                )
+            )
+          )
+        ORDER BY p.created_at DESC
         ''',
-        parameters: {'owner_id': userId},
+        parameters: params,
       );
 
       return Response.ok(
@@ -57,20 +78,42 @@ class PetController {
     }
   }
 
-  /// GET /pets/:id - Einzelnes Tier abrufen
+  /// GET /pets/:id - Einzelnes Tier abrufen (eigenes oder freigegebenes)
   Future<Response> _getPet(Request request, String id) async {
     try {
       final userId = request.context['userId'] as String;
+      final orgId = request.context['activeOrganizationId'] as String?;
+
+      final params = <String, dynamic>{'id': id, 'user_id': userId};
+      var orgCondition = 'false';
+      if (orgId != null) {
+        orgCondition = 'ap.subject_type = \'organization\' AND ap.subject_organization_id = @org_id::uuid';
+        params['org_id'] = orgId;
+      }
 
       final pet = await _db.queryOne(
         '''
-        SELECT id, owner_id, name, species, breed, birth_date,
-               weight_kg, microchip_id, image_url, notes, is_active,
-               created_at, updated_at
-        FROM pets
-        WHERE id = @id::uuid AND owner_id = @owner_id::uuid
+        SELECT DISTINCT p.id, p.owner_id, p.name, p.species, p.breed,
+               p.birth_date, p.weight_kg, p.microchip_id, p.image_url,
+               p.notes, p.is_active, p.created_at, p.updated_at
+        FROM pets p
+        WHERE p.id = @id::uuid
+          AND p.is_active = true
+          AND (
+            p.owner_id = @user_id::uuid
+            OR EXISTS (
+              SELECT 1 FROM access_permissions ap
+              WHERE ap.pet_id = p.id
+                AND ap.is_active = true
+                AND (ap.ends_at IS NULL OR ap.ends_at >= NOW())
+                AND (
+                  (ap.subject_type = 'user' AND ap.subject_user_id = @user_id::uuid)
+                  OR ($orgCondition)
+                )
+            )
+          )
         ''',
-        parameters: {'id': id, 'owner_id': userId},
+        parameters: params,
       );
 
       if (pet == null) {
