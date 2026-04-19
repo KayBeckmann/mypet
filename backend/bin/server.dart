@@ -23,6 +23,7 @@ import 'package:mypet_backend/controllers/medical_record_controller.dart';
 import 'package:mypet_backend/controllers/vaccination_controller.dart';
 import 'package:mypet_backend/controllers/medication_controller.dart';
 import 'package:mypet_backend/controllers/appointment_controller.dart';
+import 'package:mypet_backend/controllers/feeding_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
@@ -109,6 +110,9 @@ Future<void> main(List<String> args) async {
   // Termin Controller
   final appointmentController = AppointmentController(db);
 
+  // Fütterungs Controller
+  final feedingController = FeedingController(db);
+
   app.mount(
     '/account',
     const Pipeline()
@@ -122,6 +126,7 @@ Future<void> main(List<String> args) async {
       .add(medicalRecordController.router.call)
       .add(vaccinationController.router.call)
       .add(medicationController.router.call)
+      .add(feedingController.router.call)
       .handler;
   app.mount(
     '/pets',
@@ -269,6 +274,12 @@ Future<void> main(List<String> args) async {
   print('🔐 Zugriffsberechtigungen (authentifiziert):');
   print('   GET/POST       /permissions');
   print('   PUT/DELETE     /permissions/:id');
+  print('');
+  print('🍽️  Fütterung (authentifiziert):');
+  print('   GET/POST   /pets/:id/feeding-plans');
+  print('   GET/PUT/DELETE /pets/:id/feeding-plans/:planId');
+  print('   POST/DELETE /pets/:id/feeding-plans/:planId/meals');
+  print('   GET/POST   /pets/:id/feeding-log');
   print('');
   print('📅 Termine (authentifiziert):');
   print('   GET    /appointments          - Termine auflisten');

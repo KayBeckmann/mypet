@@ -15,6 +15,10 @@ const List<Migration> migrations = [
   _migration011CreateVaccinations,
   _migration012CreateMedications,
   _migration013CreateMedicationAdministrations,
+  _migration014CreateAppointments,
+  _migration015CreateFeedingPlans,
+  _migration016CreateFeedingMeals,
+  _migration017CreateFeedingLog,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -517,5 +521,144 @@ const _migration013CreateMedicationAdministrations = Migration(
   down: '''
     DROP TABLE IF EXISTS medication_administrations;
     DROP TYPE IF EXISTS administration_status;
+  ''',
+);
+
+/// Migration 014: Termine
+const _migration014CreateAppointments = Migration(
+  version: 14,
+  name: 'create_appointments_table',
+  up: '''
+    CREATE TYPE appointment_status AS ENUM (
+      'requested', 'confirmed', 'completed', 'cancelled', 'no_show'
+    );
+
+    CREATE TABLE appointments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      provider_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      status appointment_status NOT NULL DEFAULT 'requested',
+      scheduled_at TIMESTAMP NOT NULL,
+      duration_minutes INTEGER NOT NULL DEFAULT 30,
+      location TEXT,
+      notes TEXT,
+      cancelled_reason TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_appointments_pet ON appointments(pet_id);
+    CREATE INDEX idx_appointments_owner ON appointments(owner_id);
+    CREATE INDEX idx_appointments_provider ON appointments(provider_id);
+    CREATE INDEX idx_appointments_status ON appointments(status);
+    CREATE INDEX idx_appointments_scheduled ON appointments(scheduled_at);
+
+    CREATE TRIGGER update_appointments_updated_at
+      BEFORE UPDATE ON appointments
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+  ''',
+  down: '''
+    DROP TRIGGER IF EXISTS update_appointments_updated_at ON appointments;
+    DROP TABLE IF EXISTS appointments;
+    DROP TYPE IF EXISTS appointment_status;
+  ''',
+);
+
+/// Migration 015: Futterpläne
+const _migration015CreateFeedingPlans = Migration(
+  version: 15,
+  name: 'create_feeding_plans_table',
+  up: '''
+    CREATE TABLE feeding_plans (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      created_by UUID NOT NULL REFERENCES users(id),
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      valid_from DATE,
+      valid_until DATE,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_feeding_plans_pet ON feeding_plans(pet_id);
+    CREATE INDEX idx_feeding_plans_active ON feeding_plans(is_active);
+
+    CREATE TRIGGER update_feeding_plans_updated_at
+      BEFORE UPDATE ON feeding_plans
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+  ''',
+  down: '''
+    DROP TRIGGER IF EXISTS update_feeding_plans_updated_at ON feeding_plans;
+    DROP TABLE IF EXISTS feeding_plans;
+  ''',
+);
+
+/// Migration 016: Mahlzeiten & Komponenten
+const _migration016CreateFeedingMeals = Migration(
+  version: 16,
+  name: 'create_feeding_meals_table',
+  up: '''
+    CREATE TABLE feeding_meals (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      plan_id UUID NOT NULL REFERENCES feeding_plans(id) ON DELETE CASCADE,
+      name VARCHAR(255) NOT NULL,
+      time_of_day TIME,
+      notes TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_feeding_meals_plan ON feeding_meals(plan_id);
+
+    CREATE TABLE feeding_components (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      meal_id UUID NOT NULL REFERENCES feeding_meals(id) ON DELETE CASCADE,
+      food_name VARCHAR(255) NOT NULL,
+      amount_grams NUMERIC(8,2),
+      unit VARCHAR(50) NOT NULL DEFAULT 'g',
+      notes TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE INDEX idx_feeding_components_meal ON feeding_components(meal_id);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS feeding_components;
+    DROP TABLE IF EXISTS feeding_meals;
+  ''',
+);
+
+/// Migration 017: Fütterungs-Protokoll
+const _migration017CreateFeedingLog = Migration(
+  version: 17,
+  name: 'create_feeding_log_table',
+  up: '''
+    CREATE TABLE feeding_log (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      meal_id UUID REFERENCES feeding_meals(id) ON DELETE SET NULL,
+      fed_by UUID NOT NULL REFERENCES users(id),
+      fed_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      notes TEXT,
+      amount_fed_grams NUMERIC(8,2),
+      skipped BOOLEAN NOT NULL DEFAULT false,
+      skip_reason TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_feeding_log_pet ON feeding_log(pet_id);
+    CREATE INDEX idx_feeding_log_fed_at ON feeding_log(fed_at);
+    CREATE INDEX idx_feeding_log_meal ON feeding_log(meal_id);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS feeding_log;
   ''',
 );

@@ -319,20 +319,20 @@
 ## Phase 10: Fütterungsmanagement (Backend)
 
 ### M10.1 - Futterplan-Models
-- [ ] Migration: Futterplan-Tabelle
-- [ ] Migration: Futterplan-Mahlzeit-Tabelle
-- [ ] Migration: Futterplan-Komponente-Tabelle
+- [x] Migration: Futterplan-Tabelle
+- [x] Migration: Futterplan-Mahlzeit-Tabelle
+- [x] Migration: Futterplan-Komponente-Tabelle
 
 ### M10.2 - Futterplan-API
-- [ ] `GET /pets/:id/feeding-plans`
-- [ ] `POST /pets/:id/feeding-plans`
-- [ ] `PUT /feeding-plans/:id`
-- [ ] Mahlzeiten und Komponenten CRUD
+- [x] `GET /pets/:id/feeding-plans`
+- [x] `POST /pets/:id/feeding-plans`
+- [x] `PUT /feeding-plans/:id`
+- [x] Mahlzeiten und Komponenten CRUD
 
 ### M10.3 - Fütterungs-Protokoll
-- [ ] Migration: Fütterung-Protokoll-Tabelle
-- [ ] `GET /pets/:id/feeding-log`
-- [ ] `POST /pets/:id/feeding-log`
+- [x] Migration: Fütterung-Protokoll-Tabelle
+- [x] `GET /pets/:id/feeding-log`
+- [x] `POST /pets/:id/feeding-log`
 
 ---
 
