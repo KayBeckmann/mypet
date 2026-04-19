@@ -4,14 +4,18 @@ import 'package:shelf_router/shelf_router.dart';
 import 'package:postgres/postgres.dart';
 import '../database/database.dart';
 import '../services/email_service.dart';
+import '../services/audit_service.dart';
 
 /// Controller für Organisationen (Praxen & Dienstleister-Firmen)
 /// Alle Routen sind authentifiziert (auth-Middleware im Server)
 class OrganizationController {
   final Database _db;
   final EmailService _email = EmailService();
+  late final AuditService _audit;
 
-  OrganizationController(this._db);
+  OrganizationController(this._db) {
+    _audit = AuditService(_db);
+  }
 
   static const _validTypes = ['vet_practice', 'provider_company'];
   static const _validMemberRoles = ['admin', 'member', 'readonly'];
@@ -311,6 +315,14 @@ class OrganizationController {
         return orgRow;
       });
 
+      _audit.log(
+        userId: userId,
+        action: 'organization.create',
+        resourceType: 'organization',
+        resourceId: org['id'].toString(),
+        details: {'name': org['name'], 'type': org['type']?.toString()},
+      );
+
       return Response(
         201,
         body: jsonEncode({'organization': _serializeOrganization(org)}),
@@ -450,6 +462,13 @@ class OrganizationController {
         parameters: {'id': id},
       );
 
+      _audit.log(
+        userId: userId,
+        action: 'organization.delete',
+        resourceType: 'organization',
+        resourceId: id,
+      );
+
       return Response.ok(
         jsonEncode({'message': 'Organisation wurde gelöscht'}),
         headers: {'Content-Type': 'application/json'},
@@ -579,6 +598,14 @@ class OrganizationController {
           invitationCode: code,
         );
       }
+
+      _audit.log(
+        userId: userId,
+        action: 'organization.invite_member',
+        resourceType: 'organization',
+        resourceId: id,
+        details: {'invited_email': email.toLowerCase().trim(), 'role': role},
+      );
 
       return Response(
         201,

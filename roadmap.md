@@ -105,7 +105,7 @@
 - [x] Organisation wechseln (für Benutzer in mehreren Orgs) via `POST /auth/switch-organization`
 - [x] Header `X-Active-Organization` als Override unterstützt
 - [ ] Alle Daten werden im Kontext der aktiven Organisation gefiltert (offen, je Endpunkt)
-- [ ] Audit-Log für Organisations-Aktionen (siehe M17.3)
+- [x] Audit-Log für Organisations-Aktionen (create/delete/invite über AuditService)
 
 ---
 
@@ -388,7 +388,7 @@
 ### M13.1 - Medien-Upload ✅
 - [x] Migration: Medien-Tabelle (migration 018, media_type enum)
 - [x] Datei-Upload Service (ensureMediaDir, saveRaw)
-- [ ] Verschlüsselte Speicherung (offen, Phase 17)
+- [x] Verschlüsselte Speicherung: AES-256-CBC via EncryptionService (Migration 024)
 
 ### M13.2 - Medien-API ✅
 - [x] `GET /pets/:id/media`
