@@ -385,28 +385,32 @@
 
 ## Phase 13: Medien & Dokumente (Backend)
 
-### M13.1 - Medien-Upload
-- [ ] Migration: Medien-Tabelle
-- [ ] Datei-Upload Service
-- [ ] Verschlüsselte Speicherung
+### M13.1 - Medien-Upload ✅
+- [x] Migration: Medien-Tabelle (migration 018, media_type enum)
+- [x] Datei-Upload Service (ensureMediaDir, saveRaw)
+- [ ] Verschlüsselte Speicherung (offen, Phase 17)
 
-### M13.2 - Medien-API
-- [ ] `GET /pets/:id/media`
-- [ ] `POST /pets/:id/media`
-- [ ] `DELETE /media/:id`
+### M13.2 - Medien-API ✅
+- [x] `GET /pets/:id/media`
+- [x] `POST /pets/:id/media`
+- [x] `GET /pets/:id/media/:mediaId`
+- [x] `DELETE /pets/:id/media/:mediaId`
 
 ---
 
 ## Phase 14: Medien & Dokumente (Frontend)
 
-### M14.1 - Besitzer: Dokumente
-- [ ] Dokumente hochladen
-- [ ] Dokumente anzeigen
+### M14.1 - Besitzer: Dokumente ✅
+- [x] Dokumente hochladen (file_picker, multipart upload)
+- [x] Dokumente anzeigen (Grid-Ansicht, Tabs nach Typ)
+- [x] MediaProvider + PetMedia-Model
+- [x] Löschen mit Bestätigung
 
-### M14.2 - Tierarzt: Röntgenbilder
-- [ ] Bilder hochladen
-- [ ] Mit Akte verknüpfen
-- [ ] Bildarchiv
+### M14.2 - Tierarzt: Röntgenbilder ✅
+- [x] Bilder hochladen (file_picker im Upload-Dialog)
+- [x] Bildarchiv als 4. Tab in PatientDetailScreen
+- [x] VetMediaProvider + VetMedia-Model
+- [x] Löschen mit Bestätigung
 
 ---
 

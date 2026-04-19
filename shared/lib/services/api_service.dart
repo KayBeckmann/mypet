@@ -66,6 +66,35 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  /// Medien-Upload mit zusätzlichen Formularfeldern
+  Future<Map<String, dynamic>> uploadMedia(
+    String path, {
+    required List<int> bytes,
+    required String filename,
+    Map<String, String> fields = const {},
+  }) async {
+    final uri = Uri.parse('$_baseUrl$path');
+    final request = http.MultipartRequest('POST', uri);
+
+    if (_authToken != null) {
+      request.headers['Authorization'] = 'Bearer $_authToken';
+    }
+    if (_activeOrganizationId != null) {
+      request.headers['X-Active-Organization'] = _activeOrganizationId!;
+    }
+
+    request.files.add(http.MultipartFile.fromBytes(
+      'file',
+      bytes,
+      filename: filename,
+    ));
+    request.fields.addAll(fields);
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    return _handleResponse(response);
+  }
+
   Map<String, dynamic> _handleResponse(http.Response response) {
     final body = response.body.isNotEmpty
         ? jsonDecode(response.body) as Map<String, dynamic>

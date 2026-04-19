@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/medical_provider.dart';
+import '../providers/media_provider.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final String petId;
@@ -21,9 +23,10 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 3, vsync: this);
+    _tabs = TabController(length: 4, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MedicalProvider>().loadForPet(widget.petId);
+      context.read<VetMediaProvider>().loadForPet(widget.petId);
     });
   }
 
@@ -342,6 +345,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   @override
   Widget build(BuildContext context) {
     final medical = context.watch<MedicalProvider>();
+    final mediaProvider = context.watch<VetMediaProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -361,6 +365,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
             Tab(text: 'Akte'),
             Tab(text: 'Impfungen'),
             Tab(text: 'Medikamente'),
+            Tab(text: 'Bildarchiv'),
           ],
         ),
       ),
@@ -380,6 +385,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
                 _MedicationsTab(
                     medications: medical.medications,
                     onAdd: _addMedication),
+                _MediaTab(provider: mediaProvider, petId: widget.petId),
               ],
             ),
     );
@@ -728,5 +734,251 @@ class _MedCard extends StatelessWidget {
       'as_needed' => 'Bei Bedarf',
       _ => f,
     };
+  }
+}
+
+// ── Bildarchiv Tab ──
+class _MediaTab extends StatelessWidget {
+  final VetMediaProvider provider;
+  final String petId;
+
+  const _MediaTab({required this.provider, required this.petId});
+
+  static const _apiBase = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:8080',
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(VetTheme.spacingMd),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              ElevatedButton.icon(
+                icon: const Icon(Icons.upload_rounded, size: 18),
+                label: const Text('Bild hochladen'),
+                onPressed: () => _showUploadDialog(context),
+              ),
+            ],
+          ),
+        ),
+        if (provider.loading)
+          const Expanded(child: Center(child: CircularProgressIndicator()))
+        else if (provider.media.isEmpty)
+          const Expanded(
+            child: Center(child: Text('Keine Bilder vorhanden')),
+          )
+        else
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: VetTheme.spacingMd,
+                  vertical: VetTheme.spacingSm),
+              gridDelegate:
+                  const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 200,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 0.9,
+              ),
+              itemCount: provider.media.length,
+              itemBuilder: (_, i) {
+                final m = provider.media[i];
+                final isXray = m.mediaType == 'xray';
+                return Container(
+                  decoration: BoxDecoration(
+                    color: VetTheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: VetTheme.outlineVariant),
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(9)),
+                          child: m.isImage
+                              ? Image.network(
+                                  '$_apiBase${m.url}',
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  errorBuilder: (_, __, ___) =>
+                                      _placeholder(isXray),
+                                )
+                              : _placeholder(isXray),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                m.displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                final ok = await showDialog<bool>(
+                                      context: context,
+                                      builder: (_) => AlertDialog(
+                                        title: const Text('Bild löschen?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: const Text('Abbrechen'),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, true),
+                                            child: const Text('Löschen'),
+                                          ),
+                                        ],
+                                      ),
+                                    ) ??
+                                    false;
+                                if (ok) provider.delete(m.id);
+                              },
+                              child: const Icon(Icons.delete_outline,
+                                  size: 15,
+                                  color: VetTheme.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _placeholder(bool isXray) {
+    return Container(
+      color: (isXray ? Colors.purple : VetTheme.primary)
+          .withValues(alpha: 0.08),
+      child: Center(
+        child: Icon(
+          isXray
+              ? Icons.medical_information_rounded
+              : Icons.image_rounded,
+          size: 44,
+          color: (isXray ? Colors.purple : VetTheme.primary)
+              .withValues(alpha: 0.5),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showUploadDialog(BuildContext context) async {
+    final titleCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    String mediaType = 'xray';
+    bool isPrivate = true;
+    List<int>? bytes;
+    String? filename;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: const Text('Bild hochladen'),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: mediaType,
+                  decoration: const InputDecoration(labelText: 'Typ'),
+                  items: const [
+                    DropdownMenuItem(value: 'xray', child: Text('Röntgenbild')),
+                    DropdownMenuItem(value: 'image', child: Text('Foto')),
+                    DropdownMenuItem(value: 'document', child: Text('Dokument')),
+                    DropdownMenuItem(value: 'other', child: Text('Sonstiges')),
+                  ],
+                  onChanged: (v) => setDs(() => mediaType = v!),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: titleCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Titel',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Beschreibung',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  title: const Text('Privat'),
+                  value: isPrivate,
+                  onChanged: (v) => setDs(() => isPrivate = v),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.attach_file_rounded),
+                  label: Text(filename ?? 'Datei auswählen'),
+                  onPressed: () async {
+                    final result = await FilePicker.platform
+                        .pickFiles(withData: true);
+                    if (result != null && result.files.isNotEmpty) {
+                      final f = result.files.first;
+                      setDs(() {
+                        filename = f.name;
+                        bytes = f.bytes?.toList();
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Abbrechen'),
+            ),
+            FilledButton(
+              onPressed: bytes == null
+                  ? null
+                  : () async {
+                      Navigator.pop(ctx);
+                      await provider.upload(
+                        bytes: bytes!,
+                        filename: filename!,
+                        mediaType: mediaType,
+                        title: titleCtrl.text,
+                        description: descCtrl.text,
+                        isPrivate: isPrivate,
+                      );
+                    },
+              child: const Text('Hochladen'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

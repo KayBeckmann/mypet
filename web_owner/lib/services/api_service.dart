@@ -83,6 +83,34 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  /// Medien-Upload mit zusätzlichen Feldern
+  Future<Map<String, dynamic>> uploadMedia(
+    String path, {
+    required List<int> bytes,
+    required String filename,
+    required String mimeType,
+    Map<String, String> fields = const {},
+  }) async {
+    final uri = Uri.parse('$_baseUrl$path');
+    final request = http.MultipartRequest('POST', uri);
+
+    if (_authToken != null) {
+      request.headers['Authorization'] = 'Bearer $_authToken';
+    }
+
+    request.files.add(http.MultipartFile.fromBytes(
+      'file',
+      bytes,
+      filename: filename,
+    ));
+
+    request.fields.addAll(fields);
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    return _handleResponse(response);
+  }
+
   /// Basis-URL für Bild-URLs
   String get baseUrl => _baseUrl;
 
