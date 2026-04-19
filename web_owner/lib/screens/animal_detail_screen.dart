@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../models/pet.dart';
 import '../providers/pet_provider.dart';
 import '../providers/transfer_provider.dart';
+import '../providers/health_provider.dart';
 import '../services/file_picker_service.dart';
 
 class AnimalDetailScreen extends StatefulWidget {
@@ -18,6 +19,14 @@ class AnimalDetailScreen extends StatefulWidget {
 
 class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
   bool _isUploadingPhoto = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<OwnerHealthProvider>().loadForPet(widget.petId);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -254,39 +263,9 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Vaccination Passport placeholder
+              // Vaccination Passport – live data
               Expanded(
-                child: _DetailCard(
-                  title: 'IMPFPASS',
-                  children: [
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.vaccines_rounded,
-                              size: 36,
-                              color: LivingLedgerTheme.onSurfaceVariant
-                                  .withValues(alpha: 0.3),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Noch keine Impfungen eingetragen',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color:
-                                        LivingLedgerTheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                child: _VaccinationCard(petId: widget.petId),
               ),
               const SizedBox(width: 20),
 
@@ -729,6 +708,91 @@ class _DetailRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _VaccinationCard extends StatelessWidget {
+  final String petId;
+  const _VaccinationCard({required this.petId});
+
+  @override
+  Widget build(BuildContext context) {
+    final health = context.watch<OwnerHealthProvider>();
+    final vaccinations = health.vaccinationsForPet(petId);
+    final loading = health.isLoading(petId);
+
+    return _DetailCard(
+      title: 'IMPFPASS',
+      children: [
+        if (loading)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else if (vaccinations.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.vaccines_rounded,
+                    size: 36,
+                    color: LivingLedgerTheme.onSurfaceVariant
+                        .withValues(alpha: 0.3),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Noch keine Impfungen eingetragen',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: LivingLedgerTheme.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...vaccinations.take(5).map((v) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: v.statusColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            v.vaccineName,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          if (v.validUntil != null)
+                            Text(
+                              '${v.statusLabel} bis ${v.validUntil!.day}.${v.validUntil!.month}.${v.validUntil!.year}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(color: v.statusColor),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+      ],
     );
   }
 }
