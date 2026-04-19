@@ -6,6 +6,7 @@ import '../screens/organization_screen.dart';
 import '../screens/members_screen.dart';
 import '../screens/patients_screen.dart';
 import '../screens/patient_detail_screen.dart';
+import '../screens/appointments_screen.dart';
 import '../widgets/app_shell.dart';
 
 GoRouter createRouter(VetAuthProvider authProvider) {
@@ -36,6 +37,10 @@ GoRouter createRouter(VetAuthProvider authProvider) {
             path: '/patients/:id',
             builder: (_, state) => PatientDetailScreen(
                 petId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/appointments',
+            builder: (_, __) => const VetAppointmentsScreen(),
           ),
         ],
       ),

@@ -310,9 +310,9 @@
 - [x] Eigene Termine anzeigen
 
 ### M9.2 - Termine verwalten (Tierarzt)
-- [ ] Terminanfragen anzeigen
-- [ ] Termin bestätigen/ablehnen
-- [ ] Kalenderansicht
+- [x] Terminanfragen anzeigen
+- [x] Termin bestätigen/ablehnen
+- [x] Kalenderansicht
 
 ---
 

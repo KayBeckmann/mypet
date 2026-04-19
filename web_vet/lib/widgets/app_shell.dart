@@ -82,6 +82,12 @@ class VetAppShell extends StatelessWidget {
                         route: '/patients',
                         currentRoute: currentRoute,
                       ),
+                      _NavItem(
+                        icon: Icons.calendar_month_outlined,
+                        label: 'Termine',
+                        route: '/appointments',
+                        currentRoute: currentRoute,
+                      ),
                     ],
                   ),
                 ),
