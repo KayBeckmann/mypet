@@ -3,6 +3,7 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import '../database/database.dart';
 import '../services/encryption_service.dart';
+import '../utils/pet_access.dart';
 
 /// Controller für professionelle Notizen
 /// Routen: /pets/:petId/notes
@@ -26,7 +27,12 @@ class NoteController {
     try {
       final userId = request.context['userId'] as String;
       final userRole = request.context['userRole'] as String;
-      final orgId = request.context['organizationId'] as String?;
+      final orgId = request.context['activeOrganizationId'] as String?;
+
+      // Zugriffscheck auf das Tier
+      if (!await petHasAccess(_db, petId, userId, userRole, orgId: orgId)) {
+        return _error(403, 'Kein Zugriff auf dieses Tier');
+      }
 
       // Sichtbarkeits-Filter:
       // - 'private': nur Autor selbst
@@ -89,10 +95,14 @@ class NoteController {
     try {
       final userId = request.context['userId'] as String;
       final userRole = request.context['userRole'] as String;
-      final orgId = request.context['organizationId'] as String?;
+      final orgId = request.context['activeOrganizationId'] as String?;
 
       if (userRole != 'vet' && userRole != 'provider') {
         return _error(403, 'Nur Tierärzte und Dienstleister dürfen Notizen erstellen');
+      }
+
+      if (!await petHasAccess(_db, petId, userId, userRole, requireWrite: true, orgId: orgId)) {
+        return _error(403, 'Keine Schreibberechtigung für dieses Tier');
       }
 
       final body = jsonDecode(await request.readAsString()) as Map<String, dynamic>;

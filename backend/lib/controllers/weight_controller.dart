@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import '../database/database.dart';
+import '../utils/pet_access.dart';
 
 /// Controller für Gewichtsverlauf
 /// Routen unter /pets/:petId/weight
@@ -21,6 +22,14 @@ class WeightController {
   /// GET /pets/:petId/weight
   Future<Response> _listWeight(Request request, String petId) async {
     try {
+      final userId = request.context['userId'] as String;
+      final userRole = request.context['userRole'] as String;
+      final orgId = request.context['activeOrganizationId'] as String?;
+
+      if (!await petHasAccess(_db, petId, userId, userRole, orgId: orgId)) {
+        return _error(403, 'Kein Zugriff auf dieses Tier');
+      }
+
       final params = request.requestedUri.queryParameters;
       final limit = int.tryParse(params['limit'] ?? '') ?? 100;
 
@@ -50,6 +59,13 @@ class WeightController {
   Future<Response> _addWeight(Request request, String petId) async {
     try {
       final userId = request.context['userId'] as String;
+      final userRole = request.context['userRole'] as String;
+      final orgId = request.context['activeOrganizationId'] as String?;
+
+      if (!await petHasAccess(_db, petId, userId, userRole, requireWrite: true, orgId: orgId)) {
+        return _error(403, 'Keine Schreibberechtigung für dieses Tier');
+      }
+
       final body =
           jsonDecode(await request.readAsString()) as Map<String, dynamic>;
 
