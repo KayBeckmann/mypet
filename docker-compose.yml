@@ -82,6 +82,18 @@ services:
     ports:
       - "${PROVIDER_PORT:-3003}:80"
 
+  # Flutter Web - Superadmin Dashboard
+  web-admin:
+    build:
+      context: .
+      dockerfile: web_admin/Dockerfile
+    container_name: mypet-web-admin
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${ADMIN_PORT:-3004}:80"
+
 volumes:
   postgres-data:
   uploads:

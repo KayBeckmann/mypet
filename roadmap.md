@@ -604,13 +604,13 @@ services:
 - [x] `PUT /admin/users/:id/reset-password` — Passwort zurücksetzen
 - [x] `DELETE /admin/users/:id` — Benutzer deaktivieren
 
-### M21.3 - Web-Admin Frontend
-- [ ] Flutter Web-Projekt `web_admin/` anlegen
-- [ ] Login-Screen (nur für superadmin)
-- [ ] Benutzer-Liste mit Rollenfilter und Suche
-- [ ] Formular: Benutzer anlegen (Tierarzt / Dienstleister / Besitzer)
-- [ ] Benutzer-Detailansicht: Rolle & Status ändern, Passwort reset
-- [ ] Dockerfile + docker-compose Eintrag
+### M21.3 - Web-Admin Frontend ✅
+- [x] Flutter Web-Projekt `web_admin/` anlegen
+- [x] Login-Screen (nur für superadmin, Rolle wird nach Login geprüft)
+- [x] Benutzer-Liste mit Rollenfilter, Suche und Paginierung
+- [x] Formular: Benutzer anlegen (Tierarzt / Dienstleister / Besitzer)
+- [x] Benutzer-Detailansicht: Rolle & Status ändern, Passwort reset
+- [x] Dockerfile + docker-compose Eintrag (Port 3004)
 
 ---
 
