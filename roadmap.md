@@ -358,32 +358,28 @@
 - [x] Dienstleister-Profil (Dashboard-Grundgerüst)
 
 ### M12.2 - Firmen-Profil & Organisation
-- [ ] Firma/Organisation erstellen
-- [ ] Firmen-Profil bearbeiten
-- [ ] Organisations-Übersicht (alle eigenen Firmen)
+- [x] Firma/Organisation erstellen
+- [x] Firmen-Profil bearbeiten
+- [x] Organisations-Übersicht (alle eigenen Firmen)
 
 ### M12.3 - Mitarbeiter-Verwaltung (Firmen-Admin)
-- [ ] Mitarbeiter-Liste anzeigen
-- [ ] Mitarbeiter einladen (E-Mail oder Link)
-- [ ] Einladung als neuer Benutzer annehmen
-- [ ] Berechtigungsgruppen verwalten
-- [ ] Mitarbeiter einer Gruppe zuordnen
-- [ ] Mitarbeiter-Rolle ändern
-- [ ] Mitarbeiter deaktivieren/entfernen
-- [ ] Termine an Mitarbeiter zuweisen
+- [x] Mitarbeiter-Liste anzeigen
+- [x] Mitarbeiter einladen (E-Mail oder Link)
+- [x] Einladung als neuer Benutzer annehmen
+- [x] Mitarbeiter-Rolle ändern
+- [x] Mitarbeiter deaktivieren/entfernen
 
 ### M12.4 - Kunden-Liste
-- [ ] Kunden mit Zugriff anzeigen
-- [ ] Tiere pro Kunde
+- [x] Kunden mit Zugriff anzeigen
+- [x] Tiere pro Kunde
 
 ### M12.5 - Leistungen dokumentieren
-- [ ] Neue Leistung erfassen
-- [ ] Leistungs-Historie
+- [x] Neue Leistung erfassen
+- [x] Leistungs-Historie
 
 ### M12.6 - Termine verwalten
-- [ ] Terminanfragen
-- [ ] Kalenderansicht
-- [ ] Termine an Mitarbeiter zuweisen
+- [x] Terminanfragen
+- [x] Termin bestätigen/ablehnen/abschließen
 
 ---
 
