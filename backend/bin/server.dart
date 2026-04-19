@@ -22,6 +22,7 @@ import 'package:mypet_backend/controllers/admin_controller.dart';
 import 'package:mypet_backend/controllers/medical_record_controller.dart';
 import 'package:mypet_backend/controllers/vaccination_controller.dart';
 import 'package:mypet_backend/controllers/medication_controller.dart';
+import 'package:mypet_backend/controllers/appointment_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
@@ -105,6 +106,9 @@ Future<void> main(List<String> args) async {
   final vaccinationController = VaccinationController(db);
   final medicationController = MedicationController(db);
 
+  // Termin Controller
+  final appointmentController = AppointmentController(db);
+
   app.mount(
     '/account',
     const Pipeline()
@@ -155,6 +159,13 @@ Future<void> main(List<String> args) async {
     const Pipeline()
         .addMiddleware(authMiddleware())
         .addHandler(permissionController.router.call),
+  );
+
+  app.mount(
+    '/appointments',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addHandler(appointmentController.router.call),
   );
 
   // Admin Routes (nur superadmin)
@@ -258,6 +269,15 @@ Future<void> main(List<String> args) async {
   print('🔐 Zugriffsberechtigungen (authentifiziert):');
   print('   GET/POST       /permissions');
   print('   PUT/DELETE     /permissions/:id');
+  print('');
+  print('📅 Termine (authentifiziert):');
+  print('   GET    /appointments          - Termine auflisten');
+  print('   POST   /appointments          - Termin anlegen');
+  print('   GET    /appointments/:id      - Termin abrufen');
+  print('   PUT    /appointments/:id/confirm  - Bestätigen');
+  print('   PUT    /appointments/:id/complete - Abschließen');
+  print('   PUT    /appointments/:id/cancel   - Absagen');
+  print('   DELETE /appointments/:id      - Termin löschen');
   print('');
   print('🛡️  Admin (nur superadmin):');
   print('   GET    /admin/users          - Alle Benutzer');

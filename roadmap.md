@@ -286,15 +286,15 @@
 ## Phase 8: Termine (Backend)
 
 ### M8.1 - Termine-Model
-- [ ] Migration: Termine-Tabelle
-- [ ] Model mit Status-Workflow
+- [x] Migration: Termine-Tabelle
+- [x] Model mit Status-Workflow
 
 ### M8.2 - Termine-API
-- [ ] `GET /appointments`
-- [ ] `POST /appointments`
-- [ ] `PUT /appointments/:id/confirm`
-- [ ] `PUT /appointments/:id/complete`
-- [ ] `DELETE /appointments/:id`
+- [x] `GET /appointments`
+- [x] `POST /appointments`
+- [x] `PUT /appointments/:id/confirm`
+- [x] `PUT /appointments/:id/complete`
+- [x] `DELETE /appointments/:id`
 
 ### M8.3 - Automatischer Zugriff
 - [ ] Bei Terminbestätigung Zugriff gewähren
