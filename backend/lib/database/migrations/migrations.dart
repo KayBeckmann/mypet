@@ -10,6 +10,7 @@ const List<Migration> migrations = [
   _migration006CreateOrganizationInvitations,
   _migration007CreateFamilies,
   _migration008CreateAccessPermissions,
+  _migration009AddSuperadminRole,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -352,5 +353,19 @@ const _migration008CreateAccessPermissions = Migration(
     DROP TABLE IF EXISTS access_permissions;
     DROP TYPE IF EXISTS access_subject_type;
     DROP TYPE IF EXISTS access_permission_type;
+  ''',
+);
+
+/// Migration 009: superadmin zur user_role enum hinzufügen
+const _migration009AddSuperadminRole = Migration(
+  version: 9,
+  name: 'add_superadmin_role',
+  up: '''
+    ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'superadmin';
+  ''',
+  down: '''
+    -- PostgreSQL erlaubt kein direktes Entfernen von Enum-Werten.
+    -- Beim Rollback sicherstellen, dass kein Benutzer mehr die Rolle 'superadmin' hat.
+    UPDATE users SET role = 'owner' WHERE role = 'superadmin';
   ''',
 );

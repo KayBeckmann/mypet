@@ -591,10 +591,10 @@ services:
 > Kontrollierte Registrierung für Tierärzte und Dienstleister (Hufpfleger etc.) —
 > keine offene Anmeldung für professionelle Rollen. Nur der Superadmin legt diese Accounts an.
 
-### M21.1 - Superadmin-Rolle (Backend)
-- [ ] Migration 009: `superadmin` zur `user_role` enum hinzufügen
-- [ ] `/auth/register` auf Rolle `owner` beschränken (vet/provider/superadmin gesperrt)
-- [ ] `requireRole`-Middleware für `superadmin`-Routen
+### M21.1 - Superadmin-Rolle (Backend) ✅
+- [x] Migration 009: `superadmin` zur `user_role` enum hinzufügen
+- [x] `/auth/register` auf Rolle `owner` beschränken (vet/provider/superadmin gesperrt)
+- [x] `requireSuperadmin`-Middleware
 
 ### M21.2 - Admin-API (Backend)
 - [ ] `GET /admin/users` — alle Benutzer (mit Rollenfilter)

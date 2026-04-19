@@ -119,6 +119,13 @@ class AuthController {
         return _error(409, 'E-Mail-Adresse wird bereits verwendet');
       }
 
+      // Rolle aus Body — nur 'owner' erlaubt für Selbstregistrierung
+      final requestedRole = body['role'] as String?;
+      if (requestedRole != null &&
+          requestedRole != 'owner') {
+        return _error(403, 'Selbstregistrierung ist nur für Tierbesitzer möglich. Tierärzte und Dienstleister werden vom Administrator angelegt.');
+      }
+
       // Passwort hashen
       final passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
 

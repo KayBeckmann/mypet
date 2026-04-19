@@ -76,6 +76,9 @@ Middleware requireRole(List<String> roles) {
   };
 }
 
+/// Middleware die nur Superadmins durchlässt
+Middleware requireSuperadmin() => requireRole(['superadmin']);
+
 /// JWT-Token generieren
 String generateToken({
   required String userId,
