@@ -19,6 +19,9 @@ import 'package:mypet_backend/controllers/permission_group_controller.dart';
 import 'package:mypet_backend/controllers/family_controller.dart';
 import 'package:mypet_backend/controllers/permission_controller.dart';
 import 'package:mypet_backend/controllers/admin_controller.dart';
+import 'package:mypet_backend/controllers/medical_record_controller.dart';
+import 'package:mypet_backend/controllers/vaccination_controller.dart';
+import 'package:mypet_backend/controllers/medication_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
@@ -97,18 +100,32 @@ Future<void> main(List<String> args) async {
   final familyController = FamilyController(db);
   final permissionController = PermissionController(db);
 
+  // Medizinische Daten Controller
+  final medicalRecordController = MedicalRecordController(db);
+  final vaccinationController = VaccinationController(db);
+  final medicationController = MedicationController(db);
+
   app.mount(
     '/account',
     const Pipeline()
         .addMiddleware(authMiddleware())
         .addHandler(accountController.router.call),
   );
+
+  // Alle /pets-Routen in einer Cascade (PetController + medizinische Sub-Routen)
+  final petsCascade = Cascade()
+      .add(petController.router.call)
+      .add(medicalRecordController.router.call)
+      .add(vaccinationController.router.call)
+      .add(medicationController.router.call)
+      .handler;
   app.mount(
     '/pets',
     const Pipeline()
         .addMiddleware(authMiddleware())
-        .addHandler(petController.router.call),
+        .addHandler(petsCascade),
   );
+
   app.mount(
     '/organizations',
     const Pipeline()

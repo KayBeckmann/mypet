@@ -11,6 +11,10 @@ const List<Migration> migrations = [
   _migration007CreateFamilies,
   _migration008CreateAccessPermissions,
   _migration009AddSuperadminRole,
+  _migration010CreateMedicalRecords,
+  _migration011CreateVaccinations,
+  _migration012CreateMedications,
+  _migration013CreateMedicationAdministrations,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -367,5 +371,151 @@ const _migration009AddSuperadminRole = Migration(
     -- PostgreSQL erlaubt kein direktes Entfernen von Enum-Werten.
     -- Beim Rollback sicherstellen, dass kein Benutzer mehr die Rolle 'superadmin' hat.
     UPDATE users SET role = 'owner' WHERE role = 'superadmin';
+  ''',
+);
+
+/// Migration 010: Medizinische Akten-Tabelle
+const _migration010CreateMedicalRecords = Migration(
+  version: 10,
+  name: 'create_medical_records_table',
+  up: '''
+    CREATE TYPE medical_record_type AS ENUM (
+      'checkup', 'diagnosis', 'treatment', 'surgery',
+      'lab_result', 'prescription', 'observation', 'other'
+    );
+
+    CREATE TABLE medical_records (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      vet_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
+      record_type medical_record_type NOT NULL DEFAULT 'observation',
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      diagnosis TEXT,
+      treatment TEXT,
+      follow_up_date DATE,
+      is_private BOOLEAN NOT NULL DEFAULT false,
+      recorded_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_medical_records_pet ON medical_records(pet_id);
+    CREATE INDEX idx_medical_records_vet ON medical_records(vet_id);
+    CREATE INDEX idx_medical_records_date ON medical_records(recorded_at DESC);
+
+    CREATE TRIGGER update_medical_records_updated_at
+      BEFORE UPDATE ON medical_records
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+  ''',
+  down: '''
+    DROP TRIGGER IF EXISTS update_medical_records_updated_at ON medical_records;
+    DROP TABLE IF EXISTS medical_records;
+    DROP TYPE IF EXISTS medical_record_type;
+  ''',
+);
+
+/// Migration 011: Impfungen
+const _migration011CreateVaccinations = Migration(
+  version: 11,
+  name: 'create_vaccinations_table',
+  up: '''
+    CREATE TABLE vaccinations (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      vet_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
+      vaccine_name VARCHAR(255) NOT NULL,
+      batch_number VARCHAR(100),
+      manufacturer VARCHAR(255),
+      administered_at DATE NOT NULL DEFAULT CURRENT_DATE,
+      valid_until DATE,
+      notes TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_vaccinations_pet ON vaccinations(pet_id);
+    CREATE INDEX idx_vaccinations_valid_until ON vaccinations(valid_until);
+
+    CREATE TRIGGER update_vaccinations_updated_at
+      BEFORE UPDATE ON vaccinations
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+  ''',
+  down: '''
+    DROP TRIGGER IF EXISTS update_vaccinations_updated_at ON vaccinations;
+    DROP TABLE IF EXISTS vaccinations;
+  ''',
+);
+
+/// Migration 012: Medikamente
+const _migration012CreateMedications = Migration(
+  version: 12,
+  name: 'create_medications_table',
+  up: '''
+    CREATE TYPE medication_frequency AS ENUM (
+      'once', 'daily', 'twice_daily', 'three_times_daily',
+      'weekly', 'biweekly', 'monthly', 'as_needed', 'custom'
+    );
+
+    CREATE TABLE medications (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      vet_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
+      name VARCHAR(255) NOT NULL,
+      dosage VARCHAR(100),
+      frequency medication_frequency NOT NULL DEFAULT 'daily',
+      custom_frequency VARCHAR(100),
+      instructions TEXT,
+      start_date DATE NOT NULL DEFAULT CURRENT_DATE,
+      end_date DATE,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_medications_pet ON medications(pet_id);
+    CREATE INDEX idx_medications_active ON medications(is_active) WHERE is_active = true;
+
+    CREATE TRIGGER update_medications_updated_at
+      BEFORE UPDATE ON medications
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+  ''',
+  down: '''
+    DROP TRIGGER IF EXISTS update_medications_updated_at ON medications;
+    DROP TABLE IF EXISTS medications;
+    DROP TYPE IF EXISTS medication_frequency;
+  ''',
+);
+
+/// Migration 013: Medikations-Verabreichungsprotokoll
+const _migration013CreateMedicationAdministrations = Migration(
+  version: 13,
+  name: 'create_medication_administrations_table',
+  up: '''
+    CREATE TYPE administration_status AS ENUM ('given', 'skipped', 'delayed');
+
+    CREATE TABLE medication_administrations (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      medication_id UUID NOT NULL REFERENCES medications(id) ON DELETE CASCADE,
+      administered_by UUID REFERENCES users(id) ON DELETE SET NULL,
+      status administration_status NOT NULL DEFAULT 'given',
+      scheduled_at TIMESTAMP NOT NULL,
+      administered_at TIMESTAMP,
+      notes TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_med_admin_medication ON medication_administrations(medication_id);
+    CREATE INDEX idx_med_admin_scheduled ON medication_administrations(scheduled_at);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS medication_administrations;
+    DROP TYPE IF EXISTS administration_status;
   ''',
 );

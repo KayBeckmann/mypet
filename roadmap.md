@@ -217,29 +217,32 @@
 
 ## Phase 6: Medizinische Daten (Backend)
 
-### M6.1 - Medizinische Akte
-- [ ] Migration: Medizinische Akte-Tabelle
-- [ ] Model erstellen
-- [ ] `GET /pets/:id/records`
-- [ ] `POST /pets/:id/records` (nur Tierarzt)
+### M6.1 - Medizinische Akte ✅
+- [x] Migration 010: Medizinische Akte-Tabelle (mit record_type enum)
+- [x] `GET /pets/:id/records` (Zugriffscheck, private Einträge gefiltert)
+- [x] `POST /pets/:id/records`
+- [x] `GET /pets/:id/records/:recordId`
+- [x] `PUT /pets/:id/records/:recordId` (nur Ersteller)
+- [x] `DELETE /pets/:id/records/:recordId`
 
-### M6.2 - Impfungen
-- [ ] Migration: Impfungen-Tabelle
-- [ ] Model erstellen
-- [ ] `GET /pets/:id/vaccinations`
-- [ ] `POST /pets/:id/vaccinations` (nur Tierarzt)
+### M6.2 - Impfungen ✅
+- [x] Migration 011: Impfungen-Tabelle
+- [x] `GET /pets/:id/vaccinations`
+- [x] `POST /pets/:id/vaccinations`
+- [x] `DELETE /pets/:id/vaccinations/:vacId`
 
-### M6.3 - Medikationen (Teil 1)
-- [ ] Migration: Medikation-Tabelle
-- [ ] Model erstellen
-- [ ] `GET /pets/:id/medications`
-- [ ] `POST /pets/:id/medications` (nur Tierarzt)
+### M6.3 - Medikationen ✅
+- [x] Migration 012: Medikation-Tabelle (mit medication_frequency enum)
+- [x] `GET /pets/:id/medications`
+- [x] `POST /pets/:id/medications`
+- [x] `PUT /pets/:id/medications/:medId`
+- [x] `DELETE /pets/:id/medications/:medId`
 
-### M6.4 - Medikations-Tracking
-- [ ] Migration: Medikations-Verabreichung-Tabelle
-- [ ] `GET /medications/:id/schedule`
-- [ ] `POST /medications/:id/administer`
-- [ ] `POST /medications/:id/skip`
+### M6.4 - Medikations-Tracking ✅
+- [x] Migration 013: Medikations-Verabreichung-Tabelle
+- [x] `GET /pets/:id/medications/:medId/schedule`
+- [x] `POST /pets/:id/medications/:medId/administer`
+- [x] `POST /pets/:id/medications/:medId/skip`
 
 ---
 
