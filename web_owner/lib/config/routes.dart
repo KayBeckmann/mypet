@@ -17,6 +17,7 @@ import '../screens/login_screen.dart';
 import '../screens/register_screen.dart';
 import '../screens/transfer_screen.dart';
 import '../screens/settings_screen.dart';
+import '../screens/weight_screen.dart';
 import '../widgets/app_shell.dart';
 
 GoRouter createRouter(AuthProvider authProvider) {
@@ -112,6 +113,10 @@ GoRouter createRouter(AuthProvider authProvider) {
           GoRoute(
             path: '/settings',
             builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/weight',
+            builder: (context, state) => const WeightScreen(),
           ),
         ],
       ),

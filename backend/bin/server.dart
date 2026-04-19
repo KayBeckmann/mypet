@@ -27,6 +27,7 @@ import 'package:mypet_backend/controllers/feeding_controller.dart';
 import 'package:mypet_backend/controllers/media_controller.dart';
 import 'package:mypet_backend/controllers/note_controller.dart';
 import 'package:mypet_backend/controllers/transfer_controller.dart';
+import 'package:mypet_backend/controllers/weight_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
@@ -125,6 +126,9 @@ Future<void> main(List<String> args) async {
   // Transfer Controller
   final transferController = TransferController(db);
 
+  // Gewichts Controller
+  final weightController = WeightController(db);
+
   app.mount(
     '/account',
     const Pipeline()
@@ -142,6 +146,7 @@ Future<void> main(List<String> args) async {
       .add(mediaController.router.call)
       .add(noteController.router.call)
       .add(transferController.router.call)
+      .add(weightController.router.call)
       .handler;
   app.mount(
     '/pets',

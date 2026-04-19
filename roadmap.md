@@ -487,9 +487,12 @@
 - [ ] Verabreichungs-Protokoll anzeigen
 - [ ] Compliance-Statistik
 
-### M19.2 - Gewichtsverlauf
-- [ ] Gewicht erfassen
-- [ ] Diagramm anzeigen
+### M19.2 - Gewichtsverlauf ✅
+- [x] Migration 022: weight_history Tabelle
+- [x] WeightController: GET/POST/DELETE /pets/:id/weight
+- [x] WeightProvider + WeightScreen in owner app
+- [x] Liniendiagramm (CustomPainter, keine externe Abhängigkeit)
+- [x] Statistik-Karten (Aktuell, Min, Max, Anzahl)
 
 ### M19.3 - Erinnerungen
 - [ ] Erinnerungs-System

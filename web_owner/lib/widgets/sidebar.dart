@@ -57,6 +57,10 @@ class Sidebar extends StatelessWidget {
         icon: Icons.swap_horiz_rounded,
         route: '/transfer'),
     SidebarItem(
+        label: 'GEWICHT',
+        icon: Icons.monitor_weight_rounded,
+        route: '/weight'),
+    SidebarItem(
         label: 'SETTINGS',
         icon: Icons.settings_rounded,
         route: '/settings'),

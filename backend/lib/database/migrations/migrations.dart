@@ -23,6 +23,7 @@ const List<Migration> migrations = [
   _migration019CreatePetNotes,
   _migration020CreateOwnershipTransfers,
   _migration021CreateAuditLog,
+  _migration022CreateWeightHistory,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -668,6 +669,25 @@ const _migration017CreateFeedingLog = Migration(
 );
 
 /// Migration 018: Medien-Tabelle
+const _migration022CreateWeightHistory = Migration(
+  version: 22,
+  name: 'create_weight_history_table',
+  up: '''
+    CREATE TABLE weight_history (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      recorded_by UUID NOT NULL REFERENCES users(id),
+      weight_kg DECIMAL(6,2) NOT NULL,
+      notes TEXT,
+      recorded_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_weight_history_pet ON weight_history(pet_id);
+    CREATE INDEX idx_weight_history_date ON weight_history(pet_id, recorded_at DESC);
+  ''',
+  down: 'DROP TABLE IF EXISTS weight_history;',
+);
+
 const _migration021CreateAuditLog = Migration(
   version: 21,
   name: 'create_audit_log_table',

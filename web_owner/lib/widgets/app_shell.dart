@@ -51,6 +51,7 @@ class AppShell extends StatelessWidget {
     if (route.startsWith('/marketplace')) return '/marketplace';
     if (route.startsWith('/records')) return '/records';
     if (route.startsWith('/transfer')) return '/transfer';
+    if (route.startsWith('/weight')) return '/weight';
     if (route.startsWith('/settings')) return '/settings';
     return route;
   }
