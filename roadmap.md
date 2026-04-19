@@ -297,8 +297,8 @@
 - [x] `DELETE /appointments/:id`
 
 ### M8.3 - Automatischer Zugriff
-- [ ] Bei Terminbestätigung Zugriff gewähren
-- [ ] Zugriff nach Termin-Abschluss entziehen
+- [x] Bei Terminbestätigung Zugriff gewähren
+- [x] Zugriff nach Termin-Abschluss entziehen
 
 ---
 

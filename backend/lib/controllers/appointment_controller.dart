@@ -187,12 +187,93 @@ class AppointmentController {
 
   /// PUT /appointments/:id/confirm
   Future<Response> _confirm(Request request, String id) async {
-    return _updateStatus(id, 'confirmed', request);
+    try {
+      final appointment = await _db.queryOne(
+        '''
+        UPDATE appointments SET status = 'confirmed'::appointment_status
+        WHERE id = @id::uuid
+        RETURNING *
+        ''',
+        parameters: {'id': id},
+      );
+      if (appointment == null) return _error(404, 'Termin nicht gefunden');
+
+      // Automatischer Zugriff: Tierarzt erhält read-Berechtigung auf das Tier
+      final providerId = appointment['provider_id']?.toString();
+      final petId = appointment['pet_id']?.toString();
+      final scheduledAt = appointment['scheduled_at'] as DateTime;
+      // Zugriff bis 24h nach dem Termin
+      final expiresAt = scheduledAt.add(const Duration(hours: 24));
+
+      if (providerId != null && petId != null) {
+        // Nur einfügen, wenn noch keine aktive Berechtigung existiert
+        await _db.queryAll(
+          '''
+          INSERT INTO access_permissions
+            (user_id, pet_id, access_level, granted_by, valid_from, valid_until, notes)
+          VALUES
+            (@user_id::uuid, @pet_id::uuid, 'read'::access_level,
+             @granted_by::uuid, NOW(), @valid_until::timestamp,
+             'Automatisch bei Terminbestätigung')
+          ON CONFLICT DO NOTHING
+          ''',
+          parameters: {
+            'user_id': providerId,
+            'pet_id': petId,
+            'granted_by': appointment['owner_id'].toString(),
+            'valid_until': expiresAt.toIso8601String(),
+          },
+        );
+      }
+
+      return Response.ok(
+        jsonEncode({'appointment': _sanitize(appointment)}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ confirmAppointment Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
   }
 
   /// PUT /appointments/:id/complete
   Future<Response> _complete(Request request, String id) async {
-    return _updateStatus(id, 'completed', request);
+    try {
+      final appointment = await _db.queryOne(
+        '''
+        UPDATE appointments SET status = 'completed'::appointment_status
+        WHERE id = @id::uuid
+        RETURNING *
+        ''',
+        parameters: {'id': id},
+      );
+      if (appointment == null) return _error(404, 'Termin nicht gefunden');
+
+      // Automatischer Zugangsentzug: terminbezogene Berechtigung sofort ablaufen lassen
+      final providerId = appointment['provider_id']?.toString();
+      final petId = appointment['pet_id']?.toString();
+      if (providerId != null && petId != null) {
+        await _db.queryAll(
+          '''
+          UPDATE access_permissions
+          SET valid_until = NOW()
+          WHERE user_id = @user_id::uuid
+            AND pet_id = @pet_id::uuid
+            AND notes = 'Automatisch bei Terminbestätigung'
+            AND valid_until > NOW()
+          ''',
+          parameters: {'user_id': providerId, 'pet_id': petId},
+        );
+      }
+
+      return Response.ok(
+        jsonEncode({'appointment': _sanitize(appointment)}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ completeAppointment Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
   }
 
   /// PUT /appointments/:id/cancel
