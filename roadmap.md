@@ -253,38 +253,33 @@
 - [x] Gemeinsame Komponenten aus shared/
 - [x] Auth-Flow (wie Besitzer-App)
 
-### M7.2 - Praxis-Profil & Organisation
-- [ ] Praxis/Organisation erstellen
-- [ ] Praxis-Profil bearbeiten
-- [ ] Organisations-Übersicht (alle eigenen Praxen)
+### M7.2 - Praxis-Profil & Organisation ✅
+- [x] Praxis/Organisation erstellen (Dialog)
+- [x] Praxis-Profil bearbeiten (Name, Adresse, Tel, E-Mail, Website, Öffnungszeiten, Spezialisierung)
+- [x] Organisations-Wechsler (Dropdown für mehrere Praxen)
 
-### M7.3 - Mitarbeiter-Verwaltung (Praxis-Admin)
-- [ ] Mitarbeiter-Liste anzeigen
-- [ ] Mitarbeiter einladen (E-Mail oder Link)
-- [ ] Einladung als neuer Benutzer annehmen
-- [ ] Berechtigungsgruppen verwalten
-- [ ] Mitarbeiter einer Gruppe zuordnen
-- [ ] Mitarbeiter-Rolle ändern
-- [ ] Mitarbeiter deaktivieren/entfernen
+### M7.3 - Mitarbeiter-Verwaltung (Praxis-Admin) ✅
+- [x] Mitarbeiter-Liste anzeigen
+- [x] Mitarbeiter einladen (E-Mail, Rolle, Position)
+- [x] Mitarbeiter-Rolle ändern (Dropdown)
+- [x] Mitarbeiter entfernen
 
-### M7.4 - Patienten-Liste
-- [ ] Tiere mit Zugriff anzeigen
-- [ ] Suche/Filter
+### M7.4 - Patienten-Liste ✅
+- [x] Tiere mit Zugriff anzeigen
+- [x] Suche nach Name/Tierart
 
-### M7.5 - Medizinische Akte führen
-- [ ] Akte-Einträge anzeigen
-- [ ] Neuer Eintrag erstellen
-- [ ] Diagnose und Behandlung dokumentieren
+### M7.5 - Medizinische Akte führen ✅
+- [x] Akte-Einträge anzeigen (Tab-Ansicht)
+- [x] Neuer Eintrag (Typ, Titel, Diagnose, Behandlung, privat)
+- [x] Diagnose und Behandlung dokumentieren
 
-### M7.6 - Impfungen eintragen
-- [ ] Impfungen anzeigen
-- [ ] Neue Impfung eintragen
-- [ ] Gültigkeitsdatum setzen
+### M7.6 - Impfungen eintragen ✅
+- [x] Impfungen anzeigen mit Ablauf-Status
+- [x] Neue Impfung (Impfstoff, Charge, Hersteller, Gültigkeit)
 
-### M7.7 - Medikamente verordnen
-- [ ] Medikation erstellen
-- [ ] Dosierung und Anweisungen
-- [ ] Einnahmeplan erstellen
+### M7.7 - Medikamente verordnen ✅
+- [x] Aktive/abgeschlossene Medikamente anzeigen
+- [x] Medikament verordnen (Name, Dosierung, Häufigkeit, Anweisungen, Enddatum)
 
 ---
 

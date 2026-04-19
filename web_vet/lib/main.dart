@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import 'config/routes.dart';
 import 'config/theme.dart';
 import 'providers/auth_provider.dart';
+import 'providers/organization_provider.dart';
+import 'providers/patients_provider.dart';
+import 'providers/medical_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +29,15 @@ class _MyPetVetAppState extends State<MyPetVetApp> {
       providers: [
         ChangeNotifierProvider(
           create: (_) => VetAuthProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => OrganizationProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => PatientsProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => MedicalProvider(api: _apiService),
         ),
       ],
       child: const _AppShell(),
