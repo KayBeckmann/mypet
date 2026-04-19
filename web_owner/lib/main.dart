@@ -7,6 +7,7 @@ import 'providers/pet_provider.dart';
 import 'providers/family_provider.dart';
 import 'providers/permission_provider.dart';
 import 'providers/appointment_provider.dart';
+import 'providers/feeding_provider.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -42,6 +43,9 @@ class _MyPetOwnerAppState extends State<MyPetOwnerApp> {
         ),
         ChangeNotifierProvider(
           create: (_) => AppointmentProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => FeedingProvider(api: _apiService),
         ),
       ],
       child: const _AppWithAuth(),

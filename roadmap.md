@@ -339,14 +339,14 @@
 ## Phase 11: Fütterungsmanagement (Frontend)
 
 ### M11.1 - Futterplan erstellen
-- [ ] Futterplan-Screen
-- [ ] Mahlzeiten hinzufügen
-- [ ] Komponenten mit Mengen
+- [x] Futterplan-Screen
+- [x] Mahlzeiten hinzufügen
+- [x] Komponenten mit Mengen
 
 ### M11.2 - Fütterung protokollieren
-- [ ] Tägliche Übersicht
-- [ ] Als gefüttert markieren
-- [ ] Notizen hinzufügen
+- [x] Tägliche Übersicht
+- [x] Als gefüttert markieren
+- [x] Notizen hinzufügen
 
 ---
 
