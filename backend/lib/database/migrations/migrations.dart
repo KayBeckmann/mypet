@@ -19,6 +19,7 @@ const List<Migration> migrations = [
   _migration015CreateFeedingPlans,
   _migration016CreateFeedingMeals,
   _migration017CreateFeedingLog,
+  _migration018CreateMedia,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -660,5 +661,41 @@ const _migration017CreateFeedingLog = Migration(
   ''',
   down: '''
     DROP TABLE IF EXISTS feeding_log;
+  ''',
+);
+
+/// Migration 018: Medien-Tabelle
+const _migration018CreateMedia = Migration(
+  version: 18,
+  name: 'create_media_table',
+  up: '''
+    CREATE TYPE media_type AS ENUM (
+      'image', 'document', 'xray', 'video', 'other'
+    );
+
+    CREATE TABLE pet_media (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      uploaded_by UUID NOT NULL REFERENCES users(id),
+      medical_record_id UUID REFERENCES medical_records(id) ON DELETE SET NULL,
+      media_type media_type NOT NULL DEFAULT 'image',
+      filename VARCHAR(255) NOT NULL,
+      original_name VARCHAR(255),
+      mime_type VARCHAR(100) NOT NULL,
+      file_size INTEGER NOT NULL,
+      storage_path VARCHAR(500) NOT NULL,
+      title VARCHAR(255),
+      description TEXT,
+      is_private BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_pet_media_pet ON pet_media(pet_id);
+    CREATE INDEX idx_pet_media_type ON pet_media(media_type);
+    CREATE INDEX idx_pet_media_record ON pet_media(medical_record_id);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS pet_media;
+    DROP TYPE IF EXISTS media_type;
   ''',
 );

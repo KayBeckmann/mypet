@@ -81,7 +81,7 @@ class Database {
   }
 
   /// Transaktion ausführen
-  Future<T> transaction<T>(Future<T> Function(Connection tx) action) async {
+  Future<T> transaction<T>(Future<T> Function(TxSession tx) action) async {
     return await connection.runTx(action);
   }
 }

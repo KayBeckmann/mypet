@@ -79,6 +79,28 @@ class UploadService {
     }
   }
 
+  /// Media-Verzeichnis sicherstellen
+  Future<void> ensureMediaDir() async {
+    final dir = Directory('${_config.uploadPath}/media');
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+      print('📁 Media-Verzeichnis erstellt: ${dir.path}');
+    }
+  }
+
+  /// Beliebige Datei unter relativem Pfad speichern
+  Future<void> saveRaw(Uint8List bytes, String relativePath) async {
+    if (bytes.length > _config.maxFileSize) {
+      final maxMb = _config.maxFileSize / (1024 * 1024);
+      throw UploadException(
+        'Datei zu groß. Maximale Größe: ${maxMb.toStringAsFixed(0)} MB',
+      );
+    }
+    final fullPath = '${_config.uploadPath}/$relativePath';
+    final file = File(fullPath);
+    await file.writeAsBytes(bytes);
+  }
+
   /// Vollständigen Dateipfad aus relativem Pfad erstellen
   String getFullPath(String relativePath) {
     return '${_config.uploadPath}/$relativePath';

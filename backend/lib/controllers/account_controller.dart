@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'package:bcrypt/bcrypt.dart';
+import 'package:postgres/postgres.dart';
 import '../database/database.dart';
 
 /// Controller für Benutzer-Kontoverwaltung

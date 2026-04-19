@@ -24,6 +24,7 @@ import 'package:mypet_backend/controllers/vaccination_controller.dart';
 import 'package:mypet_backend/controllers/medication_controller.dart';
 import 'package:mypet_backend/controllers/appointment_controller.dart';
 import 'package:mypet_backend/controllers/feeding_controller.dart';
+import 'package:mypet_backend/controllers/media_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
@@ -113,6 +114,9 @@ Future<void> main(List<String> args) async {
   // Fütterungs Controller
   final feedingController = FeedingController(db);
 
+  // Media Controller
+  final mediaController = MediaController(db);
+
   app.mount(
     '/account',
     const Pipeline()
@@ -127,6 +131,7 @@ Future<void> main(List<String> args) async {
       .add(vaccinationController.router.call)
       .add(medicationController.router.call)
       .add(feedingController.router.call)
+      .add(mediaController.router.call)
       .handler;
   app.mount(
     '/pets',
@@ -274,6 +279,10 @@ Future<void> main(List<String> args) async {
   print('🔐 Zugriffsberechtigungen (authentifiziert):');
   print('   GET/POST       /permissions');
   print('   PUT/DELETE     /permissions/:id');
+  print('');
+  print('📎 Medien (authentifiziert):');
+  print('   GET/POST   /pets/:id/media');
+  print('   GET/DELETE /pets/:id/media/:mediaId');
   print('');
   print('🍽️  Fütterung (authentifiziert):');
   print('   GET/POST   /pets/:id/feeding-plans');

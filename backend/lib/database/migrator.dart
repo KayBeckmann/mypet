@@ -1,3 +1,4 @@
+import 'package:postgres/postgres.dart';
 import 'database.dart';
 import 'migrations/migrations.dart';
 
