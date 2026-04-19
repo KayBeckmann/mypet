@@ -11,6 +11,7 @@ import 'providers/feeding_provider.dart';
 import 'providers/media_provider.dart';
 import 'providers/transfer_provider.dart';
 import 'providers/weight_provider.dart';
+import 'providers/reminder_provider.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -59,6 +60,9 @@ class _MyPetOwnerAppState extends State<MyPetOwnerApp> {
         ),
         ChangeNotifierProvider(
           create: (_) => WeightProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ReminderProvider(api: _apiService),
         ),
       ],
       child: const _AppWithAuth(),

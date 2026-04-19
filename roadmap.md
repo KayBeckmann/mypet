@@ -494,9 +494,9 @@
 - [x] Liniendiagramm (CustomPainter, keine externe Abhängigkeit)
 - [x] Statistik-Karten (Aktuell, Min, Max, Anzahl)
 
-### M19.3 - Erinnerungen
-- [ ] Erinnerungs-System
-- [ ] E-Mail-Benachrichtigungen
+### M19.3 - Erinnerungen ✅
+- [x] Erinnerungs-System
+- [x] E-Mail-Benachrichtigungen
 
 ---
 

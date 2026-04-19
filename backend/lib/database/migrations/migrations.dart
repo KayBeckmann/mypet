@@ -24,6 +24,7 @@ const List<Migration> migrations = [
   _migration020CreateOwnershipTransfers,
   _migration021CreateAuditLog,
   _migration022CreateWeightHistory,
+  _migration023CreateReminders,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -804,5 +805,44 @@ const _migration018CreateMedia = Migration(
   down: '''
     DROP TABLE IF EXISTS pet_media;
     DROP TYPE IF EXISTS media_type;
+  ''',
+);
+
+/// Migration 023: Erinnerungen
+const _migration023CreateReminders = Migration(
+  version: 23,
+  name: 'create_reminders_table',
+  up: '''
+    CREATE TYPE reminder_type AS ENUM (
+      'vaccination', 'medication', 'appointment', 'feeding', 'weight', 'custom'
+    );
+
+    CREATE TYPE reminder_status AS ENUM (
+      'pending', 'sent', 'dismissed', 'cancelled'
+    );
+
+    CREATE TABLE reminders (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      pet_id UUID REFERENCES pets(id) ON DELETE CASCADE,
+      reminder_type reminder_type NOT NULL DEFAULT 'custom',
+      title VARCHAR(255) NOT NULL,
+      message TEXT,
+      remind_at TIMESTAMP NOT NULL,
+      status reminder_status NOT NULL DEFAULT 'pending',
+      email_sent BOOLEAN NOT NULL DEFAULT false,
+      email_sent_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_reminders_user ON reminders(user_id);
+    CREATE INDEX idx_reminders_pet ON reminders(pet_id);
+    CREATE INDEX idx_reminders_remind_at ON reminders(remind_at);
+    CREATE INDEX idx_reminders_status ON reminders(status);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS reminders;
+    DROP TYPE IF EXISTS reminder_status;
+    DROP TYPE IF EXISTS reminder_type;
   ''',
 );

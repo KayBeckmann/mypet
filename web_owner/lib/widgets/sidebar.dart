@@ -61,6 +61,10 @@ class Sidebar extends StatelessWidget {
         icon: Icons.monitor_weight_rounded,
         route: '/weight'),
     SidebarItem(
+        label: 'ERINNERUNGEN',
+        icon: Icons.alarm_rounded,
+        route: '/reminders'),
+    SidebarItem(
         label: 'SETTINGS',
         icon: Icons.settings_rounded,
         route: '/settings'),
