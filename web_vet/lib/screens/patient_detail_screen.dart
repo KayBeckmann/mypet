@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/medical_provider.dart';
 import '../providers/media_provider.dart';
+import '../providers/notes_provider.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final String petId;
@@ -23,10 +24,11 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 4, vsync: this);
+    _tabs = TabController(length: 5, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MedicalProvider>().loadForPet(widget.petId);
       context.read<VetMediaProvider>().loadForPet(widget.petId);
+      context.read<VetNotesProvider>().loadForPet(widget.petId);
     });
   }
 
@@ -346,6 +348,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   Widget build(BuildContext context) {
     final medical = context.watch<MedicalProvider>();
     final mediaProvider = context.watch<VetMediaProvider>();
+    final notesProvider = context.watch<VetNotesProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -366,6 +369,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
             Tab(text: 'Impfungen'),
             Tab(text: 'Medikamente'),
             Tab(text: 'Bildarchiv'),
+            Tab(text: 'Notizen'),
           ],
         ),
       ),
@@ -386,6 +390,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
                     medications: medical.medications,
                     onAdd: _addMedication),
                 _MediaTab(provider: mediaProvider, petId: widget.petId),
+                _NotesTab(provider: notesProvider),
               ],
             ),
     );
@@ -883,7 +888,7 @@ class _MediaTab extends StatelessWidget {
     );
   }
 
-  Future<void> _showUploadDialog(BuildContext context) async {
+  Future<void> _showUploadDialog(BuildContext ctx2) async {
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     String mediaType = 'xray';
@@ -892,7 +897,7 @@ class _MediaTab extends StatelessWidget {
     String? filename;
 
     await showDialog(
-      context: context,
+      context: ctx2,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDs) => AlertDialog(
           title: const Text('Bild hochladen'),
@@ -978,6 +983,219 @@ class _MediaTab extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Notizen Tab ──
+class _NotesTab extends StatelessWidget {
+  final VetNotesProvider provider;
+
+  const _NotesTab({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(VetTheme.spacingMd),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              ElevatedButton.icon(
+                icon: const Icon(Icons.note_add_rounded, size: 18),
+                label: const Text('Neue Notiz'),
+                onPressed: () => _showCreateDialog(context),
+              ),
+            ],
+          ),
+        ),
+        if (provider.loading)
+          const Expanded(child: Center(child: CircularProgressIndicator()))
+        else if (provider.notes.isEmpty)
+          const Expanded(
+            child: Center(child: Text('Keine Notizen vorhanden')),
+          )
+        else
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: VetTheme.spacingMd,
+                  vertical: VetTheme.spacingSm),
+              itemCount: provider.notes.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: VetTheme.spacingSm),
+              itemBuilder: (_, i) {
+                final note = provider.notes[i];
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(VetTheme.spacingMd),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                note.title ?? 'Notiz',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            _VisibilityChip(note.visibility),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline,
+                                  size: 18,
+                                  color: VetTheme.onSurfaceVariant),
+                              tooltip: 'Löschen',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () async {
+                                final ok = await showDialog<bool>(
+                                      context: context,
+                                      builder: (_) => AlertDialog(
+                                        title: const Text('Notiz löschen?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(
+                                                context, false),
+                                            child: const Text('Abbrechen'),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () => Navigator.pop(
+                                                context, true),
+                                            child: const Text('Löschen'),
+                                          ),
+                                        ],
+                                      ),
+                                    ) ??
+                                    false;
+                                if (ok) provider.delete(note.id);
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(note.content,
+                            style: const TextStyle(fontSize: 14)),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${note.authorName ?? 'Unbekannt'} · '
+                          '${note.createdAt.day}.${note.createdAt.month}.${note.createdAt.year}',
+                          style: const TextStyle(
+                              fontSize: 12,
+                              color: VetTheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _showCreateDialog(BuildContext context) async {
+    final titleCtrl = TextEditingController();
+    final contentCtrl = TextEditingController();
+    String visibility = 'private';
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: const Text('Neue Notiz'),
+          content: SizedBox(
+            width: 480,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Titel (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: contentCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Inhalt *',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 5,
+                  autofocus: true,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: visibility,
+                  decoration:
+                      const InputDecoration(labelText: 'Sichtbarkeit'),
+                  items: const [
+                    DropdownMenuItem(
+                        value: 'private', child: Text('Nur ich')),
+                    DropdownMenuItem(
+                        value: 'colleagues', child: Text('Meine Kollegen')),
+                    DropdownMenuItem(
+                        value: 'all_professionals',
+                        child: Text('Alle Fachkräfte')),
+                  ],
+                  onChanged: (v) => setDs(() => visibility = v!),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Abbrechen'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (contentCtrl.text.trim().isEmpty) return;
+                Navigator.pop(ctx);
+                await provider.create(
+                  title: titleCtrl.text,
+                  content: contentCtrl.text,
+                  visibility: visibility,
+                );
+              },
+              child: const Text('Speichern'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VisibilityChip extends StatelessWidget {
+  final String visibility;
+  const _VisibilityChip(this.visibility);
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (visibility) {
+      'private' => ('Privat', Colors.grey),
+      'colleagues' => ('Kollegen', VetTheme.secondary),
+      'all_professionals' => ('Alle', VetTheme.primary),
+      _ => (visibility, Colors.grey),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(VetTheme.radiusFull),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+            fontSize: 11, fontWeight: FontWeight.w600, color: color),
       ),
     );
   }

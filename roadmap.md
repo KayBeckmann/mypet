@@ -416,15 +416,15 @@
 
 ## Phase 15: Professionelle Notizen
 
-### M15.1 - Backend
-- [ ] Migration: Notizen-Tabelle
-- [ ] Sichtbarkeits-Logik (privat/kollegial)
-- [ ] API-Endpunkte
+### M15.1 - Backend ✅
+- [x] Migration 019: pet_notes-Tabelle mit note_visibility ENUM
+- [x] Sichtbarkeits-Logik (private/colleagues/all_professionals)
+- [x] NoteController: GET/POST/PUT/DELETE /pets/:id/notes
 
-### M15.2 - Frontend (Tierarzt & Dienstleister)
-- [ ] Notiz erstellen
-- [ ] Sichtbarkeit wählen
-- [ ] Notizen anzeigen
+### M15.2 - Frontend (Tierarzt & Dienstleister) ✅
+- [x] VetNotesProvider + Notizen-Tab in PatientDetailScreen (5. Tab)
+- [x] ProviderNotesProvider + Notizen-Dialog über Kunden-Karte
+- [x] Sichtbarkeit wählen (Dropdown), Erstellen, Löschen
 
 ---
 

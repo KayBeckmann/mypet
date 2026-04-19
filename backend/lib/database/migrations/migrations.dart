@@ -20,6 +20,7 @@ const List<Migration> migrations = [
   _migration016CreateFeedingMeals,
   _migration017CreateFeedingLog,
   _migration018CreateMedia,
+  _migration019CreatePetNotes,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -665,6 +666,36 @@ const _migration017CreateFeedingLog = Migration(
 );
 
 /// Migration 018: Medien-Tabelle
+const _migration019CreatePetNotes = Migration(
+  version: 19,
+  name: 'create_pet_notes_table',
+  up: '''
+    CREATE TYPE note_visibility AS ENUM (
+      'private', 'colleagues', 'all_professionals'
+    );
+
+    CREATE TABLE pet_notes (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      author_id UUID NOT NULL REFERENCES users(id),
+      organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
+      title VARCHAR(255),
+      content TEXT NOT NULL,
+      visibility note_visibility NOT NULL DEFAULT 'private',
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_pet_notes_pet ON pet_notes(pet_id);
+    CREATE INDEX idx_pet_notes_author ON pet_notes(author_id);
+    CREATE INDEX idx_pet_notes_org ON pet_notes(organization_id);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS pet_notes;
+    DROP TYPE IF EXISTS note_visibility;
+  ''',
+);
+
 const _migration018CreateMedia = Migration(
   version: 18,
   name: 'create_media_table',

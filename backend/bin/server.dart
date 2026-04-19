@@ -25,6 +25,7 @@ import 'package:mypet_backend/controllers/medication_controller.dart';
 import 'package:mypet_backend/controllers/appointment_controller.dart';
 import 'package:mypet_backend/controllers/feeding_controller.dart';
 import 'package:mypet_backend/controllers/media_controller.dart';
+import 'package:mypet_backend/controllers/note_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
@@ -117,6 +118,9 @@ Future<void> main(List<String> args) async {
   // Media Controller
   final mediaController = MediaController(db);
 
+  // Notizen Controller
+  final noteController = NoteController(db);
+
   app.mount(
     '/account',
     const Pipeline()
@@ -132,6 +136,7 @@ Future<void> main(List<String> args) async {
       .add(medicationController.router.call)
       .add(feedingController.router.call)
       .add(mediaController.router.call)
+      .add(noteController.router.call)
       .handler;
   app.mount(
     '/pets',
