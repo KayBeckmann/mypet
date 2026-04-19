@@ -596,12 +596,13 @@ services:
 - [x] `/auth/register` auf Rolle `owner` beschränken (vet/provider/superadmin gesperrt)
 - [x] `requireSuperadmin`-Middleware
 
-### M21.2 - Admin-API (Backend)
-- [ ] `GET /admin/users` — alle Benutzer (mit Rollenfilter)
-- [ ] `POST /admin/users` — Benutzer mit Rolle vet/provider/owner anlegen
-- [ ] `PUT /admin/users/:id` — Rolle, Name, Status ändern
-- [ ] `PUT /admin/users/:id/reset-password` — Passwort zurücksetzen
-- [ ] `DELETE /admin/users/:id` — Benutzer deaktivieren
+### M21.2 - Admin-API (Backend) ✅
+- [x] `GET /admin/users` — alle Benutzer (mit Rollenfilter, Suche, Paginierung)
+- [x] `POST /admin/users` — Benutzer mit Rolle vet/provider/owner anlegen
+- [x] `GET /admin/users/:id` — Einzelnen Benutzer abrufen
+- [x] `PUT /admin/users/:id` — Rolle, Name, Status ändern
+- [x] `PUT /admin/users/:id/reset-password` — Passwort zurücksetzen
+- [x] `DELETE /admin/users/:id` — Benutzer deaktivieren
 
 ### M21.3 - Web-Admin Frontend
 - [ ] Flutter Web-Projekt `web_admin/` anlegen

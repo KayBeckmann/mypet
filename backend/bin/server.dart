@@ -18,6 +18,7 @@ import 'package:mypet_backend/controllers/invitation_controller.dart';
 import 'package:mypet_backend/controllers/permission_group_controller.dart';
 import 'package:mypet_backend/controllers/family_controller.dart';
 import 'package:mypet_backend/controllers/permission_controller.dart';
+import 'package:mypet_backend/controllers/admin_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
@@ -139,6 +140,16 @@ Future<void> main(List<String> args) async {
         .addHandler(permissionController.router.call),
   );
 
+  // Admin Routes (nur superadmin)
+  final adminController = AdminController(db);
+  app.mount(
+    '/admin',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addMiddleware(requireSuperadmin())
+        .addHandler(adminController.router.call),
+  );
+
   // Static Files für Uploads (öffentlich, Bilder über URL abrufbar)
   app.mount(
     '/uploads/',
@@ -230,6 +241,14 @@ Future<void> main(List<String> args) async {
   print('🔐 Zugriffsberechtigungen (authentifiziert):');
   print('   GET/POST       /permissions');
   print('   PUT/DELETE     /permissions/:id');
+  print('');
+  print('🛡️  Admin (nur superadmin):');
+  print('   GET    /admin/users          - Alle Benutzer');
+  print('   POST   /admin/users          - Benutzer anlegen');
+  print('   GET    /admin/users/:id      - Benutzer abrufen');
+  print('   PUT    /admin/users/:id      - Benutzer bearbeiten');
+  print('   PUT    /admin/users/:id/reset-password - Passwort reset');
+  print('   DELETE /admin/users/:id      - Benutzer deaktivieren');
   print('');
   print('📁 Uploads:');
   print('   GET  /uploads/...  - Hochgeladene Dateien');
