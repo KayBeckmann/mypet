@@ -11,6 +11,7 @@ import '../screens/feeding_screen.dart';
 import '../screens/records_screen.dart';
 import '../screens/marketplace_screen.dart';
 import '../screens/families_screen.dart';
+import '../screens/permissions_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/register_screen.dart';
 import '../widgets/app_shell.dart';
@@ -80,6 +81,10 @@ GoRouter createRouter(AuthProvider authProvider) {
           GoRoute(
             path: '/families',
             builder: (context, state) => const FamiliesScreen(),
+          ),
+          GoRoute(
+            path: '/permissions',
+            builder: (context, state) => const PermissionsScreen(),
           ),
           GoRoute(
             path: '/feeding',

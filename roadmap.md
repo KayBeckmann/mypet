@@ -208,10 +208,10 @@
 - [x] Mitglieder-Liste
 - [x] Mitglied entfernen
 
-### M5.3 - Urlaubsvertretung
-- [ ] Berechtigung erteilen Screen
-- [ ] Zeitraum wählen
-- [ ] Aktive Berechtigungen anzeigen
+### M5.3 - Urlaubsvertretung ✅
+- [x] Berechtigung erteilen Screen (Dialog mit Tier, Empfänger, Stufe, Zeitraum, Notiz)
+- [x] Zeitraum wählen (DatePicker für Start + Ende)
+- [x] Aktive Berechtigungen anzeigen (Liste mit Status-Badges, Widerrufen-Button)
 
 ---
 

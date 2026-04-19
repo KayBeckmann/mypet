@@ -33,6 +33,10 @@ class Sidebar extends StatelessWidget {
         icon: Icons.family_restroom_rounded,
         route: '/families'),
     SidebarItem(
+        label: 'SHARING',
+        icon: Icons.share_rounded,
+        route: '/permissions'),
+    SidebarItem(
         label: 'FEEDING',
         icon: Icons.restaurant_rounded,
         route: '/feeding'),
