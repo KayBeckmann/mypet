@@ -584,6 +584,35 @@ services:
 
 ---
 
+---
+
+## Phase 21: Superadmin-System
+
+> Kontrollierte Registrierung für Tierärzte und Dienstleister (Hufpfleger etc.) —
+> keine offene Anmeldung für professionelle Rollen. Nur der Superadmin legt diese Accounts an.
+
+### M21.1 - Superadmin-Rolle (Backend)
+- [ ] Migration 009: `superadmin` zur `user_role` enum hinzufügen
+- [ ] `/auth/register` auf Rolle `owner` beschränken (vet/provider/superadmin gesperrt)
+- [ ] `requireRole`-Middleware für `superadmin`-Routen
+
+### M21.2 - Admin-API (Backend)
+- [ ] `GET /admin/users` — alle Benutzer (mit Rollenfilter)
+- [ ] `POST /admin/users` — Benutzer mit Rolle vet/provider/owner anlegen
+- [ ] `PUT /admin/users/:id` — Rolle, Name, Status ändern
+- [ ] `PUT /admin/users/:id/reset-password` — Passwort zurücksetzen
+- [ ] `DELETE /admin/users/:id` — Benutzer deaktivieren
+
+### M21.3 - Web-Admin Frontend
+- [ ] Flutter Web-Projekt `web_admin/` anlegen
+- [ ] Login-Screen (nur für superadmin)
+- [ ] Benutzer-Liste mit Rollenfilter und Suche
+- [ ] Formular: Benutzer anlegen (Tierarzt / Dienstleister / Besitzer)
+- [ ] Benutzer-Detailansicht: Rolle & Status ändern, Passwort reset
+- [ ] Dockerfile + docker-compose Eintrag
+
+---
+
 ## Legende
 
 - [ ] Offen
