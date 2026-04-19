@@ -156,6 +156,7 @@ class OrganizationController {
     final router = Router();
 
     router.get('/', _listOrganizations);
+    router.get('/search', _searchOrganizations);
     router.post('/', _createOrganization);
     router.get('/<id>', _getOrganization);
     router.put('/<id>', _updateOrganization);
@@ -205,6 +206,51 @@ class OrganizationController {
       );
     } catch (e) {
       print('❌ Organizations-List-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// GET /organizations/search?type=vet_practice&q=searchterm
+  /// Suche nach öffentlichen Organisationen (für Terminbuchung)
+  Future<Response> _searchOrganizations(Request request) async {
+    try {
+      final params = request.requestedUri.queryParameters;
+      final typeFilter = params['type'];
+      final query = (params['q'] ?? '').trim();
+
+      final conditions = ['o.is_active = true'];
+      final queryParams = <String, dynamic>{};
+
+      if (typeFilter != null && typeFilter.isNotEmpty) {
+        conditions.add('o.type = @type::organization_type');
+        queryParams['type'] = typeFilter;
+      }
+      if (query.isNotEmpty) {
+        conditions.add('(o.name ILIKE @q OR o.address ILIKE @q OR o.specialization ILIKE @q)');
+        queryParams['q'] = '%$query%';
+      }
+
+      final where = conditions.isEmpty ? '' : 'WHERE ${conditions.join(' AND ')}';
+
+      final orgs = await _db.queryAll(
+        '''
+        SELECT o.id, o.name, o.type, o.provider_type, o.description,
+               o.address, o.phone, o.email, o.website,
+               o.specialization, o.service_radius_km
+        FROM organizations o
+        $where
+        ORDER BY o.name ASC
+        LIMIT 50
+        ''',
+        parameters: queryParams,
+      );
+
+      return Response.ok(
+        jsonEncode({'organizations': orgs.map(_serializeOrganizationPublic).toList()}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Organizations-Search-Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }
@@ -856,6 +902,23 @@ class OrganizationController {
         'member_role': org['member_role']?.toString(),
       if (org.containsKey('member_position'))
         'member_position': org['member_position'],
+    };
+  }
+
+  /// Öffentliche Ansicht (ohne sensible Felder wie created_by)
+  Map<String, dynamic> _serializeOrganizationPublic(Map<String, dynamic> org) {
+    return {
+      'id': org['id'].toString(),
+      'name': org['name'],
+      'type': org['type'].toString(),
+      'provider_type': org['provider_type'],
+      'description': org['description'],
+      'address': org['address'],
+      'phone': org['phone'],
+      'email': org['email'],
+      'website': org['website'],
+      'specialization': org['specialization'],
+      'service_radius_km': org['service_radius_km'],
     };
   }
 

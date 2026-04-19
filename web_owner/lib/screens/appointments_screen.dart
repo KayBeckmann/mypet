@@ -5,6 +5,7 @@ import '../models/appointment.dart';
 import '../providers/appointment_provider.dart';
 import '../providers/pet_provider.dart';
 import '../models/pet.dart';
+import '../services/api_service.dart';
 
 class AppointmentsScreen extends StatefulWidget {
   const AppointmentsScreen({super.key});
@@ -403,10 +404,36 @@ class _BookAppointmentDialogState extends State<_BookAppointmentDialog> {
   int _duration = 30;
   bool _saving = false;
 
+  // Provider/Org selection
+  List<Map<String, dynamic>> _organizations = [];
+  Map<String, dynamic>? _selectedOrg;
+  bool _loadingOrgs = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.pets.isNotEmpty) _selectedPet = widget.pets.first;
+    _loadOrganizations();
+  }
+
+  Future<void> _loadOrganizations() async {
+    setState(() => _loadingOrgs = true);
+    try {
+      final api = ApiService();
+      final data = await api.get('/organizations/search?type=vet_practice');
+      final orgs = (data['organizations'] as List? ?? [])
+          .cast<Map<String, dynamic>>();
+      // Also load service providers
+      final data2 = await api.get('/organizations/search?type=service_provider');
+      final orgs2 = (data2['organizations'] as List? ?? [])
+          .cast<Map<String, dynamic>>();
+      setState(() {
+        _organizations = [...orgs, ...orgs2];
+        _loadingOrgs = false;
+      });
+    } catch (_) {
+      setState(() => _loadingOrgs = false);
+    }
   }
 
   @override
@@ -485,6 +512,34 @@ class _BookAppointmentDialogState extends State<_BookAppointmentDialog> {
                   onChanged: (v) => setState(() => _duration = v ?? 30),
                 ),
                 const SizedBox(height: 12),
+
+                // Provider/Organization selection
+                if (_loadingOrgs)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: LinearProgressIndicator(),
+                  )
+                else if (_organizations.isNotEmpty) ...[
+                  DropdownButtonFormField<Map<String, dynamic>>(
+                    value: _selectedOrg,
+                    decoration: const InputDecoration(
+                      labelText: 'Tierarzt / Dienstleister (optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem<Map<String, dynamic>>(
+                        value: null,
+                        child: Text('Keine Auswahl'),
+                      ),
+                      ..._organizations.map((org) => DropdownMenuItem(
+                            value: org,
+                            child: Text(org['name'] as String),
+                          )),
+                    ],
+                    onChanged: (org) => setState(() => _selectedOrg = org),
+                  ),
+                  const SizedBox(height: 12),
+                ],
 
                 // Location
                 TextFormField(
@@ -571,6 +626,7 @@ class _BookAppointmentDialogState extends State<_BookAppointmentDialog> {
           description: _descCtrl.text.trim().isEmpty
               ? null
               : _descCtrl.text.trim(),
+          organizationId: _selectedOrg?['id'] as String?,
           location: _locationCtrl.text.trim().isEmpty
               ? null
               : _locationCtrl.text.trim(),
