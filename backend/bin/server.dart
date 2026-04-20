@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:bcrypt/bcrypt.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
@@ -81,6 +82,11 @@ Future<void> main(List<String> args) async {
     final migrator = Migrator(db);
     await migrator.rollback();
     exit(0);
+  }
+
+  // Superadmin anlegen, falls noch keiner existiert
+  if (db.isConnected) {
+    await _seedSuperadmin(db, config);
   }
 
   // Upload-Verzeichnis sicherstellen
@@ -357,4 +363,56 @@ Future<void> main(List<String> args) async {
     await server.close();
     exit(0);
   });
+}
+
+/// Stellt sicher, dass ein Superadmin-Account mit den konfigurierten
+/// Zugangsdaten existiert. Bei jedem Start wird das Passwort aktualisiert,
+/// sofern SUPERADMIN_PASSWORD gesetzt ist.
+Future<void> _seedSuperadmin(Database db, Config config) async {
+  final email = config.superadminEmail;
+  final password = config.superadminPassword;
+  final name = config.superadminName;
+
+  if (password == 'change-me-in-production') {
+    print(
+        '⚠️  SUPERADMIN_PASSWORD nicht gesetzt – Superadmin-Seed übersprungen.');
+    return;
+  }
+
+  final hash = BCrypt.hashpw(password, BCrypt.gensalt());
+  try {
+    final existing = await db.queryOne(
+      "SELECT id FROM users WHERE role = 'superadmin' LIMIT 1",
+    );
+
+    if (existing != null) {
+      await db.query(
+        '''
+        UPDATE users
+        SET email = @email, password_hash = @hash, name = @name, is_active = true
+        WHERE id = @id::uuid
+        ''',
+        parameters: {
+          'id': existing['id'],
+          'email': email,
+          'hash': hash,
+          'name': name,
+        },
+      );
+      print('✅  Superadmin aktualisiert: $email');
+    } else {
+      await db.query(
+        '''
+        INSERT INTO users (email, password_hash, name, role, is_active)
+        VALUES (@email, @hash, @name, 'superadmin', true)
+        ON CONFLICT (email) DO UPDATE
+          SET role = 'superadmin', is_active = true, password_hash = @hash
+        ''',
+        parameters: {'email': email, 'hash': hash, 'name': name},
+      );
+      print('✅  Superadmin angelegt: $email');
+    }
+  } catch (e) {
+    print('❌  Superadmin-Seed fehlgeschlagen: $e');
+  }
 }

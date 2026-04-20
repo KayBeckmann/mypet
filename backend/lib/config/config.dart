@@ -35,6 +35,14 @@ class Config {
   String? get smtpPassword => _envOptional('SMTP_PASSWORD');
   String? get smtpFrom => _envOptional('SMTP_FROM');
 
+  // ===== Superadmin Seed =====
+  String get superadminEmail =>
+      _env('SUPERADMIN_EMAIL', 'admin@mypet.local');
+  String get superadminPassword =>
+      _env('SUPERADMIN_PASSWORD', 'change-me-in-production');
+  String get superadminName =>
+      _env('SUPERADMIN_NAME', 'Super Admin');
+
   // ===== Entwicklung =====
   bool get debug => _env('DEBUG', 'false').toLowerCase() == 'true';
   String get logLevel => _env('LOG_LEVEL', 'info');

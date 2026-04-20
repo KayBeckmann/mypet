@@ -50,18 +50,26 @@ class DashboardScreen extends StatelessWidget {
                 Wrap(
                   spacing: 12,
                   runSpacing: 12,
-                  children: const [
+                  children: [
                     QuickActionChip(
-                      icon: Icons.book_rounded,
-                      label: 'Tagebuch',
+                      icon: Icons.vaccines_rounded,
+                      label: 'Impfpass',
+                      onTap: () => context.go('/animals'),
                     ),
                     QuickActionChip(
-                      icon: Icons.health_and_safety_rounded,
-                      label: 'Gesundheits-Check',
+                      icon: Icons.restaurant_rounded,
+                      label: 'Fütterung',
+                      onTap: () => context.go('/feeding'),
                     ),
                     QuickActionChip(
-                      icon: Icons.inventory_2_rounded,
-                      label: 'Futterbestand',
+                      icon: Icons.alarm_rounded,
+                      label: 'Erinnerungen',
+                      onTap: () => context.go('/reminders'),
+                    ),
+                    QuickActionChip(
+                      icon: Icons.storefront_rounded,
+                      label: 'Tierärzte finden',
+                      onTap: () => context.go('/marketplace'),
                     ),
                   ],
                 ),

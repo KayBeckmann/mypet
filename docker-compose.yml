@@ -41,6 +41,9 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change-me-in-production}
       UPLOAD_PATH: /app/uploads
       MAX_FILE_SIZE: ${MAX_FILE_SIZE:-10485760}
+      SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL:-admin@mypet.local}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD:-change-me-in-production}
+      SUPERADMIN_NAME: ${SUPERADMIN_NAME:-Super Admin}
     volumes:
       - uploads:/app/uploads
     ports:
