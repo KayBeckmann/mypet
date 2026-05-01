@@ -28,6 +28,7 @@ class _MyPetProviderAppState extends State<MyPetProviderApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<ApiService>.value(value: _apiService),
         ChangeNotifierProvider(
           create: (_) => ProviderAuthProvider(api: _apiService),
         ),
