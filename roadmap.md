@@ -640,6 +640,33 @@ services:
 
 ---
 
+## Phase 23: Dashboard, Medikamente, Gewicht & Bugfixes
+
+### M23.1 - Medikations-Tracking (web_owner) ✅
+- [x] `MedicationProvider` — `loadForPet`, `administer`, `skip` mit vollständigem Modell
+- [x] `MedicationsScreen` — Pet-Selector, aktive/inaktive Medikamente, Gegeben/Übersprungen-Dialog
+- [x] `AnimalDetailScreen` — `_MedicationsCard` mit 1-Klick-Gegeben-Button
+
+### M23.2 - Dashboard Erinnerungen ✅
+- [x] `_RemindersPanel` im Dashboard-Sidebar zeigt bis zu 4 ausstehende Erinnerungen
+- [x] `ReminderProvider.load()` beim Login gestartet (nicht erst beim Navigieren zu /reminders)
+- [x] "Kalender öffnen"-Button durch Link zu `/appointments` ersetzt
+
+### M23.3 - Gewichtsverlauf im Tierprofil (web_owner) ✅
+- [x] `AnimalDetailScreen` — `_WeightCard` mit Sparkline (CustomPainter), Trend-Badge, Quick-Add-Dialog
+- [x] Lädt `WeightProvider` nur wenn `selectedPetId != petId`
+
+### M23.4 - Compliance-Bug fix (web_vet) ✅
+- [x] `patient_detail_screen`: `s['was_given']` existiert nicht → auf `s['status'] == 'given'` korrigiert
+- [x] Adherence-Rate und Einzel-Einträge zeigten immer 0%/"Ausgelassen"
+
+### M23.5 - services_screen API-Anbindung (web_provider) ✅
+- [x] Leistungen wurden nur lokal in `_entries` gehalten (TODO seit Phase 12)
+- [x] Pet-Auswahl lädt `GET /pets/:id/records`, Erfassen ruft `POST /pets/:id/records` auf
+- [x] `Provider<ApiService>` in `web_provider/main.dart` ergänzt
+
+---
+
 ## Legende
 
 - [ ] Offen
