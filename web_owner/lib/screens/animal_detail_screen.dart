@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -11,6 +12,7 @@ import '../models/media.dart';
 import '../providers/media_provider.dart';
 import '../providers/medication_provider.dart';
 import '../providers/permission_provider.dart';
+import '../providers/weight_provider.dart';
 import '../services/file_picker_service.dart';
 
 class AnimalDetailScreen extends StatefulWidget {
@@ -33,6 +35,8 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
       context.read<OwnerHealthProvider>().loadForPet(widget.petId);
       context.read<MediaProvider>().selectPet(widget.petId);
       context.read<MedicationProvider>().loadForPet(widget.petId);
+      final wp = context.read<WeightProvider>();
+      if (wp.selectedPetId != widget.petId) wp.loadForPet(widget.petId);
     });
   }
 
@@ -283,6 +287,10 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
 
           // Medications (full width)
           _MedicationsCard(petId: widget.petId),
+          const SizedBox(height: 20),
+
+          // Weight trend (full width)
+          _WeightCard(petId: widget.petId),
           const SizedBox(height: 32),
 
           // Transfer & Delete buttons
@@ -1252,6 +1260,309 @@ class _QuickAdministerButtonState extends State<_QuickAdministerButton> {
       );
     }
   }
+}
+
+// ── Weight Card ───────────────────────────────────────────────────────────────
+
+class _WeightCard extends StatelessWidget {
+  final String petId;
+  const _WeightCard({required this.petId});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<WeightProvider>();
+    final loading = provider.loading;
+    final entries = provider.selectedPetId == petId ? provider.entries : <WeightEntry>[];
+
+    return _DetailCard(
+      title: 'GEWICHTSVERLAUF',
+      children: [
+        if (loading)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else if (entries.isEmpty)
+          Row(
+            children: [
+              Expanded(
+                child: _EmptyState(
+                  icon: Icons.monitor_weight_outlined,
+                  label: 'Noch kein Gewicht eingetragen',
+                ),
+              ),
+              _AddWeightButton(provider: provider),
+            ],
+          )
+        else ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Current weight + trend
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${entries.last.weightKg.toStringAsFixed(1)} kg',
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                    if (entries.length >= 2)
+                      _TrendBadge(
+                        current: entries.last.weightKg,
+                        previous: entries[entries.length - 2].weightKg,
+                      ),
+                  ],
+                ),
+              ),
+              // Mini sparkline
+              if (entries.length >= 2)
+                SizedBox(
+                  width: 120,
+                  height: 48,
+                  child: CustomPaint(
+                    painter: _SparklinePainter(
+                      values: entries
+                        .skip(math.max(0, entries.length - 8))
+                        .map((e) => e.weightKg)
+                        .toList(),
+                      color: LivingLedgerTheme.primary,
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 12),
+              _AddWeightButton(provider: provider),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Last 3 entries
+          ...entries.reversed.take(3).map((e) {
+            final fmt = DateFormat('dd.MM.yy');
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Text(
+                    fmt.format(e.recordedAt),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${e.weightKg.toStringAsFixed(1)} kg',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  if (e.notes != null && e.notes!.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        e.notes!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontStyle: FontStyle.italic,
+                            ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => context.go('/weight'),
+              child: const Text('Vollständiger Verlauf →'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _TrendBadge extends StatelessWidget {
+  final double current;
+  final double previous;
+  const _TrendBadge({required this.current, required this.previous});
+
+  @override
+  Widget build(BuildContext context) {
+    final diff = current - previous;
+    final up = diff > 0;
+    final color = up ? LivingLedgerTheme.tertiary : LivingLedgerTheme.success;
+    final sign = up ? '+' : '';
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          up ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+          size: 14,
+          color: color,
+        ),
+        const SizedBox(width: 3),
+        Text(
+          '$sign${diff.toStringAsFixed(1)} kg',
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall
+              ?.copyWith(color: color, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+}
+
+class _AddWeightButton extends StatelessWidget {
+  final WeightProvider provider;
+  const _AddWeightButton({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      icon: const Icon(Icons.add_rounded, size: 16),
+      label: const Text('Erfassen'),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      ),
+      onPressed: () => _showAddDialog(context),
+    );
+  }
+
+  Future<void> _showAddDialog(BuildContext context) async {
+    final weightCtrl = TextEditingController();
+    final notesCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Gewicht erfassen'),
+        content: SizedBox(
+          width: 340,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: weightCtrl,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Gewicht (kg) *',
+                    hintText: '4.5',
+                    suffixText: 'kg',
+                  ),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
+                    final n = double.tryParse(v.replaceAll(',', '.'));
+                    if (n == null || n <= 0) return 'Ungültiger Wert';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: notesCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Notiz (optional)',
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Abbrechen'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) Navigator.pop(ctx, true);
+            },
+            child: const Text('Speichern'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      final kg = double.parse(weightCtrl.text.trim().replaceAll(',', '.'));
+      final ok = await provider.add(
+        weightKg: kg,
+        notes: notesCtrl.text.trim().isNotEmpty ? notesCtrl.text.trim() : null,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ok ? 'Gewicht gespeichert.' : 'Fehler beim Speichern'),
+            backgroundColor: ok ? null : LivingLedgerTheme.error,
+          ),
+        );
+      }
+    }
+  }
+}
+
+class _SparklinePainter extends CustomPainter {
+  final List<double> values;
+  final Color color;
+
+  const _SparklinePainter({required this.values, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.length < 2) return;
+
+    final minV = values.reduce(math.min);
+    final maxV = values.reduce(math.max);
+    final range = maxV - minV;
+    final effectiveRange = range < 0.01 ? 1.0 : range;
+
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.7)
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final step = size.width / (values.length - 1);
+    final path = Path();
+
+    for (var i = 0; i < values.length; i++) {
+      final x = i * step;
+      final y = size.height -
+          ((values[i] - minV) / effectiveRange) * size.height * 0.85 -
+          size.height * 0.075;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(path, paint);
+
+    // Dot for last value
+    final lastX = (values.length - 1) * step;
+    final lastY = size.height -
+        ((values.last - minV) / effectiveRange) * size.height * 0.85 -
+        size.height * 0.075;
+    canvas.drawCircle(
+      Offset(lastX, lastY),
+      3.5,
+      Paint()..color = color,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SparklinePainter old) =>
+      old.values != values || old.color != color;
 }
 
 // ── Empty State ───────────────────────────────────────────────────────────────

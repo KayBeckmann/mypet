@@ -1274,7 +1274,7 @@ class _ComplianceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final given = schedule.where((s) => s['was_given'] == true).length;
+    final given = schedule.where((s) => s['status'] == 'given').length;
     final total = schedule.length;
     final adherence = total > 0 ? (given / total * 100).round() : null;
 
@@ -1379,7 +1379,7 @@ class _ComplianceCard extends StatelessWidget {
                       letterSpacing: 0.5)),
               const SizedBox(height: 6),
               ...schedule.take(7).map((s) {
-                final wasGiven = s['was_given'] == true;
+                final wasGiven = s['status'] == 'given';
                 final scheduled = s['scheduled_at'] as String?;
                 DateTime? dt;
                 try {
