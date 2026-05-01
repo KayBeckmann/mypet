@@ -52,6 +52,7 @@ class Sidebar extends StatelessWidget {
       SidebarItem(label: 'Akten', icon: Icons.folder_rounded, route: '/records'),
       SidebarItem(label: 'Gewicht', icon: Icons.monitor_weight_rounded, route: '/weight'),
       SidebarItem(label: 'Fütterung', icon: Icons.restaurant_rounded, route: '/feeding'),
+      SidebarItem(label: 'Medikamente', icon: Icons.medication_rounded, route: '/medications'),
       SidebarItem(label: 'Erinnerungen', icon: Icons.alarm_rounded, route: '/reminders'),
     ]),
     _SidebarSection(title: 'Verwaltung', items: [

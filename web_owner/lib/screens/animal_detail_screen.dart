@@ -9,6 +9,7 @@ import '../providers/transfer_provider.dart';
 import '../providers/health_provider.dart';
 import '../models/media.dart';
 import '../providers/media_provider.dart';
+import '../providers/medication_provider.dart';
 import '../providers/permission_provider.dart';
 import '../services/file_picker_service.dart';
 
@@ -31,6 +32,7 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<OwnerHealthProvider>().loadForPet(widget.petId);
       context.read<MediaProvider>().selectPet(widget.petId);
+      context.read<MedicationProvider>().loadForPet(widget.petId);
     });
   }
 
@@ -277,6 +279,10 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
 
           // Medical Records (full width)
           _MedicalRecordsCard(petId: widget.petId),
+          const SizedBox(height: 20),
+
+          // Medications (full width)
+          _MedicationsCard(petId: widget.petId),
           const SizedBox(height: 32),
 
           // Transfer & Delete buttons
@@ -1095,6 +1101,156 @@ class _MedicalRecordsCard extends StatelessWidget {
         ],
       ],
     );
+  }
+}
+
+// ── Medications Card ──────────────────────────────────────────────────────────
+
+class _MedicationsCard extends StatelessWidget {
+  final String petId;
+  const _MedicationsCard({required this.petId});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<MedicationProvider>();
+    final loading = provider.isLoading(petId);
+    final active = provider.activeForPet(petId);
+
+    return _DetailCard(
+      title: 'MEDIKAMENTE',
+      children: [
+        if (loading)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else if (active.isEmpty)
+          _EmptyState(
+            icon: Icons.medication_outlined,
+            label: 'Keine aktiven Medikamente',
+          )
+        else ...[
+          ...active.take(4).map((m) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: LivingLedgerTheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(
+                            LivingLedgerTheme.radiusFull),
+                      ),
+                      child: Text(
+                        m.frequencyLabel,
+                        style:
+                            Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: LivingLedgerTheme.primary,
+                                ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            m.name,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          if (m.dosage != null)
+                            Text(m.dosage!,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                        color: LivingLedgerTheme.secondary)),
+                        ],
+                      ),
+                    ),
+                    _QuickAdministerButton(petId: petId, medication: m),
+                  ],
+                ),
+              )),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => context.go('/medications'),
+              child: const Text('Alle Medikamente →'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _QuickAdministerButton extends StatefulWidget {
+  final String petId;
+  final Medication medication;
+  const _QuickAdministerButton(
+      {required this.petId, required this.medication});
+
+  @override
+  State<_QuickAdministerButton> createState() =>
+      _QuickAdministerButtonState();
+}
+
+class _QuickAdministerButtonState extends State<_QuickAdministerButton> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return _busy
+        ? const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : Tooltip(
+            message: 'Gegeben',
+            child: InkWell(
+              onTap: () => _administer(context),
+              borderRadius:
+                  BorderRadius.circular(LivingLedgerTheme.radiusFull),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color:
+                      LivingLedgerTheme.success.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  size: 16,
+                  color: LivingLedgerTheme.success,
+                ),
+              ),
+            ),
+          );
+  }
+
+  Future<void> _administer(BuildContext context) async {
+    setState(() => _busy = true);
+    final ok = await context
+        .read<MedicationProvider>()
+        .administer(widget.petId, widget.medication.id);
+    if (mounted) {
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ok
+              ? '${widget.medication.name} als gegeben protokolliert.'
+              : 'Fehler beim Speichern'),
+          backgroundColor: ok ? null : LivingLedgerTheme.error,
+        ),
+      );
+    }
   }
 }
 

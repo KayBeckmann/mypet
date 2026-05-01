@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import 'package:intl/intl.dart';
 import '../providers/auth_provider.dart';
 import '../providers/pet_provider.dart';
 import '../providers/appointment_provider.dart';
+import '../providers/reminder_provider.dart';
 import '../models/appointment.dart';
 import '../widgets/pet_card.dart';
 import '../widgets/appointment_card.dart';
@@ -18,6 +20,7 @@ class DashboardScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final petProvider = context.watch<PetProvider>();
     final appointmentProvider = context.watch<AppointmentProvider>();
+    final reminderProvider = context.watch<ReminderProvider>();
     final userName = auth.user?.name ?? 'Tierfreund';
 
     return SingleChildScrollView(
@@ -130,11 +133,19 @@ class DashboardScreen extends StatelessWidget {
           ),
           const SizedBox(width: 32),
 
-          // ── Right Panel: Appointments ──
+          // ── Right Panel: Appointments + Reminders ──
           SizedBox(
             width: 300,
-            child: _AppointmentsPanel(
-              appointments: appointmentProvider.upcoming,
+            child: Column(
+              children: [
+                _AppointmentsPanel(
+                  appointments: appointmentProvider.upcoming,
+                ),
+                const SizedBox(height: 20),
+                _RemindersPanel(
+                  reminders: reminderProvider.upcoming,
+                ),
+              ],
             ),
           ),
         ],
@@ -216,12 +227,145 @@ class _AppointmentsPanel extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Calendar Button
+          // Link
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () {},
-              child: const Text('Kalender öffnen'),
+            child: TextButton(
+              onPressed: () => context.go('/appointments'),
+              child: const Text('Alle Termine →'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RemindersPanel extends StatelessWidget {
+  final List<Reminder> reminders;
+
+  const _RemindersPanel({required this.reminders});
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = DateFormat('dd.MM. HH:mm');
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: LivingLedgerTheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusXl),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.alarm_rounded,
+                  size: 20, color: LivingLedgerTheme.tertiary),
+              const SizedBox(width: 8),
+              Text('Erinnerungen',
+                  style: Theme.of(context).textTheme.headlineSmall),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          if (reminders.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Text(
+                  'Keine ausstehenden Erinnerungen',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: LivingLedgerTheme.onSurfaceVariant,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          else
+            ...reminders.take(4).map((r) {
+              final isPast = r.isPast;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 2),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: isPast
+                            ? LivingLedgerTheme.tertiary
+                            : LivingLedgerTheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            r.title,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Row(
+                            children: [
+                              Icon(
+                                isPast
+                                    ? Icons.warning_amber_rounded
+                                    : Icons.schedule_rounded,
+                                size: 11,
+                                color: isPast
+                                    ? LivingLedgerTheme.tertiary
+                                    : LivingLedgerTheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                fmt.format(r.remindAt),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: isPast
+                                          ? LivingLedgerTheme.tertiary
+                                          : null,
+                                    ),
+                              ),
+                              if (r.petName != null) ...[
+                                const Text(' · ',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color:
+                                            LivingLedgerTheme.onSurfaceVariant)),
+                                Text(r.petName!,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () => context.go('/reminders'),
+              child: const Text('Alle Erinnerungen →'),
             ),
           ),
         ],
