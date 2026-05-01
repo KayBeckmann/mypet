@@ -617,6 +617,29 @@ services:
 
 ---
 
+---
+
+## Phase 22: Detail-Screen & Berechtigungen
+
+### M22.1 - AnimalDetailScreen Verbesserungen ✅
+- [x] Dokumente-Placeholder durch echte `_MediaCard` ersetzt (MediaProvider, 4 Vorschau-Einträge + Link zu /records)
+- [x] `_MedicalRecordsCard` hinzugefügt — zeigt Einträge aus der med. Akte via OwnerHealthProvider (Typ-Badge, Datum, Diagnose, Tierarzt)
+- [x] Leerer Zustand als wiederverwendbarer `_EmptyState`-Widget extrahiert
+
+### M22.2 - „Teilen mit TA"-Dialog ✅
+- [x] Button war dead code (`onPressed: (){}`), jetzt funktionierender Dialog
+- [x] Eingabe: E-Mail der Person, Zugriffsstufe (lesen/schreiben/verwalten), optionales Ablaufdatum, Notiz
+- [x] Ruft `PermissionProvider.grantPermission` mit `subjectEmail` auf
+
+### M22.3 - Berechtigung erteilen (PermissionsScreen Fix) ✅
+- [x] `PermissionProvider.grantPermission` unterstützt jetzt `subjectEmail` (Backend löst E-Mail → UUID serverseitig auf)
+- [x] `permissions_screen.dart`: Berechtigung-erteilen-Dialog rief API bisher nie auf (TODO-Kommentar seit M5.3) — jetzt korrekt implementiert
+
+### M22.4 - CLAUDE.md ✅
+- [x] `CLAUDE.md` erstellt: Befehle, Architektur, Controller/Provider-Muster, Migrations-Workflow
+
+---
+
 ## Legende
 
 - [ ] Offen
