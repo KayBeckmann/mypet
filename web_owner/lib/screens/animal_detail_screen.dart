@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../models/pet.dart';
 import '../providers/pet_provider.dart';
 import '../providers/transfer_provider.dart';
 import '../providers/health_provider.dart';
+import '../providers/media_provider.dart';
+import '../providers/permission_provider.dart';
 import '../services/file_picker_service.dart';
 
 class AnimalDetailScreen extends StatefulWidget {
@@ -19,12 +22,14 @@ class AnimalDetailScreen extends StatefulWidget {
 
 class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
   bool _isUploadingPhoto = false;
+  final _dateFormat = DateFormat('dd.MM.yyyy');
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<OwnerHealthProvider>().loadForPet(widget.petId);
+      context.read<MediaProvider>().selectPet(widget.petId);
     });
   }
 
@@ -75,7 +80,6 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Pet Image
               _buildPetImage(pet, photoUrl),
               const SizedBox(width: 32),
 
@@ -84,7 +88,6 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Status badges
                     Row(
                       children: [
                         _StatusBadge(
@@ -101,7 +104,6 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Name
                     Text(
                       pet.name,
                       style: Theme.of(context).textTheme.displaySmall,
@@ -117,7 +119,6 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Action Buttons
                     Row(
                       children: [
                         OutlinedButton.icon(
@@ -128,7 +129,8 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () =>
+                              _showShareWithVetDialog(context, pet),
                           icon: const Icon(Icons.share_rounded, size: 18),
                           label: const Text('Teilen mit TA'),
                         ),
@@ -145,7 +147,6 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Core Bio-Metrics
               Expanded(
                 child: _DetailCard(
                   title: 'CORE BIO-METRICS',
@@ -164,7 +165,6 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
               ),
               const SizedBox(width: 20),
 
-              // Health Status
               Expanded(
                 child: _DetailCard(
                   title: 'GESUNDHEITSSTATUS',
@@ -202,7 +202,6 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
               ),
               const SizedBox(width: 20),
 
-              // Feeding
               Expanded(
                 child: _DetailCard(
                   title: 'FÜTTERUNG',
@@ -259,53 +258,24 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
           ),
           const SizedBox(height: 32),
 
-          // Bottom sections row
+          // Vaccination + Media Row
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Vaccination Passport – live data
-              Expanded(
-                child: _VaccinationCard(petId: widget.petId),
-              ),
+              Expanded(child: _VaccinationCard(petId: widget.petId)),
               const SizedBox(width: 20),
-
-              // Documents placeholder
               Expanded(
-                child: _DetailCard(
-                  title: 'DOKUMENTE & BILDER',
-                  children: [
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.folder_open_rounded,
-                              size: 36,
-                              color: LivingLedgerTheme.onSurfaceVariant
-                                  .withValues(alpha: 0.3),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Noch keine Dokumente hochgeladen',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color:
-                                        LivingLedgerTheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                child: _MediaCard(
+                  petId: widget.petId,
+                  apiBaseUrl: petProvider.apiBaseUrl,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 20),
 
+          // Medical Records (full width)
+          _MedicalRecordsCard(petId: widget.petId),
           const SizedBox(height: 32),
 
           // Transfer & Delete buttons
@@ -336,6 +306,8 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
       ),
     );
   }
+
+  // ── Pet Image ──────────────────────────────────────────────────────────────
 
   Widget _buildPetImage(Pet pet, String? photoUrl) {
     return Stack(
@@ -429,12 +401,161 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
     }
   }
 
+  // ── Teilen mit TA ──────────────────────────────────────────────────────────
+
+  Future<void> _showShareWithVetDialog(BuildContext context, Pet pet) async {
+    final emailCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+    String selectedPermission = 'read';
+    DateTime? endsAt;
+    final formKey = GlobalKey<FormState>();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.share_rounded, size: 20),
+              const SizedBox(width: 8),
+              Text('${pet.name} teilen'),
+            ],
+          ),
+          content: SizedBox(
+            width: 440,
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Erteile einem Tierarzt, Dienstleister oder einer '
+                    'Vertretung Zugriff auf ${pet.name}. '
+                    'Die Person muss bereits bei MyPet registriert sein.',
+                    style: Theme.of(ctx).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: emailCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'E-Mail der Person *',
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) =>
+                        (v == null || !v.contains('@'))
+                            ? 'Ungültige E-Mail'
+                            : null,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: selectedPermission,
+                    decoration:
+                        const InputDecoration(labelText: 'Zugriffsstufe'),
+                    items: const [
+                      DropdownMenuItem(
+                          value: 'read',
+                          child: Text('Lesen — Profil & Akte einsehen')),
+                      DropdownMenuItem(
+                          value: 'write',
+                          child: Text('Schreiben — Einträge hinzufügen')),
+                      DropdownMenuItem(
+                          value: 'manage',
+                          child: Text('Verwalten — voller Zugriff')),
+                    ],
+                    onChanged: (v) =>
+                        setDs(() => selectedPermission = v!),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.event_busy, size: 16),
+                    label: Text(endsAt != null
+                        ? 'Bis: ${_dateFormat.format(endsAt!)}'
+                        : 'Gültig bis (optional)'),
+                    onPressed: () async {
+                      final date = await showDatePicker(
+                        context: ctx,
+                        initialDate:
+                            DateTime.now().add(const Duration(days: 30)),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now()
+                            .add(const Duration(days: 365 * 3)),
+                      );
+                      if (date != null) setDs(() => endsAt = date);
+                    },
+                  ),
+                  if (endsAt != null) ...[
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => setDs(() => endsAt = null),
+                        child: const Text('Datum entfernen'),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: noteCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Notiz (optional)',
+                      hintText: 'z.B. Urlaubsvertretung, Impftermin …',
+                    ),
+                    maxLines: 2,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Abbrechen'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(ctx, true);
+                }
+              },
+              child: const Text('Zugriff erteilen'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final permProvider = context.read<PermissionProvider>();
+      final ok = await permProvider.grantPermission(
+        petId: pet.id,
+        subjectType: 'user',
+        subjectEmail: emailCtrl.text.trim(),
+        permission: selectedPermission,
+        endsAt: endsAt,
+        note: noteCtrl.text.trim().isNotEmpty ? noteCtrl.text.trim() : null,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ok
+                ? 'Zugriff auf ${pet.name} erteilt.'
+                : permProvider.error ?? 'Fehler beim Erteilen'),
+            backgroundColor:
+                ok ? null : LivingLedgerTheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  // ── Transfer & Delete ──────────────────────────────────────────────────────
+
   Future<void> _showTransferDialog(BuildContext context, Pet pet) async {
     final emailCtrl = TextEditingController();
     final messageCtrl = TextEditingController();
     final transferProvider = context.read<TransferProvider>();
 
-    // Load existing transfers
     await transferProvider.loadForPet(pet.id);
     final transfers = transferProvider.transfersForPet(pet.id);
     final pending = transfers.where((t) => t.status == 'pending').toList();
@@ -591,6 +712,8 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
     );
   }
 
+  // ── Color helpers ──────────────────────────────────────────────────────────
+
   Color _healthColor(HealthStatus s) {
     switch (s) {
       case HealthStatus.optimal:
@@ -621,6 +744,8 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
   Color _feedingBgColor(FeedingStatus s) =>
       _feedingColor(s).withValues(alpha: 0.08);
 }
+
+// ── Reusable Widgets ──────────────────────────────────────────────────────────
 
 class _StatusBadge extends StatelessWidget {
   final String label;
@@ -712,6 +837,8 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
+// ── Vaccination Card ──────────────────────────────────────────────────────────
+
 class _VaccinationCard extends StatelessWidget {
   final String petId;
   const _VaccinationCard({required this.petId});
@@ -731,27 +858,9 @@ class _VaccinationCard extends StatelessWidget {
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           )
         else if (vaccinations.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.vaccines_rounded,
-                    size: 36,
-                    color: LivingLedgerTheme.onSurfaceVariant
-                        .withValues(alpha: 0.3),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Noch keine Impfungen eingetragen',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: LivingLedgerTheme.onSurfaceVariant,
-                        ),
-                  ),
-                ],
-              ),
-            ),
+          _EmptyState(
+            icon: Icons.vaccines_rounded,
+            label: 'Noch keine Impfungen eingetragen',
           )
         else
           ...vaccinations.take(5).map((v) => Padding(
@@ -780,7 +889,8 @@ class _VaccinationCard extends StatelessWidget {
                           ),
                           if (v.validUntil != null)
                             Text(
-                              '${v.statusLabel} bis ${v.validUntil!.day}.${v.validUntil!.month}.${v.validUntil!.year}',
+                              '${v.statusLabel} bis '
+                              '${v.validUntil!.day}.${v.validUntil!.month}.${v.validUntil!.year}',
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
@@ -793,6 +903,228 @@ class _VaccinationCard extends StatelessWidget {
                 ),
               )),
       ],
+    );
+  }
+}
+
+// ── Media Card ────────────────────────────────────────────────────────────────
+
+class _MediaCard extends StatelessWidget {
+  final String petId;
+  final String apiBaseUrl;
+
+  const _MediaCard({required this.petId, required this.apiBaseUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaProvider = context.watch<MediaProvider>();
+    final loading = mediaProvider.loading;
+    final items = mediaProvider.selectedPetId == petId
+        ? mediaProvider.media.take(4).toList()
+        : <PetMedia>[];
+
+    return _DetailCard(
+      title: 'DOKUMENTE & BILDER',
+      children: [
+        if (loading)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else if (items.isEmpty)
+          _EmptyState(
+            icon: Icons.folder_open_rounded,
+            label: 'Noch keine Dokumente hochgeladen',
+          )
+        else ...[
+          ...items.map((m) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      _mediaIcon(m.mediaType),
+                      size: 18,
+                      color: LivingLedgerTheme.secondary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        m.displayName,
+                        style:
+                            Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      m.sizeLabel,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              )),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => context.go('/records'),
+              child: const Text('Alle Dokumente →'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  IconData _mediaIcon(String type) {
+    switch (type) {
+      case 'image':
+        return Icons.image_outlined;
+      case 'xray':
+        return Icons.biotech_outlined;
+      case 'document':
+      default:
+        return Icons.description_outlined;
+    }
+  }
+}
+
+// ── Medical Records Card ──────────────────────────────────────────────────────
+
+class _MedicalRecordsCard extends StatelessWidget {
+  final String petId;
+  const _MedicalRecordsCard({required this.petId});
+
+  @override
+  Widget build(BuildContext context) {
+    final health = context.watch<OwnerHealthProvider>();
+    final records = health.recordsForPet(petId);
+    final loading = health.isLoading(petId);
+    final fmt = DateFormat('dd.MM.yyyy');
+
+    return _DetailCard(
+      title: 'MEDIZINISCHE AKTE',
+      children: [
+        if (loading)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else if (records.isEmpty)
+          _EmptyState(
+            icon: Icons.medical_services_outlined,
+            label: 'Noch keine Einträge in der Akte',
+          )
+        else ...[
+          ...records.take(5).map((r) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: LivingLedgerTheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(
+                            LivingLedgerTheme.radiusFull),
+                      ),
+                      child: Text(
+                        r.typeLabel,
+                        style:
+                            Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: LivingLedgerTheme.onSecondaryContainer,
+                                ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            r.title,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          if (r.vetName != null || r.recordedAt != null)
+                            Text(
+                              [
+                                if (r.vetName != null) r.vetName!,
+                                if (r.recordedAt != null)
+                                  fmt.format(r.recordedAt!),
+                              ].join(' · '),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          if (r.diagnosis != null &&
+                              r.diagnosis!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                r.diagnosis!,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                        fontStyle: FontStyle.italic),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+          if (records.length > 5)
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '+ ${records.length - 5} weitere Einträge',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: LivingLedgerTheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+}
+
+// ── Empty State ───────────────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _EmptyState({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Column(
+          children: [
+            Icon(icon,
+                size: 36,
+                color: LivingLedgerTheme.onSurfaceVariant
+                    .withValues(alpha: 0.3)),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: LivingLedgerTheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

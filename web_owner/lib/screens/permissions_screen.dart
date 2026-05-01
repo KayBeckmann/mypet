@@ -171,21 +171,28 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
     );
 
     if (confirmed == true && mounted) {
-      // E-Mail → userId auflösen ist serverseitig — wir senden E-Mail direkt
-      // Der Backend /permissions endpoint akzeptiert subject_user_id (UUID).
-      // Wir senden hier vorerst die E-Mail als "email" Feld — alternativ
-      // könnte ein /users/lookup?email= Endpoint genutzt werden.
-      // Für die MVP-Phase senden wir die E-Mail und der Server muss sie auflösen.
-      // Da die aktuelle API subject_user_id erwartet, zeigen wir einen Hinweis.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Berechtigung wird erteilt...'),
-          duration: Duration(seconds: 1),
-        ),
+      final ok = await context.read<PermissionProvider>().grantPermission(
+        petId: selectedPetId,
+        subjectType: 'user',
+        subjectEmail: emailController.text.trim(),
+        permission: selectedPermission,
+        startsAt: startsAt,
+        endsAt: endsAt,
+        note: noteController.text.trim().isNotEmpty
+            ? noteController.text.trim()
+            : null,
       );
-      // TODO: /users/lookup?email= implementieren für E-Mail→UUID Auflösung
-      // Für jetzt reloaden wir nur die Liste
-      await context.read<PermissionProvider>().loadPermissions();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ok
+                ? 'Berechtigung erteilt.'
+                : context.read<PermissionProvider>().error ??
+                    'Fehler beim Erteilen der Berechtigung'),
+            backgroundColor: ok ? null : LivingLedgerTheme.error,
+          ),
+        );
+      }
     }
   }
 

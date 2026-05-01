@@ -102,6 +102,7 @@ class PermissionProvider extends ChangeNotifier {
     required String petId,
     required String subjectType,
     String? subjectUserId,
+    String? subjectEmail, // Server löst E-Mail → UUID auf
     String? subjectOrganizationId,
     required String permission,
     DateTime? startsAt,
@@ -113,6 +114,7 @@ class PermissionProvider extends ChangeNotifier {
         'pet_id': petId,
         'subject_type': subjectType,
         if (subjectUserId != null) 'subject_user_id': subjectUserId,
+        if (subjectEmail != null) 'subject_email': subjectEmail,
         if (subjectOrganizationId != null)
           'subject_organization_id': subjectOrganizationId,
         'permission': permission,
