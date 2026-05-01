@@ -10,6 +10,7 @@ version: '3.8'
 
 services:
   db:
+    image: postgres:16-alpine
     restart: always
     # Port NICHT nach außen freigeben in Produktion
     ports: []

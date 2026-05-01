@@ -7,6 +7,7 @@ import '../models/pet.dart';
 import '../providers/pet_provider.dart';
 import '../providers/transfer_provider.dart';
 import '../providers/health_provider.dart';
+import '../models/media.dart';
 import '../providers/media_provider.dart';
 import '../providers/permission_provider.dart';
 import '../services/file_picker_service.dart';
