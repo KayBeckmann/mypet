@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
@@ -52,7 +53,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'Hier ist eine Übersicht Ihrer aktuellen Aktivitäten.',
               style: TextStyle(color: ProviderTheme.onSurfaceVariant),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
+
+            if (auth.activeOrganizationId == null) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: Colors.amber.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded,
+                        color: Colors.amber, size: 20),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Kein Betrieb verbunden. Lege einen Betrieb an oder '
+                        'nimm eine Einladung an, um Kunden zu verwalten.',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.go('/organization'),
+                      child: const Text('Zum Betrieb'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            const SizedBox(height: 16),
 
             // Summary cards
             Row(
