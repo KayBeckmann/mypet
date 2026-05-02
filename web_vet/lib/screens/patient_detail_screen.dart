@@ -353,16 +353,30 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
     final mediaProvider = context.watch<VetMediaProvider>();
     final notesProvider = context.watch<VetNotesProvider>();
     final patientsProvider = context.watch<PatientsProvider>();
-    final petName = patientsProvider.patients
+    final petData = patientsProvider.patients
         .where((p) => p['id'] == widget.petId)
-        .map((p) => p['name'] as String?)
-        .firstOrNull ?? 'Patient';
+        .firstOrNull;
+    final petName = petData?['name'] as String? ?? 'Patient';
+    final ownerName = petData?['owner_name'] as String?;
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: VetTheme.primary,
         foregroundColor: VetTheme.onPrimary,
-        title: Text(petName),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(petName,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 16)),
+            if (ownerName != null)
+              Text(
+                'Besitzer: $ownerName',
+                style: const TextStyle(
+                    fontSize: 11, color: Colors.white70),
+              ),
+          ],
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/patients'),

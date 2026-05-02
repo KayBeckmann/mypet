@@ -44,8 +44,10 @@ class PetController {
         '''
         SELECT DISTINCT p.id, p.owner_id, p.name, p.species, p.breed,
                p.birth_date, p.weight_kg, p.microchip_id, p.image_url,
-               p.notes, p.is_active, p.created_at, p.updated_at
+               p.notes, p.is_active, p.created_at, p.updated_at,
+               u.name AS owner_name, u.email AS owner_email
         FROM pets p
+        LEFT JOIN users u ON p.owner_id = u.id
         WHERE p.is_active = true
           AND (
             p.owner_id = @user_id::uuid
@@ -568,6 +570,8 @@ class PetController {
       'is_active': pet['is_active'],
       'created_at': (pet['created_at'] as DateTime).toIso8601String(),
       'updated_at': (pet['updated_at'] as DateTime).toIso8601String(),
+      if (pet['owner_name'] != null) 'owner_name': pet['owner_name'],
+      if (pet['owner_email'] != null) 'owner_email': pet['owner_email'],
     };
   }
 

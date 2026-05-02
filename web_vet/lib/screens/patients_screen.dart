@@ -129,6 +129,7 @@ class _PatientCard extends StatelessWidget {
     final name = patient['name'] as String? ?? '';
     final species = patient['species'] as String? ?? '';
     final breed = patient['breed'] as String? ?? '';
+    final ownerName = patient['owner_name'] as String?;
 
     return Card(
       child: ListTile(
@@ -146,6 +147,7 @@ class _PatientCard extends StatelessWidget {
         subtitle: Text([
           _speciesLabel(species),
           if (breed.isNotEmpty) breed,
+          if (ownerName != null) 'Besitzer: $ownerName',
         ].join(' · ')),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => context.go('/patients/${patient['id']}'),
