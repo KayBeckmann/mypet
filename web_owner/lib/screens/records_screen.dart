@@ -1,11 +1,13 @@
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../config/theme.dart';
 import '../providers/pet_provider.dart';
 import '../providers/media_provider.dart';
+import '../providers/health_provider.dart';
 import '../models/media.dart';
 
 class RecordsScreen extends StatefulWidget {
@@ -22,12 +24,14 @@ class _RecordsScreenState extends State<RecordsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final pets = context.read<PetProvider>().pets;
       final mediaProvider = context.read<MediaProvider>();
       if (pets.isNotEmpty && mediaProvider.selectedPetId == null) {
-        mediaProvider.selectPet(pets.first.id);
+        final petId = pets.first.id;
+        mediaProvider.selectPet(petId);
+        context.read<OwnerHealthProvider>().loadForPet(petId);
       }
     });
   }
@@ -42,7 +46,9 @@ class _RecordsScreenState extends State<RecordsScreen>
   Widget build(BuildContext context) {
     final petProvider = context.watch<PetProvider>();
     final mediaProvider = context.watch<MediaProvider>();
+    final healthProvider = context.watch<OwnerHealthProvider>();
     final pets = petProvider.pets;
+    final selectedPetId = mediaProvider.selectedPetId;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(40, 24, 40, 40),
@@ -50,12 +56,12 @@ class _RecordsScreenState extends State<RecordsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Dokumente & Medien',
+            'Akten & Medien',
             style: Theme.of(context).textTheme.displaySmall,
           ),
           const SizedBox(height: 8),
           Text(
-            'Fotos, Dokumente und Röntgenbilder deiner Tiere.',
+            'Medizinische Akte, Fotos und Dokumente deiner Tiere.',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: LivingLedgerTheme.onSurfaceVariant,
                 ),
@@ -76,19 +82,23 @@ class _RecordsScreenState extends State<RecordsScreen>
                   children: pets
                       .map((p) => ChoiceChip(
                             label: Text(p.name),
-                            selected: mediaProvider.selectedPetId == p.id,
-                            onSelected: (_) => mediaProvider.selectPet(p.id),
+                            selected: selectedPetId == p.id,
+                            onSelected: (_) {
+                              mediaProvider.selectPet(p.id);
+                              healthProvider.loadForPet(p.id);
+                            },
                           ))
                       .toList(),
                 ),
                 const Spacer(),
-                FilledButton.icon(
-                  icon: const Icon(Icons.upload_rounded, size: 18),
-                  label: const Text('Datei hochladen'),
-                  onPressed: mediaProvider.selectedPetId == null
-                      ? null
-                      : () => _showUploadDialog(context, mediaProvider),
-                ),
+                if (_tabController.index < 3)
+                  FilledButton.icon(
+                    icon: const Icon(Icons.upload_rounded, size: 18),
+                    label: const Text('Datei hochladen'),
+                    onPressed: selectedPetId == null
+                        ? null
+                        : () => _showUploadDialog(context, mediaProvider),
+                  ),
               ],
             ),
           const SizedBox(height: 16),
@@ -101,10 +111,16 @@ class _RecordsScreenState extends State<RecordsScreen>
               labelColor: LivingLedgerTheme.primary,
               unselectedLabelColor: LivingLedgerTheme.onSurfaceVariant,
               indicatorColor: LivingLedgerTheme.primary,
+              onTap: (_) => setState(() {}),
               tabs: [
                 Tab(text: 'Alle (${mediaProvider.media.length})'),
                 Tab(text: 'Bilder (${mediaProvider.images.length})'),
                 Tab(text: 'Dokumente (${mediaProvider.documents.length})'),
+                Tab(
+                  text: selectedPetId != null
+                      ? 'Krankenakte (${healthProvider.recordsForPet(selectedPetId).length})'
+                      : 'Krankenakte',
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -116,6 +132,13 @@ class _RecordsScreenState extends State<RecordsScreen>
                   _MediaGrid(items: mediaProvider.media),
                   _MediaGrid(items: mediaProvider.images),
                   _MediaGrid(items: mediaProvider.documents),
+                  selectedPetId != null
+                      ? _MedicalRecordsTab(
+                          petId: selectedPetId,
+                          provider: healthProvider,
+                        )
+                      : const Center(
+                          child: Text('Tier auswählen')),
                 ],
               ),
             ),
@@ -469,6 +492,119 @@ class _UploadDialogState extends State<_UploadDialog> {
               : const Text('Hochladen'),
         ),
       ],
+    );
+  }
+}
+
+class _MedicalRecordsTab extends StatelessWidget {
+  final String petId;
+  final OwnerHealthProvider provider;
+
+  const _MedicalRecordsTab({required this.petId, required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final records = provider.recordsForPet(petId);
+    final loading = provider.isLoading(petId);
+    final fmt = DateFormat('dd.MM.yyyy');
+
+    if (loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (records.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.medical_services_outlined,
+                size: 56,
+                color:
+                    LivingLedgerTheme.onSurfaceVariant.withValues(alpha: 0.3)),
+            const SizedBox(height: 12),
+            Text(
+              'Noch keine Einträge in der Krankenakte.',
+              style: TextStyle(color: LivingLedgerTheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.only(top: 8),
+      itemCount: records.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (_, i) {
+        final r = records[i];
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: LivingLedgerTheme.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: LivingLedgerTheme.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: LivingLedgerTheme.secondaryContainer,
+                      borderRadius:
+                          BorderRadius.circular(LivingLedgerTheme.radiusFull),
+                    ),
+                    child: Text(r.typeLabel,
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: LivingLedgerTheme.onSecondaryContainer,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      r.title,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  if (r.recordedAt != null)
+                    Text(
+                      fmt.format(r.recordedAt!),
+                      style: const TextStyle(
+                          fontSize: 12,
+                          color: LivingLedgerTheme.onSurfaceVariant),
+                    ),
+                ],
+              ),
+              if (r.vetName != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  [
+                    r.vetName!,
+                    if (r.organizationName != null) r.organizationName!,
+                  ].join(' · '),
+                  style: const TextStyle(
+                      fontSize: 12,
+                      color: LivingLedgerTheme.onSurfaceVariant),
+                ),
+              ],
+              if (r.diagnosis != null && r.diagnosis!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  r.diagnosis!,
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: LivingLedgerTheme.onSurfaceVariant),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }
