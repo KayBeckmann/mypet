@@ -140,6 +140,43 @@ class ProviderAuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> updateProfile({String? name, String? email}) async {
+    if (_user == null) return false;
+    try {
+      final data = await _api.put('/account', body: {
+        if (name != null && name.isNotEmpty) 'name': name,
+        if (email != null && email.isNotEmpty) 'email': email,
+      });
+      final updated = data['user'] as Map<String, dynamic>?;
+      if (updated != null) {
+        _user = User.fromJson(updated);
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _api.put('/account/password', body: {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      });
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();

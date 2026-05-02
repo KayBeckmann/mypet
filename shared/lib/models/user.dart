@@ -30,6 +30,16 @@ class User {
     );
   }
 
+  User copyWith({String? name, String? email}) => User(
+        id: id,
+        email: email ?? this.email,
+        name: name ?? this.name,
+        role: role,
+        emailVerified: emailVerified,
+        isActive: isActive,
+        createdAt: createdAt,
+      );
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'email': email,

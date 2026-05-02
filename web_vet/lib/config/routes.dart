@@ -7,6 +7,8 @@ import '../screens/members_screen.dart';
 import '../screens/patients_screen.dart';
 import '../screens/patient_detail_screen.dart';
 import '../screens/appointments_screen.dart';
+import '../screens/register_screen.dart';
+import '../screens/settings_screen.dart';
 import '../widgets/app_shell.dart';
 
 GoRouter createRouter(VetAuthProvider authProvider) {
@@ -22,6 +24,7 @@ GoRouter createRouter(VetAuthProvider authProvider) {
     },
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       ShellRoute(
         builder: (context, state, child) => VetAppShell(child: child),
         routes: [
@@ -41,6 +44,10 @@ GoRouter createRouter(VetAuthProvider authProvider) {
           GoRoute(
             path: '/appointments',
             builder: (_, __) => const VetAppointmentsScreen(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (_, __) => const VetSettingsScreen(),
           ),
         ],
       ),

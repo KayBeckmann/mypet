@@ -94,6 +94,12 @@ class ProviderAppShell extends StatelessWidget {
                         route: '/appointments',
                         currentRoute: currentRoute,
                       ),
+                      _NavItem(
+                        icon: Icons.settings_outlined,
+                        label: 'Einstellungen',
+                        route: '/settings',
+                        currentRoute: currentRoute,
+                      ),
                     ],
                   ),
                 ),
