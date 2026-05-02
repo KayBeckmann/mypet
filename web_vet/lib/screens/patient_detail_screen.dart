@@ -1,3 +1,5 @@
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
@@ -833,6 +835,20 @@ class _MediaTab extends StatelessWidget {
                                     fontWeight: FontWeight.w600),
                               ),
                             ),
+                            GestureDetector(
+                              onTap: () {
+                                html.window.open(
+                                    '$_apiBase${m.url}', '_blank');
+                              },
+                              child: Icon(
+                                m.isImage
+                                    ? Icons.open_in_new_rounded
+                                    : Icons.download_rounded,
+                                size: 14,
+                                color: VetTheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
                             GestureDetector(
                               onTap: () async {
                                 final ok = await showDialog<bool>(

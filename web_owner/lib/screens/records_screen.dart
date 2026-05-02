@@ -1,3 +1,5 @@
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -241,6 +243,19 @@ class _MediaCard extends StatelessWidget {
                           fontSize: 11),
                     ),
                     const Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        html.window.open('$apiBase${item.url}', '_blank');
+                      },
+                      child: Icon(
+                        item.isImage
+                            ? Icons.open_in_new_rounded
+                            : Icons.download_rounded,
+                        size: 16,
+                        color: LivingLedgerTheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     GestureDetector(
                       onTap: () async {
                         final ok = await showDialog<bool>(
