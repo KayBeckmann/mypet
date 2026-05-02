@@ -76,11 +76,32 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Back button
-          TextButton.icon(
-            onPressed: () => context.go('/animals'),
-            icon: const Icon(Icons.arrow_back_rounded, size: 18),
-            label: const Text('Zurück'),
+          // Back button + pet switcher
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: () => context.go('/animals'),
+                icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                label: const Text('Zurück'),
+              ),
+              if (petProvider.pets.length > 1) ...[
+                const Spacer(),
+                DropdownButton<String>(
+                  value: widget.petId,
+                  underline: const SizedBox(),
+                  icon: const Icon(Icons.pets_rounded, size: 16),
+                  items: petProvider.pets.map((p) => DropdownMenuItem(
+                    value: p.id,
+                    child: Text(p.name),
+                  )).toList(),
+                  onChanged: (id) {
+                    if (id != null && id != widget.petId) {
+                      context.go('/animals/$id');
+                    }
+                  },
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 16),
 
