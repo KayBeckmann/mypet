@@ -21,8 +21,15 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final pets = context.read<PetProvider>().pets;
+      final medProvider = context.read<MedicationProvider>();
       if (pets.isNotEmpty) {
-        _selectPet(pets.first.id);
+          // Use already-selected pet if available, otherwise first pet
+        final preselected = medProvider.selectedPetId;
+        final target = preselected != null &&
+                pets.any((p) => p.id == preselected)
+            ? preselected
+            : pets.first.id;
+        _selectPet(target);
       }
     });
   }

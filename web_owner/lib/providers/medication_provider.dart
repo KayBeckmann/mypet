@@ -91,14 +91,17 @@ class MedicationProvider extends ChangeNotifier {
   final Map<String, List<Medication>> _medications = {};
   final Set<String> _loading = {};
   final Map<String, String?> _errors = {};
+  String? _selectedPetId;
 
   List<Medication> forPet(String petId) => _medications[petId] ?? [];
   List<Medication> activeForPet(String petId) =>
       forPet(petId).where((m) => m.isActive && !m.isExpired).toList();
   bool isLoading(String petId) => _loading.contains(petId);
   String? error(String petId) => _errors[petId];
+  String? get selectedPetId => _selectedPetId;
 
   Future<void> loadForPet(String petId) async {
+    _selectedPetId = petId;
     if (_loading.contains(petId)) return;
     _loading.add(petId);
     _errors.remove(petId);

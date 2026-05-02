@@ -1282,7 +1282,10 @@ class _MedicationsCard extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () => context.go('/medications'),
+              onPressed: () {
+                context.read<MedicationProvider>().loadForPet(petId);
+                context.go('/medications');
+              },
               child: const Text('Alle Medikamente →'),
             ),
           ),
