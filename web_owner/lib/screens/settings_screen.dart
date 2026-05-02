@@ -383,9 +383,117 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       TextStyle(color: LivingLedgerTheme.error, fontSize: 13)),
             ),
           ],
+
+          const SizedBox(height: 24),
+
+          // Danger Zone
+          _Section(
+            title: 'Gefahrenzone',
+            children: [
+              ListTile(
+                leading: Icon(Icons.delete_forever_rounded,
+                    color: LivingLedgerTheme.error),
+                title: const Text('Konto löschen'),
+                subtitle: const Text(
+                    'Löscht dein Konto und alle deine Tiere unwiderruflich.'),
+                trailing: OutlinedButton(
+                  onPressed: auth.isDemoMode
+                      ? null
+                      : () => _showDeleteAccountDialog(context, auth),
+                  style: OutlinedButton.styleFrom(
+                      foregroundColor: LivingLedgerTheme.error,
+                      side: BorderSide(color: LivingLedgerTheme.error)),
+                  child: const Text('Konto löschen'),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _showDeleteAccountDialog(
+      BuildContext context, AuthProvider auth) async {
+    final confirmCtrl = TextEditingController();
+    final email = auth.user?.email ?? '';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.warning_rounded,
+                  color: LivingLedgerTheme.error, size: 24),
+              const SizedBox(width: 8),
+              const Text('Konto unwiderruflich löschen'),
+            ],
+          ),
+          content: SizedBox(
+            width: 440,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: LivingLedgerTheme.error.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Diese Aktion kann nicht rückgängig gemacht werden! '
+                    'Alle deine Tiere, Akten, Fotos und Daten werden dauerhaft gelöscht.',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text('Gib deine E-Mail-Adresse ein, um zu bestätigen:',
+                    style: const TextStyle(fontSize: 13)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: confirmCtrl,
+                  autofocus: true,
+                  onChanged: (_) => setDs(() {}),
+                  decoration: InputDecoration(
+                    labelText: email,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Abbrechen')),
+            FilledButton(
+              onPressed: confirmCtrl.text.trim() == email
+                  ? () => Navigator.pop(ctx, true)
+                  : null,
+              style: FilledButton.styleFrom(
+                  backgroundColor: LivingLedgerTheme.error),
+              child: const Text('Konto löschen'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    try {
+      final api = context.read<ApiService>();
+      await api.delete('/account');
+      if (mounted) auth.logout();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Fehler: $e'),
+          backgroundColor: LivingLedgerTheme.error,
+        ));
+      }
+    }
   }
 
   String _fmtDate(String? iso) {
