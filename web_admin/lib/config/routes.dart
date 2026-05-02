@@ -5,6 +5,7 @@ import '../screens/dashboard_screen.dart';
 import '../screens/users_screen.dart';
 import '../screens/create_user_screen.dart';
 import '../screens/user_detail_screen.dart';
+import '../screens/organizations_screen.dart';
 
 GoRouter createRouter(AdminAuthProvider authProvider) {
   return GoRouter(
@@ -27,6 +28,9 @@ GoRouter createRouter(AdminAuthProvider authProvider) {
         builder: (_, state) =>
             UserDetailScreen(userId: state.pathParameters['id']!),
       ),
+      GoRoute(
+          path: '/organizations',
+          builder: (_, __) => const AdminOrganizationsScreen()),
     ],
   );
 }

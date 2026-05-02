@@ -116,6 +116,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       label: 'Benutzer anlegen',
                       onTap: () => context.go('/users/create'),
                     ),
+                    _QuickAction(
+                      icon: Icons.business_outlined,
+                      label: 'Organisationen',
+                      onTap: () => context.go('/organizations'),
+                    ),
                   ],
                 ),
               ],

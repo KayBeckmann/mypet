@@ -20,6 +20,7 @@ class AdminController {
     router.put('/users/<id>', _updateUser);
     router.put('/users/<id>/reset-password', _resetPassword);
     router.delete('/users/<id>', _deactivateUser);
+    router.get('/organizations', _listOrganizations);
 
     return router;
   }
@@ -326,6 +327,78 @@ class AdminController {
       );
     } catch (e) {
       print('❌ Admin deactivateUser Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// GET /admin/organizations?search=...&type=...&page=1&limit=20
+  Future<Response> _listOrganizations(Request request) async {
+    try {
+      final params = request.requestedUri.queryParameters;
+      final search = params['search'];
+      final type = params['type'];
+      final page = int.tryParse(params['page'] ?? '1') ?? 1;
+      final limit = (int.tryParse(params['limit'] ?? '20') ?? 20).clamp(1, 100);
+      final offset = (page - 1) * limit;
+
+      final conditions = <String>[];
+      final parameters = <String, dynamic>{'limit': limit, 'offset': offset};
+
+      if (search != null && search.isNotEmpty) {
+        conditions.add('(o.name ILIKE @search OR o.email ILIKE @search)');
+        parameters['search'] = '%$search%';
+      }
+      if (type != null && type.isNotEmpty) {
+        conditions.add('o.type::text = @type');
+        parameters['type'] = type;
+      }
+
+      final where = conditions.isEmpty ? '' : 'WHERE ${conditions.join(' AND ')}';
+
+      final rows = await _db.queryAll(
+        '''
+        SELECT o.id, o.name, o.type::text AS type, o.email, o.phone,
+               o.is_active, o.created_at,
+               COUNT(om.user_id) AS member_count
+        FROM organizations o
+        LEFT JOIN organization_members om ON o.id = om.organization_id
+        $where
+        GROUP BY o.id
+        ORDER BY o.created_at DESC
+        LIMIT @limit OFFSET @offset
+        ''',
+        parameters: parameters,
+      );
+
+      final countResult = await _db.queryOne(
+        'SELECT COUNT(*) AS total FROM organizations o $where',
+        parameters: parameters,
+      );
+      final total = int.tryParse(countResult?['total']?.toString() ?? '0') ?? 0;
+
+      return Response.ok(
+        jsonEncode({
+          'organizations': rows.map((r) => {
+            'id': r['id'].toString(),
+            'name': r['name'],
+            'type': r['type'],
+            'email': r['email'],
+            'phone': r['phone'],
+            'is_active': r['is_active'],
+            'member_count': int.tryParse(r['member_count']?.toString() ?? '0') ?? 0,
+            'created_at': (r['created_at'] as DateTime).toIso8601String(),
+          }).toList(),
+          'pagination': {
+            'page': page,
+            'limit': limit,
+            'total': total,
+            'pages': (total / limit).ceil(),
+          },
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Admin listOrganizations Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }
