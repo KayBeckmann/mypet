@@ -719,6 +719,23 @@ services:
 
 ---
 
+## Phase 26: Media-Download, Einladungen & UI-Fixes
+
+### M26.1 - Media Download/View ✅
+- [x] `records_screen` (web_owner): Öffnen/Download-Button auf jeder Mediakarte (html.window.open)
+- [x] `patient_detail_screen` (web_vet): identischer Button im Bildarchiv-Tab
+
+### M26.2 - Einladungs-Management ✅
+- [x] `OrganizationProvider` (web_vet + web_provider): loadInvitations(), acceptInvitation(), rejectInvitation()
+- [x] Organisations-Screen zeigt Banner mit ausstehenden Einladungen (Annehmen/Ablehnen)
+
+### M26.3 - UI-Fixes ✅
+- [x] `patient_detail_screen` (web_vet): AppBar zeigt jetzt den Tiernamen statt "Patient"
+- [x] `settings_screen` (web_owner): Gefahrenzone-Sektion mit Konto-Löschen + E-Mail-Bestätigung
+- [x] `admin_controller`: GET /admin/organizations + organizations_screen in web_admin
+
+---
+
 ## Legende
 
 - [ ] Offen
