@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
+import '../providers/reminder_provider.dart';
 
 class SidebarItem {
   final String label;
@@ -43,6 +44,16 @@ class Sidebar extends StatelessWidget {
     this.compact = false,
   });
 
+  Map<String, int> _buildBadges(BuildContext context) {
+    final reminderProvider = context.watch<ReminderProvider>();
+    final overdue = reminderProvider.reminders
+        .where((r) => r.status == 'pending' && r.isPast)
+        .length;
+    return {
+      if (overdue > 0) '/reminders': overdue,
+    };
+  }
+
   static const List<_SidebarSection> _sections = [
     _SidebarSection(items: [
       SidebarItem(label: 'Dashboard', icon: Icons.dashboard_rounded, route: '/'),
@@ -72,6 +83,7 @@ class Sidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final badges = _buildBadges(context);
     final user = auth.user;
 
     return Container(
@@ -160,6 +172,7 @@ class Sidebar extends StatelessWidget {
                       isActive: currentRoute == item.route,
                       onTap: () => onNavigate(item.route),
                       compact: compact,
+                      badge: badges[item.route],
                     ),
                   if (section.title != null) const SizedBox(height: 4),
                 ],
@@ -341,12 +354,14 @@ class _SidebarNavItem extends StatefulWidget {
   final bool isActive;
   final VoidCallback onTap;
   final bool compact;
+  final int? badge;
 
   const _SidebarNavItem({
     required this.item,
     required this.isActive,
     required this.onTap,
     this.compact = false,
+    this.badge,
   });
 
   @override
@@ -364,34 +379,36 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
         vertical: 12,
       ),
       child: widget.compact
-          ? Icon(
-              widget.item.icon,
-              size: 20,
+          ? _BadgeIcon(
+              icon: widget.item.icon,
+              badge: widget.badge,
               color: widget.isActive
                   ? LivingLedgerTheme.primary
                   : LivingLedgerTheme.onSurfaceVariant,
             )
           : Row(
               children: [
-                Icon(
-                  widget.item.icon,
-                  size: 20,
+                _BadgeIcon(
+                  icon: widget.item.icon,
+                  badge: widget.badge,
                   color: widget.isActive
                       ? LivingLedgerTheme.primary
                       : LivingLedgerTheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  widget.item.label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: widget.isActive
-                            ? LivingLedgerTheme.primary
-                            : LivingLedgerTheme.onSurfaceVariant,
-                        fontWeight: widget.isActive
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        letterSpacing: 0.3,
-                      ),
+                Expanded(
+                  child: Text(
+                    widget.item.label,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: widget.isActive
+                              ? LivingLedgerTheme.primary
+                              : LivingLedgerTheme.onSurfaceVariant,
+                          fontWeight: widget.isActive
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          letterSpacing: 0.3,
+                        ),
+                  ),
                 ),
               ],
             ),
@@ -436,6 +453,47 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
               )
             : decorated,
       ),
+    );
+  }
+}
+
+class _BadgeIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final int? badge;
+
+  const _BadgeIcon({
+    required this.icon,
+    required this.color,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Icon(icon, size: 20, color: color),
+        if (badge != null && badge! > 0)
+          Positioned(
+            right: -6,
+            top: -4,
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: LivingLedgerTheme.error,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                badge! > 9 ? '9+' : '$badge',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
