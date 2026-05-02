@@ -1099,15 +1099,109 @@ class _MedicalRecordsCard extends StatelessWidget {
           if (records.length > 5)
             Align(
               alignment: Alignment.centerRight,
-              child: Text(
-                '+ ${records.length - 5} weitere Einträge',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: LivingLedgerTheme.onSurfaceVariant,
-                    ),
+              child: TextButton(
+                onPressed: () => _showAllRecords(context, records, fmt),
+                child: Text(
+                  '+ ${records.length - 5} weitere →',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: LivingLedgerTheme.primary,
+                      ),
+                ),
               ),
             ),
         ],
       ],
+    );
+  }
+
+  void _showAllRecords(BuildContext context, List<MedicalRecord> records, DateFormat fmt) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Medizinische Akte'),
+        content: SizedBox(
+          width: 600,
+          height: 500,
+          child: ListView.separated(
+            itemCount: records.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (_, i) {
+              final r = records[i];
+              return Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: LivingLedgerTheme.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusMd),
+                  border: Border.all(color: LivingLedgerTheme.outlineVariant),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: LivingLedgerTheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(
+                                LivingLedgerTheme.radiusFull),
+                          ),
+                          child: Text(
+                            r.typeLabel,
+                            style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            r.title,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        if (r.recordedAt != null)
+                          Text(
+                            fmt.format(r.recordedAt!),
+                            style: const TextStyle(
+                                fontSize: 11,
+                                color: LivingLedgerTheme.onSurfaceVariant),
+                          ),
+                      ],
+                    ),
+                    if (r.vetName != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        r.vetName!,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: LivingLedgerTheme.onSurfaceVariant),
+                      ),
+                    ],
+                    if (r.diagnosis != null && r.diagnosis!.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        r.diagnosis!,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                            color: LivingLedgerTheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Schließen'),
+          ),
+        ],
+      ),
     );
   }
 }
