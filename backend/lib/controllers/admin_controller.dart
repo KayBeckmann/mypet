@@ -13,6 +13,7 @@ class AdminController {
   Router get router {
     final router = Router();
 
+    router.get('/stats', _getStats);
     router.get('/users', _listUsers);
     router.post('/users', _createUser);
     router.get('/users/<id>', _getUser);
@@ -21,6 +22,48 @@ class AdminController {
     router.delete('/users/<id>', _deactivateUser);
 
     return router;
+  }
+
+  /// GET /admin/stats — Plattform-Statistiken
+  Future<Response> _getStats(Request request) async {
+    try {
+      final rows = await Future.wait([
+        _db.queryOne("SELECT COUNT(*) AS c FROM users"),
+        _db.queryOne("SELECT COUNT(*) AS c FROM users WHERE role = 'owner'"),
+        _db.queryOne("SELECT COUNT(*) AS c FROM users WHERE role = 'vet'"),
+        _db.queryOne("SELECT COUNT(*) AS c FROM users WHERE role = 'provider'"),
+        _db.queryOne("SELECT COUNT(*) AS c FROM pets"),
+        _db.queryOne("SELECT COUNT(*) AS c FROM organizations"),
+        _db.queryOne(
+            "SELECT COUNT(*) AS c FROM users WHERE created_at >= NOW() - INTERVAL '7 days'"),
+        _db.queryOne(
+            "SELECT COUNT(*) AS c FROM pets WHERE created_at >= NOW() - INTERVAL '7 days'"),
+        _db.queryOne("SELECT COUNT(*) AS c FROM users WHERE is_active = false"),
+      ]);
+
+      int _count(int i) =>
+          int.tryParse(rows[i]?['c']?.toString() ?? '0') ?? 0;
+
+      return Response.ok(
+        jsonEncode({
+          'stats': {
+            'users_total': _count(0),
+            'users_owner': _count(1),
+            'users_vet': _count(2),
+            'users_provider': _count(3),
+            'pets_total': _count(4),
+            'organizations_total': _count(5),
+            'new_users_7d': _count(6),
+            'new_pets_7d': _count(7),
+            'users_inactive': _count(8),
+          }
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Admin getStats Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
   }
 
   /// GET /admin/users?role=vet&search=...&page=1&limit=20

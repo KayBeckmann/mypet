@@ -47,6 +47,11 @@ class _UsersScreenState extends State<UsersScreen> {
       appBar: AppBar(
         backgroundColor: AdminTheme.primary,
         foregroundColor: AdminTheme.onPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.dashboard_outlined),
+          tooltip: 'Dashboard',
+          onPressed: () => context.go('/'),
+        ),
         title: const Text('Benutzerverwaltung'),
         actions: [
           Padding(

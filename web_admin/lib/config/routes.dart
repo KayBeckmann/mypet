@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../screens/login_screen.dart';
+import '../screens/dashboard_screen.dart';
 import '../screens/users_screen.dart';
 import '../screens/create_user_screen.dart';
 import '../screens/user_detail_screen.dart';
@@ -18,7 +19,8 @@ GoRouter createRouter(AdminAuthProvider authProvider) {
     },
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/', builder: (_, __) => const UsersScreen()),
+      GoRoute(path: '/', builder: (_, __) => const AdminDashboardScreen()),
+      GoRoute(path: '/users', builder: (_, __) => const UsersScreen()),
       GoRoute(path: '/users/create', builder: (_, __) => const CreateUserScreen()),
       GoRoute(
         path: '/users/:id',
