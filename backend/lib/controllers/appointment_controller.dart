@@ -18,6 +18,7 @@ class AppointmentController {
     router.get('/<id>', _getAppointment);
     router.put('/<id>/confirm', _confirm);
     router.put('/<id>/complete', _complete);
+    router.put('/<id>/no-show', _noShow);
     router.put('/<id>/cancel', _cancel);
     router.delete('/<id>', _delete);
 
@@ -272,6 +273,28 @@ class AppointmentController {
       );
     } catch (e) {
       print('❌ completeAppointment Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// PUT /appointments/:id/no-show
+  Future<Response> _noShow(Request request, String id) async {
+    try {
+      final appt = await _db.queryOne(
+        '''
+        UPDATE appointments SET status = 'no_show'::appointment_status
+        WHERE id = @id::uuid
+        RETURNING *
+        ''',
+        parameters: {'id': id},
+      );
+      if (appt == null) return _error(404, 'Termin nicht gefunden');
+      return Response.ok(
+        jsonEncode({'appointment': _sanitize(appt)}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ noShowAppointment Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }

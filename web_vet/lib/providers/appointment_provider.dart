@@ -169,6 +169,7 @@ class VetAppointmentProvider extends ChangeNotifier {
 
   Future<bool> confirm(String id) async => _action(id, 'confirm');
   Future<bool> complete(String id) async => _action(id, 'complete');
+  Future<bool> markNoShow(String id) async => _action(id, 'no-show');
 
   Future<bool> cancel(String id, {String? reason}) async {
     try {

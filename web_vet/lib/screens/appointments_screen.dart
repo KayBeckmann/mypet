@@ -142,6 +142,13 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
                                   context.read<VetAppointmentProvider>().complete(a.id),
                             ),
                             _ActionButton(
+                              label: 'Nicht erschienen',
+                              color: Colors.grey,
+                              icon: Icons.person_off_outlined,
+                              onPressed: () =>
+                                  context.read<VetAppointmentProvider>().markNoShow(a.id),
+                            ),
+                            _ActionButton(
                               label: 'Absagen',
                               color: VetTheme.error,
                               icon: Icons.cancel_outlined,
