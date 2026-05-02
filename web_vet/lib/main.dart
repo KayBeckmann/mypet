@@ -30,6 +30,7 @@ class _MyPetVetAppState extends State<MyPetVetApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<ApiService>.value(value: _apiService),
         ChangeNotifierProvider(
           create: (_) => VetAuthProvider(api: _apiService),
         ),
