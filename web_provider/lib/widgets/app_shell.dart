@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
+import '../providers/appointment_provider.dart';
 
 class ProviderAppShell extends StatelessWidget {
   final Widget child;
@@ -12,6 +13,8 @@ class ProviderAppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentRoute = GoRouterState.of(context).uri.toString();
     final auth = context.watch<ProviderAuthProvider>();
+    final pendingAppts =
+        context.watch<ProviderAppointmentProvider>().pending.length;
 
     return Scaffold(
       backgroundColor: ProviderTheme.surface,
@@ -93,6 +96,7 @@ class ProviderAppShell extends StatelessWidget {
                         label: 'Termine',
                         route: '/appointments',
                         currentRoute: currentRoute,
+                        badge: pendingAppts > 0 ? pendingAppts : null,
                       ),
                       _NavItem(
                         icon: Icons.settings_outlined,
@@ -163,12 +167,14 @@ class _NavItem extends StatelessWidget {
   final String label;
   final String route;
   final String currentRoute;
+  final int? badge;
 
   const _NavItem({
     required this.icon,
     required this.label,
     required this.route,
     required this.currentRoute,
+    this.badge,
   });
 
   bool get _isActive {
@@ -193,11 +199,35 @@ class _NavItem extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
-                Icon(icon,
-                    size: 20,
-                    color: _isActive
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.7)),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(icon,
+                        size: 20,
+                        color: _isActive
+                            ? Colors.white
+                            : Colors.white.withOpacity(0.7)),
+                    if (badge != null && badge! > 0)
+                      Positioned(
+                        right: -6,
+                        top: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            badge! > 9 ? '9+' : '$badge',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
                 const SizedBox(width: 10),
                 Text(
                   label,
