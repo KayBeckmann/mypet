@@ -246,6 +246,11 @@ class _RemindersPanel extends StatelessWidget {
 
   const _RemindersPanel({required this.reminders});
 
+  // Needed to call ReminderProvider from a StatelessWidget
+  void _dismiss(BuildContext context, String id) {
+    context.read<ReminderProvider>().dismiss(id);
+  }
+
   @override
   Widget build(BuildContext context) {
     final fmt = DateFormat('dd.MM. HH:mm');
@@ -355,6 +360,15 @@ class _RemindersPanel extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (isPast)
+                      GestureDetector(
+                        onTap: () => _dismiss(context, r.id),
+                        child: const Icon(
+                          Icons.check_circle_outline_rounded,
+                          size: 16,
+                          color: LivingLedgerTheme.tertiary,
+                        ),
+                      ),
                   ],
                 ),
               );
