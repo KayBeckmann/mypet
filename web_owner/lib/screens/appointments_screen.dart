@@ -143,7 +143,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     }
     await showDialog(
       context: context,
-      builder: (ctx) => _BookAppointmentDialog(pets: pets),
+      builder: (ctx) => BookAppointmentDialog(pets: pets),
     );
   }
 
@@ -384,15 +384,16 @@ class _AppointmentTile extends StatelessWidget {
   }
 }
 
-class _BookAppointmentDialog extends StatefulWidget {
+class BookAppointmentDialog extends StatefulWidget {
   final List<Pet> pets;
-  const _BookAppointmentDialog({required this.pets});
+  final Map<String, dynamic>? preselectedOrg;
+  const BookAppointmentDialog({required this.pets, this.preselectedOrg});
 
   @override
-  State<_BookAppointmentDialog> createState() => _BookAppointmentDialogState();
+  State<BookAppointmentDialog> createState() => _BookAppointmentDialogState();
 }
 
-class _BookAppointmentDialogState extends State<_BookAppointmentDialog> {
+class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
@@ -413,6 +414,9 @@ class _BookAppointmentDialogState extends State<_BookAppointmentDialog> {
   void initState() {
     super.initState();
     if (widget.pets.isNotEmpty) _selectedPet = widget.pets.first;
+    if (widget.preselectedOrg != null) {
+      _selectedOrg = widget.preselectedOrg;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadOrganizations());
   }
 
@@ -427,9 +431,16 @@ class _BookAppointmentDialogState extends State<_BookAppointmentDialog> {
       final data2 = await api.get('/organizations/search?type=service_provider');
       final orgs2 = (data2['organizations'] as List? ?? [])
           .cast<Map<String, dynamic>>();
+      final all = [...orgs, ...orgs2];
       setState(() {
-        _organizations = [...orgs, ...orgs2];
+        _organizations = all;
         _loadingOrgs = false;
+        // Re-match preselected org with loaded data (uses same ID)
+        if (widget.preselectedOrg != null && _selectedOrg != null) {
+          final preId = widget.preselectedOrg!['id'];
+          final match = all.where((o) => o['id'] == preId).firstOrNull;
+          if (match != null) _selectedOrg = match;
+        }
       });
     } catch (_) {
       setState(() => _loadingOrgs = false);

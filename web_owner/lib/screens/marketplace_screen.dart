@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../providers/pet_provider.dart';
 import '../services/api_service.dart';
+import 'appointments_screen.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
@@ -299,7 +301,24 @@ class _OrgCard extends StatelessWidget {
                 ],
               ],
             ),
-          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.calendar_today_rounded, size: 16),
+              label: const Text('Termin anfragen'),
+              onPressed: () {
+                final pets = context.read<PetProvider>().pets;
+                showDialog(
+                  context: context,
+                  builder: (_) => _BookAppointmentDialog(
+                    pets: pets,
+                    preselectedOrg: org,
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
