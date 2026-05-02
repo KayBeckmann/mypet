@@ -36,6 +36,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
+      context.read<OrganizationProvider>().loadInvitations();
     });
   }
 
@@ -117,8 +118,21 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
     }
 
     if (auth.organizations.isEmpty) {
-      return _NoOrgView(
-        onCreate: () => _showCreateDialog(context, auth),
+      // Show pending invitations even if no org yet
+      final invitations = orgProvider.pendingInvitations;
+      return Column(
+        children: [
+          if (invitations.isNotEmpty)
+            _InvitationsBanner(
+              invitations: invitations,
+              provider: orgProvider,
+            ),
+          Expanded(
+            child: _NoOrgView(
+              onCreate: () => _showCreateDialog(context, auth),
+            ),
+          ),
+        ],
       );
     }
 
@@ -130,6 +144,15 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Ausstehende Einladungen
+              if (orgProvider.pendingInvitations.isNotEmpty) ...[
+                _InvitationsBanner(
+                  invitations: orgProvider.pendingInvitations,
+                  provider: orgProvider,
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // Org-Selektor (falls mehrere)
               if (auth.organizations.length > 1)
                 DropdownButtonFormField<String>(
@@ -322,4 +345,108 @@ class _NoOrgView extends StatelessWidget {
       ),
     );
   }
+}
+
+class _InvitationsBanner extends StatelessWidget {
+  final List<Map<String, dynamic>> invitations;
+  final OrganizationProvider provider;
+
+  const _InvitationsBanner({
+    required this.invitations,
+    required this.provider,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            'Ausstehende Einladungen',
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ),
+        ...invitations.map((inv) {
+          final orgName = inv['organization_name'] as String? ?? '—';
+          final role = inv['role'] as String? ?? '';
+          final code = inv['invitation_code'] as String? ?? '';
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: VetTheme.primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                  color: VetTheme.primary.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.business_outlined,
+                    size: 20, color: VetTheme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        orgName,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        'Einladung als ${_roleLabel(role)}',
+                        style: const TextStyle(
+                            fontSize: 12, color: VetTheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final ok = await provider.rejectInvitation(code);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(ok
+                            ? 'Einladung abgelehnt'
+                            : 'Fehler beim Ablehnen'),
+                      ));
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                      foregroundColor: VetTheme.error),
+                  child: const Text('Ablehnen'),
+                ),
+                const SizedBox(width: 4),
+                FilledButton(
+                  onPressed: () async {
+                    final ok = await provider.acceptInvitation(code);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(ok
+                            ? 'Einladung angenommen!'
+                            : 'Fehler beim Annehmen'),
+                      ));
+                    }
+                  },
+                  child: const Text('Annehmen'),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  String _roleLabel(String role) => switch (role) {
+        'admin' => 'Administrator',
+        'vet' => 'Tierarzt',
+        'member' => 'Mitglied',
+        _ => role,
+      };
 }

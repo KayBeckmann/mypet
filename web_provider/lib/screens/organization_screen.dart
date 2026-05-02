@@ -30,6 +30,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
       if (orgId != null) {
         context.read<ProviderOrganizationProvider>().load(orgId);
       }
+      context.read<ProviderOrganizationProvider>().loadInvitations();
     });
   }
 
@@ -75,6 +76,14 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
               ],
             ),
             const SizedBox(height: 24),
+
+            if (orgProvider.pendingInvitations.isNotEmpty) ...[
+              _InvitationsBanner(
+                invitations: orgProvider.pendingInvitations,
+                provider: orgProvider,
+              ),
+              const SizedBox(height: 16),
+            ],
 
             if (orgProvider.loading)
               const Expanded(
@@ -391,4 +400,104 @@ class _EditForm extends StatelessWidget {
       ),
     );
   }
+}
+
+class _InvitationsBanner extends StatelessWidget {
+  final List<Map<String, dynamic>> invitations;
+  final ProviderOrganizationProvider provider;
+
+  const _InvitationsBanner({
+    required this.invitations,
+    required this.provider,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Ausstehende Einladungen',
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        ...invitations.map((inv) {
+          final orgName = inv['organization_name'] as String? ?? '—';
+          final role = inv['role'] as String? ?? '';
+          final code = inv['invitation_code'] as String? ?? '';
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: ProviderTheme.primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                  color: ProviderTheme.primary.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.business_outlined,
+                    size: 20, color: ProviderTheme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(orgName,
+                          style:
+                              const TextStyle(fontWeight: FontWeight.w700)),
+                      Text(
+                        'Einladung als ${_roleLabel(role)}',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: ProviderTheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final ok = await provider.rejectInvitation(code);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(ok
+                            ? 'Einladung abgelehnt'
+                            : 'Fehler beim Ablehnen'),
+                      ));
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                      foregroundColor: ProviderTheme.error),
+                  child: const Text('Ablehnen'),
+                ),
+                const SizedBox(width: 4),
+                FilledButton(
+                  onPressed: () async {
+                    final ok = await provider.acceptInvitation(code);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(ok
+                            ? 'Einladung angenommen!'
+                            : 'Fehler beim Annehmen'),
+                      ));
+                    }
+                  },
+                  child: const Text('Annehmen'),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  String _roleLabel(String role) => switch (role) {
+        'admin' => 'Administrator',
+        'provider' => 'Dienstleister',
+        'member' => 'Mitglied',
+        _ => role,
+      };
 }

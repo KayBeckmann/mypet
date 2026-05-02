@@ -119,4 +119,43 @@ class ProviderOrganizationProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  // ── Invitations ──────────────────────────────────────────────────────────────
+
+  List<Map<String, dynamic>> _invitations = [];
+  List<Map<String, dynamic>> get pendingInvitations => _invitations;
+
+  Future<void> loadInvitations() async {
+    try {
+      final data = await _api.get('/invitations');
+      _invitations = (data['invitations'] as List? ?? [])
+          .cast<Map<String, dynamic>>();
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<bool> acceptInvitation(String code) async {
+    try {
+      await _api.post('/invitations/$code/accept', body: {});
+      await loadInvitations();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> rejectInvitation(String code) async {
+    try {
+      await _api.post('/invitations/$code/reject', body: {});
+      await loadInvitations();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }
