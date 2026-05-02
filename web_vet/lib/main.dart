@@ -58,12 +58,29 @@ class _MyPetVetAppState extends State<MyPetVetApp> {
   }
 }
 
-class _AppShell extends StatelessWidget {
+class _AppShell extends StatefulWidget {
   const _AppShell();
+
+  @override
+  State<_AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<_AppShell> {
+  bool _loaded = false;
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<VetAuthProvider>();
+
+    if (auth.isAuthenticated && !_loaded) {
+      _loaded = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<VetAppointmentProvider>().load();
+        context.read<PatientsProvider>().loadPatients();
+      });
+    }
+    if (!auth.isAuthenticated) _loaded = false;
+
     final router = createRouter(auth);
     return MaterialApp.router(
       title: 'MyPet Vet',
