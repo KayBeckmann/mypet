@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:mypet_shared/shared.dart';
 import '../config/theme.dart';
+import '../providers/auth_provider.dart';
 import '../providers/notes_provider.dart';
 
 /// Detailansicht eines Kunden-Tieres für den Dienstleister.
@@ -564,11 +565,16 @@ class _ServicesTabState extends State<_ServicesTab> {
     setState(() => _loading = true);
     try {
       final api = context.read<ApiService>();
+      final auth = context.read<ProviderAuthProvider>();
       final data = await api.get('/pets/${widget.petId}/records');
-      // Filter to own records (has vet_name or organization matching current user)
+      final myId = auth.user?.id;
+      final all = (data['records'] as List? ?? [])
+          .cast<Map<String, dynamic>>();
       setState(() {
-        _services = (data['records'] as List? ?? [])
-            .cast<Map<String, dynamic>>();
+        // Only show records created by the current user
+        _services = myId != null
+            ? all.where((r) => r['vet_id'] == myId).toList()
+            : all;
         _loading = false;
       });
     } catch (_) {
