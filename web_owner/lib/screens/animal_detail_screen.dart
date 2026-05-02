@@ -10,6 +10,8 @@ import '../providers/transfer_provider.dart';
 import '../providers/health_provider.dart';
 import '../models/media.dart';
 import '../providers/media_provider.dart';
+import '../models/appointment.dart';
+import '../providers/appointment_provider.dart';
 import '../providers/feeding_provider.dart';
 import '../providers/medication_provider.dart';
 import '../providers/permission_provider.dart';
@@ -325,6 +327,10 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
 
           // Weight trend (full width)
           _WeightCard(petId: widget.petId),
+          const SizedBox(height: 20),
+
+          // Upcoming appointments for this pet
+          _AppointmentsCard(petId: widget.petId),
           const SizedBox(height: 32),
 
           // Transfer & Delete buttons
@@ -1724,6 +1730,78 @@ class _EmptyState extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Appointments Card ─────────────────────────────────────────────────────────
+
+class _AppointmentsCard extends StatelessWidget {
+  final String petId;
+  const _AppointmentsCard({required this.petId});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<AppointmentProvider>();
+    final upcoming = provider.appointments
+        .where((a) =>
+            a.petId == petId &&
+            (a.status == AppointmentStatus.requested ||
+                a.status == AppointmentStatus.confirmed))
+        .toList()
+      ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+
+    if (upcoming.isEmpty) return const SizedBox.shrink();
+
+    return _DetailCard(
+      title: 'ANSTEHENDE TERMINE',
+      children: [
+        ...upcoming.take(3).map((a) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: a.status == AppointmentStatus.confirmed
+                          ? LivingLedgerTheme.secondary.withValues(alpha: 0.1)
+                          : Colors.orange.withValues(alpha: 0.1),
+                      borderRadius:
+                          BorderRadius.circular(LivingLedgerTheme.radiusFull),
+                    ),
+                    child: Text(
+                      '${a.scheduledAt.day}.${a.scheduledAt.month}. ${a.scheduledAt.hour.toString().padLeft(2, '0')}:${a.scheduledAt.minute.toString().padLeft(2, '0')}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: a.status == AppointmentStatus.confirmed
+                            ? LivingLedgerTheme.secondary
+                            : Colors.orange,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      a.title,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () => context.go('/appointments'),
+            child: const Text('Alle Termine →'),
+          ),
+        ),
+      ],
     );
   }
 }
