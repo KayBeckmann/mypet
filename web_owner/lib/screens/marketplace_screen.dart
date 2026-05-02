@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../services/api_service.dart';
 
@@ -34,7 +35,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       _error = null;
     });
     try {
-      final api = ApiService();
+      final api = context.read<ApiService>();
       final q = _searchCtrl.text.trim();
       var url = '/organizations/search';
       final params = <String>[];

@@ -413,13 +413,13 @@ class _BookAppointmentDialogState extends State<_BookAppointmentDialog> {
   void initState() {
     super.initState();
     if (widget.pets.isNotEmpty) _selectedPet = widget.pets.first;
-    _loadOrganizations();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadOrganizations());
   }
 
   Future<void> _loadOrganizations() async {
     setState(() => _loadingOrgs = true);
     try {
-      final api = ApiService();
+      final api = context.read<ApiService>();
       final data = await api.get('/organizations/search?type=vet_practice');
       final orgs = (data['organizations'] as List? ?? [])
           .cast<Map<String, dynamic>>();

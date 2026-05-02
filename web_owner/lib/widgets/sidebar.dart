@@ -64,6 +64,9 @@ class Sidebar extends StatelessWidget {
     _SidebarSection(title: 'Community', items: [
       SidebarItem(label: 'Marktplatz', icon: Icons.storefront_rounded, route: '/marketplace'),
     ]),
+    _SidebarSection(title: 'Konto', items: [
+      SidebarItem(label: 'Einstellungen', icon: Icons.settings_outlined, route: '/settings'),
+    ]),
   ];
 
   @override
