@@ -217,6 +217,13 @@ Future<void> main(List<String> args) async {
         .addHandler(transferController.tokenRouter.call),
   );
 
+  app.mount(
+    '/vaccinations',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addHandler(vaccinationController.aggregateRouter.call),
+  );
+
   // Admin Routes (nur superadmin)
   final adminController = AdminController(db);
   app.mount(

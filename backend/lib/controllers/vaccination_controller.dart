@@ -20,6 +20,13 @@ class VaccinationController {
     return router;
   }
 
+  /// Separater Router für aggregierte Abfragen (kein petId-Prefix)
+  Router get aggregateRouter {
+    final router = Router();
+    router.get('/expiring', _expiringVaccinations);
+    return router;
+  }
+
   /// GET /pets/:petId/vaccinations
   Future<Response> _listVaccinations(Request request, String petId) async {
     try {
@@ -198,6 +205,71 @@ class VaccinationController {
       'notes': v['notes'],
       'created_at': (v['created_at'] as DateTime).toIso8601String(),
     };
+  }
+
+  /// GET /vaccinations/expiring?days=30 — Ablaufende Impfungen für zugängliche Tiere
+  Future<Response> _expiringVaccinations(Request request) async {
+    try {
+      final userId = request.context['userId'] as String;
+      final orgId = request.context['activeOrganizationId'] as String?;
+      final days = int.tryParse(
+              request.requestedUri.queryParameters['days'] ?? '30') ??
+          30;
+
+      final params = <String, dynamic>{'user_id': userId, 'days': days};
+      var orgCondition = 'false';
+      if (orgId != null) {
+        orgCondition =
+            'ap.subject_type = \'organization\' AND ap.subject_organization_id = @org_id::uuid';
+        params['org_id'] = orgId;
+      }
+
+      final rows = await _db.queryAll(
+        '''
+        SELECT v.id, v.pet_id, v.vaccine_name, v.valid_until,
+               p.name AS pet_name, p.species::text AS species
+        FROM vaccinations v
+        JOIN pets p ON v.pet_id = p.id
+        WHERE v.valid_until BETWEEN NOW() AND NOW() + INTERVAL \'1 day\' * @days::int
+          AND p.is_active = true
+          AND (
+            p.owner_id = @user_id::uuid
+            OR EXISTS (
+              SELECT 1 FROM access_permissions ap
+              WHERE ap.pet_id = p.id
+                AND ap.is_active = true
+                AND (ap.ends_at IS NULL OR ap.ends_at >= NOW())
+                AND (
+                  (ap.subject_type = \'user\' AND ap.subject_user_id = @user_id::uuid)
+                  OR ($orgCondition)
+                )
+            )
+          )
+        ORDER BY v.valid_until ASC
+        LIMIT 20
+        ''',
+        parameters: params,
+      );
+
+      return Response.ok(
+        jsonEncode({
+          'vaccinations': rows.map((r) => {
+                'id': r['id'].toString(),
+                'pet_id': r['pet_id'].toString(),
+                'pet_name': r['pet_name'],
+                'species': r['species'],
+                'vaccine_name': r['vaccine_name'],
+                'valid_until': r['valid_until']?.toString(),
+              }).toList(),
+          'count': rows.length,
+          'days_ahead': days,
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ expiringVaccinations Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
   }
 
   Response _error(int statusCode, String message) {
