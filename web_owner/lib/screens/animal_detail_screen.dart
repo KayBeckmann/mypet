@@ -10,6 +10,7 @@ import '../providers/transfer_provider.dart';
 import '../providers/health_provider.dart';
 import '../models/media.dart';
 import '../providers/media_provider.dart';
+import '../providers/feeding_provider.dart';
 import '../providers/medication_provider.dart';
 import '../providers/permission_provider.dart';
 import '../providers/weight_provider.dart';
@@ -256,6 +257,18 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
                             ],
                           ),
                         ],
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          context
+                              .read<FeedingProvider>()
+                              .selectPet(pet.id);
+                          context.go('/feeding');
+                        },
+                        child: const Text('Zum Futterplan →'),
                       ),
                     ),
                   ],
