@@ -754,6 +754,26 @@ services:
 
 ---
 
+## Phase 28: UX-Verbesserungen & Bugfixes II
+
+### M28.1 - Appointment-Badge ✅
+- [x] Sidebar (web_owner): Badge auf `/appointments` bei ausstehenden Terminanfragen
+
+### M28.2 - Ablaufende Impfungen ✅
+- [x] Backend: `GET /vaccinations/expiring?days=30` (aggregateRouter, joins pets + access_permissions)
+- [x] web_vet Dashboard: Amber-Panel mit ablaufenden Impfungen; Einträge ≤7 Tage rot
+
+### M28.3 - Navigation & Pre-selection ✅
+- [x] Tier-Detail: Pet-Switcher-Dropdown wenn > 1 Tier vorhanden
+- [x] Tier-Detail: „Zum Futterplan →" Button in Fütterungs-Karte (FeedingProvider.selectPet)
+- [x] Medication-Screen pre-selects correctly from animal detail (MedicationProvider.selectedPetId)
+
+### M28.4 - Bugfixes ✅
+- [x] web_provider `_ServicesTab`: filtert Records jetzt auf eigene (`vet_id == currentUser.id`)
+- [x] Backend GET /pets: JOIN users für owner_name + owner_email
+
+---
+
 ## Legende
 
 - [ ] Offen
