@@ -736,6 +736,24 @@ services:
 
 ---
 
+## Phase 27: Akten-Tab, Marktplatz-Termin & Sidebar-Badge
+
+### M27.1 - Krankenakte-Tab im records_screen ✅
+- [x] 4. Tab „Krankenakte" in `records_screen` (web_owner) via OwnerHealthProvider
+- [x] Pet-Selektor lädt jetzt auch Health-Daten; Titel zu „Akten & Medien" aktualisiert
+
+### M27.2 - Marktplatz „Termin anfragen" ✅
+- [x] `BookAppointmentDialog` zu öffentlicher Klasse gemacht
+- [x] Marktplatz-OrgCard: „Termin anfragen"-Button öffnet Buchungsdialog vorausgewählt
+- [x] `BookAppointmentDialog`: preselectedOrg-Parameter + Re-Matching nach Org-Ladelauf
+
+### M27.3 - Sidebar-Badge für überfällige Erinnerungen ✅
+- [x] `_BadgeIcon`-Widget in sidebar.dart (rote Zahl-Badge)
+- [x] `Sidebar._buildBadges()` liest ReminderProvider aus; `/reminders`-Route erhält Badge
+- [x] `_SidebarNavItem`: badge-Parameter + Expanded-Wrap für Label
+
+---
+
 ## Legende
 
 - [ ] Offen
