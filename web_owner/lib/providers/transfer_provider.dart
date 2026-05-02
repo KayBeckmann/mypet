@@ -118,6 +118,17 @@ class TransferProvider extends ChangeNotifier {
     }
   }
 
+  Future<Map<String, dynamic>?> lookup(String token) async {
+    try {
+      final data = await _api.get('/transfers/$token');
+      return data['transfer'] as Map<String, dynamic>?;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
   Future<bool> accept(String token) async {
     try {
       await _api.post('/transfers/$token/accept');

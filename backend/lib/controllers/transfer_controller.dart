@@ -23,6 +23,7 @@ class TransferController {
   /// Routen unter /transfers/... (token-basiert)
   Router get tokenRouter {
     final router = Router();
+    router.get('/<token>', _lookupTransfer);
     router.post('/<token>/accept', _acceptTransfer);
     router.post('/<token>/reject', _rejectTransfer);
     return router;
@@ -159,6 +160,44 @@ class TransferController {
       );
     } catch (e) {
       print('❌ cancelTransfer Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// GET /transfers/:token — Transfer-Vorschau (kein Schreibzugriff)
+  Future<Response> _lookupTransfer(Request request, String token) async {
+    try {
+      final row = await _db.queryOne(
+        '''
+        SELECT t.status, t.to_email, t.message, t.created_at,
+               p.name AS pet_name, p.species::text AS species, p.breed,
+               u.name AS from_owner_name
+        FROM ownership_transfers t
+        JOIN pets p ON t.pet_id = p.id
+        JOIN users u ON t.from_owner_id = u.id
+        WHERE t.token = @token
+        ''',
+        parameters: {'token': token},
+      );
+      if (row == null) return _error(404, 'Transfer nicht gefunden');
+
+      return Response.ok(
+        jsonEncode({
+          'transfer': {
+            'status': row['status'].toString(),
+            'to_email': row['to_email'],
+            'message': row['message'],
+            'created_at': (row['created_at'] as DateTime).toIso8601String(),
+            'pet_name': row['pet_name'],
+            'species': row['species'],
+            'breed': row['breed'],
+            'from_owner_name': row['from_owner_name'],
+          }
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ lookupTransfer Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }

@@ -5,6 +5,7 @@ import '../screens/login_screen.dart';
 import '../screens/organization_screen.dart';
 import '../screens/members_screen.dart';
 import '../screens/customers_screen.dart';
+import '../screens/customer_detail_screen.dart';
 import '../screens/services_screen.dart';
 import '../screens/appointments_screen.dart';
 import '../widgets/app_shell.dart';
@@ -37,6 +38,12 @@ GoRouter createRouter(ProviderAuthProvider authProvider) {
           GoRoute(
               path: '/customers',
               builder: (_, __) => const CustomersScreen()),
+          GoRoute(
+              path: '/customers/:petId',
+              builder: (_, state) => CustomerDetailScreen(
+                    petId: state.pathParameters['petId']!,
+                    petName: state.uri.queryParameters['name'] ?? '',
+                  )),
           GoRoute(
               path: '/services',
               builder: (_, __) => const ServicesScreen()),

@@ -19,6 +19,148 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _exportData;
   String? _error;
 
+  Future<void> _showEditProfileDialog(
+      BuildContext context, AuthProvider auth) async {
+    final nameCtrl =
+        TextEditingController(text: auth.user?.name ?? '');
+    final emailCtrl =
+        TextEditingController(text: auth.user?.email ?? '');
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Profil bearbeiten'),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: emailCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'E-Mail',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Abbrechen')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Speichern')),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    final ok = await auth.updateProfile(
+      name: nameCtrl.text.trim(),
+      email: emailCtrl.text.trim(),
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(ok ? 'Profil aktualisiert.' : (auth.error ?? 'Fehler')),
+        backgroundColor: ok ? null : LivingLedgerTheme.error,
+      ));
+    }
+  }
+
+  Future<void> _showChangePasswordDialog(
+      BuildContext context, AuthProvider auth) async {
+    final currentCtrl = TextEditingController();
+    final newCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: const Text('Passwort ändern'),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: currentCtrl,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Aktuelles Passwort',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: newCtrl,
+                  obscureText: true,
+                  onChanged: (_) => setDs(() {}),
+                  decoration: const InputDecoration(
+                    labelText: 'Neues Passwort (min. 8 Zeichen)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: confirmCtrl,
+                  obscureText: true,
+                  onChanged: (_) => setDs(() {}),
+                  decoration: InputDecoration(
+                    labelText: 'Neues Passwort bestätigen',
+                    border: const OutlineInputBorder(),
+                    errorText: confirmCtrl.text.isNotEmpty &&
+                            confirmCtrl.text != newCtrl.text
+                        ? 'Passwörter stimmen nicht überein'
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Abbrechen')),
+            FilledButton(
+              onPressed: newCtrl.text.length >= 8 &&
+                      newCtrl.text == confirmCtrl.text &&
+                      currentCtrl.text.isNotEmpty
+                  ? () => Navigator.pop(ctx, true)
+                  : null,
+              child: const Text('Ändern'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    final ok = await auth.changePassword(
+      currentPassword: currentCtrl.text,
+      newPassword: newCtrl.text,
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(ok
+            ? 'Passwort geändert.'
+            : (auth.error ?? 'Fehler beim Ändern des Passworts')),
+        backgroundColor: ok ? null : LivingLedgerTheme.error,
+      ));
+    }
+  }
+
   Future<void> _exportMyData() async {
     setState(() {
       _exportLoading = true;
@@ -114,9 +256,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Icon(Icons.person_rounded)),
                 title: Text(auth.user?.name ?? '—'),
                 subtitle: Text(auth.user?.email ?? '—'),
-                trailing: TextButton(
-                  onPressed: auth.logout,
-                  child: const Text('Abmelden'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextButton.icon(
+                      icon: const Icon(Icons.edit_rounded, size: 16),
+                      label: const Text('Bearbeiten'),
+                      onPressed: () =>
+                          _showEditProfileDialog(context, auth),
+                    ),
+                    TextButton(
+                      onPressed: auth.logout,
+                      child: const Text('Abmelden'),
+                    ),
+                  ],
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.lock_outline_rounded),
+                title: const Text('Passwort ändern'),
+                trailing: OutlinedButton(
+                  onPressed: () => _showChangePasswordDialog(context, auth),
+                  child: const Text('Ändern'),
                 ),
               ),
             ],
