@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
+import '../models/appointment.dart';
+import '../providers/appointment_provider.dart';
 import '../providers/reminder_provider.dart';
 
 class SidebarItem {
@@ -46,11 +48,16 @@ class Sidebar extends StatelessWidget {
 
   Map<String, int> _buildBadges(BuildContext context) {
     final reminderProvider = context.watch<ReminderProvider>();
+    final appointmentProvider = context.watch<AppointmentProvider>();
     final overdue = reminderProvider.reminders
         .where((r) => r.status == 'pending' && r.isPast)
         .length;
+    final pendingAppts = appointmentProvider.appointments
+        .where((a) => a.status == AppointmentStatus.requested)
+        .length;
     return {
       if (overdue > 0) '/reminders': overdue,
+      if (pendingAppts > 0) '/appointments': pendingAppts,
     };
   }
 
