@@ -9,6 +9,7 @@ import '../config/theme.dart';
 import '../providers/medical_provider.dart';
 import '../providers/media_provider.dart';
 import '../providers/notes_provider.dart';
+import '../providers/patients_provider.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final String petId;
@@ -351,12 +352,17 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
     final medical = context.watch<MedicalProvider>();
     final mediaProvider = context.watch<VetMediaProvider>();
     final notesProvider = context.watch<VetNotesProvider>();
+    final patientsProvider = context.watch<PatientsProvider>();
+    final petName = patientsProvider.patients
+        .where((p) => p['id'] == widget.petId)
+        .map((p) => p['name'] as String?)
+        .firstOrNull ?? 'Patient';
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: VetTheme.primary,
         foregroundColor: VetTheme.onPrimary,
-        title: const Text('Patient'),
+        title: Text(petName),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/patients'),
