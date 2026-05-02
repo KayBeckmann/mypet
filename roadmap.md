@@ -667,6 +667,33 @@ services:
 
 ---
 
+---
+
+## Phase 24: Kunden-Detailansicht, Transfer-Preview & Profilverwaltung
+
+### M24.1 - web_provider: CustomerDetailScreen ✅
+- [x] `CustomerDetailScreen` — 4-Tab-Ansicht (Übersicht, Akte, Meine Notizen, Meine Leistungen)
+- [x] Parallel-API-Calls mit `Future.wait()` für Impfungen, Medikamente, Akteneinträge
+- [x] Tab 1: Impfstatus (abgelaufen/bald ablaufend farblich markiert), aktive Medikamente
+- [x] Tab 2: Med. Akte — nicht-private Einträge mit Typ-Badge, Tierarzt, Datum
+- [x] Tab 3: Eigene Notizen mit CRUD (ProviderNotesProvider)
+- [x] Tab 4: Eigene Leistungen mit Erfassen-Dialog
+- [x] Route `/customers/:petId` verdrahtet; `_PetCard` navigiert per `context.go` statt Dialog
+
+### M24.2 - Transfer-Preview (web_owner) ✅
+- [x] Backend: `GET /transfers/:token` — liefert Tier-Name, Spezies, Rasse, Absender, Nachricht, Status
+- [x] `TransferProvider.lookup()` — fragt Vorschau-Endpoint ab
+- [x] `TransferScreen` — 2-Schritt-Flow: Token eingeben → Vorschau-Karte → Annehmen/Ablehnen
+- [x] Nicht-ausstehende Transfers werden korrekt als inaktiv angezeigt (kein Accept/Reject-Button)
+
+### M24.3 - Profil & Passwort (web_owner) ✅
+- [x] `AuthProvider.updateProfile()` — ruft `PUT /account` auf, updated lokalen User
+- [x] `AuthProvider.changePassword()` — ruft `PUT /account/password` auf
+- [x] `User.copyWith()` hinzugefügt
+- [x] `SettingsScreen` — "Profil bearbeiten"-Dialog (Name/E-Mail), "Passwort ändern"-Dialog
+
+---
+
 ## Legende
 
 - [ ] Offen
