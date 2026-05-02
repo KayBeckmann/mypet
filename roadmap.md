@@ -774,6 +774,24 @@ services:
 
 ---
 
+## Phase 29: Badges, Eager-Loading & Dashboard-Quickactions
+
+### M29.1 - Appointment-Badges in web_vet & web_provider ✅
+- [x] VetAppShell und ProviderAppShell: Pending-Badge auf Termine-Eintrag
+- [x] VetAppShell._NavItem + ProviderAppShell._NavItem unterstützt badge-Parameter
+
+### M29.2 - Eager Data Loading ✅
+- [x] web_vet: _AppShell lädt Termine + Patienten nach Login (StatefulWidget)
+- [x] web_provider: _AppShell lädt Termine + Kunden nach Login (StatefulWidget)
+
+### M29.3 - UX: Animal Detail Improvements ✅
+- [x] `_AppointmentsCard`: zeigt anstehende Termine für das aktuelle Tier
+- [x] Dashboard `_RemindersPanel`: Quick-Dismiss-Button (✓) für überfällige Erinnerungen
+- [x] backend + web_vet: GET /vaccinations/expiring + ExpiringVaccinationsPanel im Vet-Dashboard
+- [x] web_vet: Provider<ApiService> in MultiProvider ergänzt
+
+---
+
 ## Legende
 
 - [ ] Offen
