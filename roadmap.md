@@ -694,6 +694,31 @@ services:
 
 ---
 
+---
+
+## Phase 25: Settings, Bugfixes & Admin Dashboard
+
+### M25.1 - Settings-Screens (web_vet & web_provider) ✅
+- [x] `VetSettingsScreen` — Profil bearbeiten (Name/E-Mail), Passwort ändern
+- [x] `ProviderSettingsScreen` — identisch für web_provider
+- [x] `VetAuthProvider` + `ProviderAuthProvider` — updateProfile() + changePassword()
+- [x] `shared/User.copyWith(name, email)` hinzugefügt
+- [x] Sidebar-NavItem "Einstellungen" in beiden Apps
+- [x] Fehlende `/register`-Route in web_vet und web_provider verdrahtet
+
+### M25.2 - ApiService-Bugfixes ✅
+- [x] `marketplace_screen` + `_BookAppointmentDialog` nutzten `ApiService()` direkt → auf `context.read<ApiService>()` umgestellt
+- [x] web_owner Sidebar: „Einstellungen"-Eintrag ergänzt
+- [x] `_MedicalRecordsCard`: „+ X weitere →" Button öffnet Dialog mit vollständiger Liste
+
+### M25.3 - Admin Dashboard ✅
+- [x] Backend: `GET /admin/stats` — Nutzer/Tier/Org-Counts + 7-Tage-Delta
+- [x] `AdminDashboardScreen` — Statistik-Grid (8 Kacheln) + Schnellzugriff
+- [x] Route `/` zeigt jetzt Dashboard, `/users` zeigt Benutzerliste
+- [x] `Provider<ApiService>` in web_admin MultiProvider ergänzt
+
+---
+
 ## Legende
 
 - [ ] Offen
