@@ -906,6 +906,28 @@ services:
 
 ---
 
+## Phase 37: Familien-Zugriff, Einladungscodes & QR-Code ✅ *(2026-05-03)*
+
+### M37.1 - Kritischer Bugfix: Terminbestätigung HTTP 500 ✅
+- [x] `appointment_controller._confirm/_complete/_noShow`: access_permissions-INSERT/UPDATE
+  verwendete falsche Spaltennamen → `subject_user_id`, `permission`, `ends_at`, `note`
+
+### M37.2 - Familienmitglieder sehen Tiere ✅
+- [x] `pet_access.dart`: Familien-Check via JOIN über `family_members` beider User
+- [x] Familienmitglieder bekommen automatisch Lesezugriff (kein `requireWrite` nötig)
+
+### M37.3 - Familien-Einladungscodes ✅
+- [x] Migration 025: Tabelle `family_invite_codes` (UNIQUE pro Familie, expires_at, used_by)
+- [x] `POST /families/:id/invite-code` → 8-stelliger Code, 7 Tage gültig
+- [x] `GET /families/join/:code` → Familien-Vorschau ohne Beitritt
+- [x] `POST /families/join/:code` → Beitritt, Code wird als used markiert
+
+### M37.4 - QR-Code & Beitreten-Dialog (web_owner) ✅
+- [x] `_FamilyCard`: QR-Icon öffnet Dialog mit QR-Code (qr_flutter) + kopierbarem Code
+- [x] Header: "Per Code beitreten"-Button mit Such-Dialog und Familien-Vorschau
+
+---
+
 ## Legende
 
 - [ ] Offen
