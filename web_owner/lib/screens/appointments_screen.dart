@@ -15,6 +15,8 @@ class AppointmentsScreen extends StatefulWidget {
 }
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
+  bool _showAllPast = false;
+
   @override
   void initState() {
     super.initState();
@@ -91,37 +93,76 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Upcoming
-                      if (provider.upcoming.isNotEmpty) ...[
-                        _SectionHeader(title: 'Kommende Termine'),
+                      // Ausstehend
+                      final pending = provider.upcoming
+                          .where((a) => a.status == AppointmentStatus.requested)
+                          .toList();
+                      final confirmed = provider.upcoming
+                          .where((a) => a.status == AppointmentStatus.confirmed)
+                          .toList();
+
+                      if (pending.isNotEmpty) ...[
+                        _SectionHeader(
+                            title: 'Ausstehend', count: pending.length),
                         const SizedBox(height: 12),
-                        ...provider.upcoming.map(
-                          (a) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: _AppointmentTile(
-                              appointment: a,
-                              onCancel: () => _confirmCancel(context, a),
-                            ),
-                          ),
-                        ),
+                        ...pending.map((a) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _AppointmentTile(
+                                appointment: a,
+                                onCancel: () => _confirmCancel(context, a),
+                              ),
+                            )),
                         const SizedBox(height: 24),
                       ],
+
+                      // Bestätigt
+                      if (confirmed.isNotEmpty) ...[
+                        _SectionHeader(
+                            title: 'Bestätigt', count: confirmed.length),
+                        const SizedBox(height: 12),
+                        ...confirmed.map((a) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _AppointmentTile(
+                                appointment: a,
+                                onCancel: () => _confirmCancel(context, a),
+                              ),
+                            )),
+                        const SizedBox(height: 24),
+                      ],
+
                       if (provider.upcoming.isEmpty)
                         _EmptyHint(
                           icon: Icons.event_available_rounded,
                           text: 'Keine kommenden Termine',
                         ),
 
-                      // Past
+                      // Vergangen
                       if (provider.past.isNotEmpty) ...[
-                        _SectionHeader(title: 'Vergangene Termine'),
+                        _SectionHeader(
+                            title: 'Vergangen', count: provider.past.length),
                         const SizedBox(height: 12),
-                        ...provider.past.map(
-                          (a) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: _AppointmentTile(appointment: a),
+                        ...(_showAllPast
+                                ? provider.past
+                                : provider.past.take(5).toList())
+                            .map((a) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: _AppointmentTile(appointment: a),
+                                )),
+                        if (provider.past.length > 5) ...[
+                          const SizedBox(height: 8),
+                          Center(
+                            child: TextButton.icon(
+                              icon: Icon(_showAllPast
+                                  ? Icons.expand_less
+                                  : Icons.expand_more),
+                              label: Text(_showAllPast
+                                  ? 'Weniger anzeigen'
+                                  : 'Alle ${provider.past.length} anzeigen'),
+                              onPressed: () =>
+                                  setState(() => _showAllPast = !_showAllPast),
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ],
                   ),
@@ -192,17 +233,40 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
 
 class _SectionHeader extends StatelessWidget {
   final String title;
-  const _SectionHeader({required this.title});
+  final int? count;
+  const _SectionHeader({required this.title, this.count});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title.toUpperCase(),
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: LivingLedgerTheme.onSurfaceVariant,
-            letterSpacing: 1.5,
-            fontWeight: FontWeight.w700,
+    return Row(
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: LivingLedgerTheme.onSurfaceVariant,
+                letterSpacing: 1.5,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        if (count != null) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(
+              color: LivingLedgerTheme.onSurfaceVariant.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '$count',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: LivingLedgerTheme.onSurfaceVariant),
+            ),
           ),
+        ],
+      ],
     );
   }
 }
@@ -239,6 +303,10 @@ class _AppointmentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = _statusColor(appointment.status);
+    final isCancelled =
+        appointment.status == AppointmentStatus.cancelled ||
+        appointment.status == AppointmentStatus.noShow;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -249,118 +317,182 @@ class _AppointmentTile extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status indicator
-          Container(
-            width: 4,
-            height: 56,
-            decoration: BoxDecoration(
-              color: statusColor,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 16),
+          Row(
+            children: [
+              // Status indicator
+              Container(
+                width: 4,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: statusColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 16),
 
-          // Date/time
-          SizedBox(
-            width: 72,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  appointment.dateLabel,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
-                ),
-                Text(
-                  appointment.timeLabel,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-
-          // Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  appointment.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Row(
+              // Date/time
+              SizedBox(
+                width: 72,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (appointment.petName != null) ...[
-                      Icon(Icons.pets_rounded,
-                          size: 13,
+                    Text(
+                      appointment.dateLabel,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: statusColor,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                    ),
+                    Text(
+                      appointment.timeLabel,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      '${appointment.durationMinutes} min',
+                      style: TextStyle(
+                          fontSize: 11,
                           color: LivingLedgerTheme.onSurfaceVariant),
-                      const SizedBox(width: 4),
-                      Text(appointment.petName!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                                  color:
-                                      LivingLedgerTheme.onSurfaceVariant)),
-                      const SizedBox(width: 12),
-                    ],
-                    if (appointment.providerName != null) ...[
-                      Icon(Icons.person_outline_rounded,
-                          size: 13,
-                          color: LivingLedgerTheme.onSurfaceVariant),
-                      const SizedBox(width: 4),
-                      Text(appointment.providerName!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                                  color:
-                                      LivingLedgerTheme.onSurfaceVariant)),
-                    ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
+              const SizedBox(width: 16),
 
-          // Status badge
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              borderRadius:
-                  BorderRadius.circular(LivingLedgerTheme.radiusFull),
-            ),
-            child: Text(
-              appointment.statusLabel,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: statusColor,
-                    fontWeight: FontWeight.w600,
+              // Title + meta
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      appointment.title,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 12,
+                      children: [
+                        if (appointment.petName != null)
+                          _MetaChip(
+                              icon: Icons.pets_rounded,
+                              text: appointment.petName!),
+                        if (appointment.organizationName != null)
+                          _MetaChip(
+                              icon: Icons.business_rounded,
+                              text: appointment.organizationName!)
+                        else if (appointment.providerName != null)
+                          _MetaChip(
+                              icon: Icons.person_outline_rounded,
+                              text: appointment.providerName!),
+                        if (appointment.location != null)
+                          _MetaChip(
+                              icon: Icons.location_on_outlined,
+                              text: appointment.location!),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Status badge
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(
+                          LivingLedgerTheme.radiusFull),
+                    ),
+                    child: Text(
+                      appointment.statusLabel,
+                      style: Theme.of(context)
+                          .textTheme
+                          .labelSmall
+                          ?.copyWith(
+                              color: statusColor,
+                              fontWeight: FontWeight.w600),
+                    ),
                   ),
-            ),
+                  if (onCancel != null) ...[
+                    const SizedBox(height: 4),
+                    InkWell(
+                      onTap: onCancel,
+                      borderRadius: BorderRadius.circular(4),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.cancel_outlined,
+                                size: 13,
+                                color: LivingLedgerTheme.error),
+                            const SizedBox(width: 3),
+                            Text('Absagen',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: LivingLedgerTheme.error)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
           ),
 
-          // Cancel button for upcoming
-          if (onCancel != null) ...[
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: onCancel,
-              icon: const Icon(Icons.cancel_outlined),
-              color: LivingLedgerTheme.error,
-              tooltip: 'Termin absagen',
-              iconSize: 20,
+          // Description
+          if (appointment.description != null &&
+              appointment.description!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              appointment.description!,
+              style: TextStyle(
+                  fontSize: 13,
+                  color: LivingLedgerTheme.onSurfaceVariant),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+
+          // Cancellation reason
+          if (isCancelled && appointment.cancelledReason != null &&
+              appointment.cancelledReason!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 13, color: statusColor),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Grund: ${appointment.cancelledReason}',
+                      style:
+                          TextStyle(fontSize: 12, color: statusColor),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ],
@@ -381,6 +513,26 @@ class _AppointmentTile extends StatelessWidget {
       case AppointmentStatus.noShow:
         return Colors.grey;
     }
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _MetaChip({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: LivingLedgerTheme.onSurfaceVariant),
+        const SizedBox(width: 3),
+        Text(text,
+            style: const TextStyle(
+                fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant)),
+      ],
+    );
   }
 }
 

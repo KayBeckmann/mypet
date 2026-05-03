@@ -35,13 +35,14 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
   List<Map<String, dynamic>> _medications = [];
   List<Map<String, dynamic>> _records = [];
   List<Map<String, dynamic>> _feedingPlans = [];
+  List<Map<String, dynamic>> _weightEntries = [];
   bool _loading = true;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 6, vsync: this);
+    _tabs = TabController(length: 7, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _load();
       context.read<ProviderNotesProvider>().loadForPet(widget.petId);
@@ -66,6 +67,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
         api.get('/pets/${widget.petId}/medications'),
         api.get('/pets/${widget.petId}/records'),
         api.get('/pets/${widget.petId}/feeding-plans'),
+        api.get('/pets/${widget.petId}/weight'),
       ]);
       setState(() {
         _vaccinations = (results[0]['vaccinations'] as List? ?? [])
@@ -75,6 +77,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
         _records = (results[2]['records'] as List? ?? [])
             .cast<Map<String, dynamic>>();
         _feedingPlans = (results[3]['feeding_plans'] as List? ?? [])
+            .cast<Map<String, dynamic>>();
+        _weightEntries = (results[4]['entries'] as List? ?? [])
             .cast<Map<String, dynamic>>();
         _loading = false;
       });
@@ -113,6 +117,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
             Tab(text: 'Meine Notizen'),
             Tab(text: 'Meine Leistungen'),
             Tab(text: 'Termine'),
+            Tab(text: 'Gewicht'),
             Tab(text: 'Fütterung'),
           ],
         ),
@@ -148,6 +153,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                     _NotesTab(petId: widget.petId),
                     _ServicesTab(petId: widget.petId, fmt: _fmt),
                     _AppointmentsTab(petId: widget.petId),
+                    _ProviderWeightTab(
+                        entries: _weightEntries, fmt: _fmt),
                     _ProviderFeedingTab(plans: _feedingPlans),
                   ],
                 ),
@@ -1018,6 +1025,140 @@ class _AppointmentsTab extends StatelessWidget {
       case ProviderAppointmentStatus.noShow:
         return Colors.grey;
     }
+  }
+}
+
+// ── Gewicht Tab ───────────────────────────────────────────────────────────────
+
+class _ProviderWeightTab extends StatelessWidget {
+  final List<Map<String, dynamic>> entries;
+  final DateFormat fmt;
+  const _ProviderWeightTab({required this.entries, required this.fmt});
+
+  @override
+  Widget build(BuildContext context) {
+    if (entries.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.monitor_weight_outlined,
+                size: 48, color: ProviderTheme.onSurfaceVariant),
+            SizedBox(height: 12),
+            Text('Keine Gewichtsdaten',
+                style: TextStyle(color: ProviderTheme.onSurfaceVariant)),
+          ],
+        ),
+      );
+    }
+
+    final sorted = [...entries]
+      ..sort((a, b) {
+        final da =
+            DateTime.tryParse(a['measured_at'] as String? ?? '') ?? DateTime(0);
+        final db =
+            DateTime.tryParse(b['measured_at'] as String? ?? '') ?? DateTime(0);
+        return db.compareTo(da);
+      });
+
+    final weights =
+        sorted.map((e) => (e['weight_kg'] as num?)?.toDouble() ?? 0.0).toList();
+    final latestKg = weights.isNotEmpty ? weights.first : null;
+
+    return Column(
+      children: [
+        if (latestKg != null)
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: ProviderTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.monitor_weight_rounded,
+                    color: ProviderTheme.primary),
+                const SizedBox(width: 12),
+                Text(
+                  'Aktuell: ${latestKg.toStringAsFixed(2)} kg',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: ProviderTheme.primary),
+                ),
+                if (weights.length >= 2) ...[
+                  const SizedBox(width: 16),
+                  Builder(builder: (ctx) {
+                    final diff = weights.first - weights[1];
+                    final isUp = diff > 0;
+                    return Row(
+                      children: [
+                        Icon(
+                          isUp ? Icons.trending_up : Icons.trending_down,
+                          size: 16,
+                          color: isUp ? Colors.orange : ProviderTheme.secondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${isUp ? '+' : ''}${diff.toStringAsFixed(2)} kg',
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: isUp
+                                  ? Colors.orange
+                                  : ProviderTheme.secondary,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    );
+                  }),
+                ],
+              ],
+            ),
+          ),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: sorted.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (_, i) {
+              final e = sorted[i];
+              final kg = (e['weight_kg'] as num?)?.toDouble();
+              final dt = DateTime.tryParse(e['measured_at'] as String? ?? '');
+              final note = e['notes'] as String?;
+              return ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: ProviderTheme.primary.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.monitor_weight_rounded,
+                      size: 18, color: ProviderTheme.primary),
+                ),
+                title: Text(
+                  kg != null ? '${kg.toStringAsFixed(2)} kg' : '—',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: dt != null
+                    ? Text(fmt.format(dt),
+                        style: const TextStyle(fontSize: 12))
+                    : null,
+                trailing: note != null && note.isNotEmpty
+                    ? Tooltip(
+                        message: note,
+                        child: const Icon(Icons.notes_rounded,
+                            size: 16,
+                            color: ProviderTheme.onSurfaceVariant),
+                      )
+                    : null,
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 }
 

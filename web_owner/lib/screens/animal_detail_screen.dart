@@ -15,6 +15,7 @@ import '../providers/appointment_provider.dart';
 import '../providers/feeding_provider.dart';
 import '../providers/medication_provider.dart';
 import '../providers/permission_provider.dart';
+import '../providers/reminder_provider.dart';
 import '../providers/weight_provider.dart';
 import '../services/file_picker_service.dart';
 
@@ -918,47 +919,89 @@ class _VaccinationCard extends StatelessWidget {
             label: 'Noch keine Impfungen eingetragen',
           )
         else
-          ...vaccinations.take(5).map((v) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: v.statusColor,
-                        shape: BoxShape.circle,
-                      ),
+          ...vaccinations.take(5).map((v) {
+            final daysLeft = v.validUntil != null
+                ? v.validUntil!.difference(DateTime.now()).inDays
+                : null;
+            final showReminder =
+                daysLeft != null && daysLeft >= 0 && daysLeft <= 60;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: v.statusColor,
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          v.vaccineName,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        if (v.validUntil != null)
                           Text(
-                            v.vaccineName,
+                            '${v.statusLabel} bis '
+                            '${v.validUntil!.day}.${v.validUntil!.month}.${v.validUntil!.year}'
+                            '${daysLeft != null && daysLeft >= 0 ? ' (noch $daysLeft T)' : ''}',
                             style: Theme.of(context)
                                 .textTheme
-                                .bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                                .bodySmall
+                                ?.copyWith(color: v.statusColor),
                           ),
-                          if (v.validUntil != null)
-                            Text(
-                              '${v.statusLabel} bis '
-                              '${v.validUntil!.day}.${v.validUntil!.month}.${v.validUntil!.year}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: v.statusColor),
-                            ),
-                        ],
+                      ],
+                    ),
+                  ),
+                  if (showReminder)
+                    Tooltip(
+                      message: 'Erinnerung anlegen',
+                      child: InkWell(
+                        onTap: () => _quickReminder(
+                            context, petId, v.vaccineName, v.validUntil!),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(Icons.alarm_add_rounded,
+                              size: 16, color: v.statusColor),
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              )),
+                ],
+              ),
+            );
+          }),
       ],
     );
+  }
+}
+
+Future<void> _quickReminder(BuildContext context, String petId,
+    String vaccineName, DateTime validUntil) async {
+  final remindAt = validUntil.subtract(const Duration(days: 14));
+  final effectiveRemindAt =
+      remindAt.isBefore(DateTime.now()) ? DateTime.now().add(const Duration(days: 1)) : remindAt;
+
+  final ok = await context.read<ReminderProvider>().create(
+        title: 'Impfung auffrischen: $vaccineName',
+        message: 'Läuft ab am ${validUntil.day}.${validUntil.month}.${validUntil.year}',
+        type: 'vaccination',
+        petId: petId,
+        remindAt: effectiveRemindAt,
+      );
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(ok ? 'Erinnerung angelegt' : 'Fehler beim Anlegen'),
+    ));
   }
 }
 

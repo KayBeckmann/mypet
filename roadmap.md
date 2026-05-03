@@ -827,6 +827,25 @@ services:
 
 ---
 
+## Phase 32: Appointment-UX, Impfungs-Reminder & Gewicht Dienstleister ✅ *(2026-05-03)*
+
+### M32.1 - Appointment-Karten verbessert (web_owner) ✅
+- [x] Karte zeigt jetzt Dauer, Ort, Beschreibung, Praxisname
+- [x] Absagegrund als farbiges Info-Banner bei abgesagten Terminen
+- [x] "Absagen"-Link direkt in Karte (statt separatem IconButton)
+- [x] Aufteilung in Sektionen: "Ausstehend" / "Bestätigt" / "Vergangen"
+- [x] "Vergangen": max. 5 Einträge, erweiterbar über "Alle X anzeigen"
+- [x] Sektions-Header mit Anzahl-Badge
+
+### M32.2 - Impfungs-Erinnerung (web_owner) ✅
+- [x] AnimalDetailScreen: Alarm-Icon bei Impfungen mit ≤ 60 Tagen Restlaufzeit
+- [x] Klick legt automatisch Erinnerung 14 Tage vor Ablauf an
+
+### M32.3 - Gewichts-Tab CustomerDetailScreen (web_provider) ✅
+- [x] 7. Tab "Gewicht" mit aktuellem Wert, Trend-Anzeige (↑/↓) und Eintrags-Liste
+
+---
+
 ## Legende
 
 - [ ] Offen
