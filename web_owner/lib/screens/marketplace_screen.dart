@@ -301,6 +301,7 @@ class _OrgCard extends StatelessWidget {
                 ],
               ],
             ),
+          ],
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
