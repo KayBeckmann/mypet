@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:mypet_shared/shared.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
-import 'package:intl/intl.dart';
 import '../providers/auth_provider.dart';
 import '../providers/pet_provider.dart';
 import '../providers/appointment_provider.dart';
@@ -12,8 +13,36 @@ import '../widgets/pet_card.dart';
 import '../widgets/appointment_card.dart';
 import '../widgets/quick_action_chip.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  List<Map<String, dynamic>> _expiringVaccinations = [];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadExpiringVaccinations();
+    });
+  }
+
+  Future<void> _loadExpiringVaccinations() async {
+    try {
+      final api = context.read<ApiService>();
+      final data = await api.get('/vaccinations/expiring?days=30');
+      if (mounted) {
+        setState(() {
+          _expiringVaccinations = (data['vaccinations'] as List? ?? [])
+              .cast<Map<String, dynamic>>();
+        });
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +105,14 @@ class DashboardScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 24),
+
+                // Ablaufende Impfungen
+                if (_expiringVaccinations.isNotEmpty) ...[
+                  _ExpiringVaccinationsPanel(
+                      vaccinations: _expiringVaccinations),
+                  const SizedBox(height: 24),
+                ],
 
                 // Pet Section Header
                 Row(
@@ -382,6 +418,87 @@ class _RemindersPanel extends StatelessWidget {
               child: const Text('Alle Erinnerungen →'),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpiringVaccinationsPanel extends StatelessWidget {
+  final List<Map<String, dynamic>> vaccinations;
+  const _ExpiringVaccinationsPanel({required this.vaccinations});
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = DateFormat('dd.MM.yyyy');
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusLg),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.vaccines_rounded, color: Colors.amber, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Ablaufende Impfungen (nächste 30 Tage)',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => context.go('/animals'),
+                child: const Text('Zum Impfpass →'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...vaccinations.map((v) {
+            final validUntil = v['valid_until'] as String?;
+            DateTime? date;
+            if (validUntil != null) date = DateTime.tryParse(validUntil);
+            final daysLeft =
+                date != null ? date.difference(DateTime.now()).inDays : null;
+            final urgent = daysLeft != null && daysLeft <= 7;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: urgent ? LivingLedgerTheme.error : Colors.amber,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      '${v['pet_name'] ?? '—'} · ${v['vaccine_name'] ?? '—'}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                  if (date != null)
+                    Text(
+                      '${fmt.format(date)}${daysLeft != null ? ' ($daysLeft T)' : ''}',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: urgent
+                              ? LivingLedgerTheme.error
+                              : Colors.amber.shade700,
+                          fontWeight: FontWeight.w600),
+                    ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );

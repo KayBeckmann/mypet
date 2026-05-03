@@ -89,7 +89,11 @@ class _PetCardState extends State<PetCard> {
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         Text(
-                          widget.pet.breed.toUpperCase(),
+                          [
+                            widget.pet.breed.toUpperCase(),
+                            if (widget.pet.ageYears != null)
+                              '${widget.pet.ageYears} J.',
+                          ].join(' · '),
                           style:
                               Theme.of(context).textTheme.labelMedium?.copyWith(
                                     letterSpacing: 1,
