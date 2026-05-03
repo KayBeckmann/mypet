@@ -14,6 +14,7 @@ class PatientsScreen extends StatefulWidget {
 class _PatientsScreenState extends State<PatientsScreen> {
   final _searchController = TextEditingController();
   String _search = '';
+  String _sortBy = 'name'; // 'name' | 'species' | 'owner'
 
   @override
   void initState() {
@@ -32,17 +33,33 @@ class _PatientsScreenState extends State<PatientsScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PatientsProvider>();
-    final filtered = _search.isEmpty
-        ? provider.patients
-        : provider.patients
-            .where((p) =>
-                (p['name'] as String? ?? '')
-                    .toLowerCase()
-                    .contains(_search.toLowerCase()) ||
-                (p['species'] as String? ?? '')
-                    .toLowerCase()
-                    .contains(_search.toLowerCase()))
-            .toList();
+    final filtered = ((_search.isEmpty
+            ? provider.patients
+            : provider.patients
+                .where((p) =>
+                    (p['name'] as String? ?? '')
+                        .toLowerCase()
+                        .contains(_search.toLowerCase()) ||
+                    (p['species'] as String? ?? '')
+                        .toLowerCase()
+                        .contains(_search.toLowerCase()) ||
+                    (p['owner_name'] as String? ?? '')
+                        .toLowerCase()
+                        .contains(_search.toLowerCase()))
+                .toList())
+          ..sort((a, b) {
+            switch (_sortBy) {
+              case 'species':
+                return (a['species'] as String? ?? '')
+                    .compareTo(b['species'] as String? ?? '');
+              case 'owner':
+                return (a['owner_name'] as String? ?? '')
+                    .compareTo(b['owner_name'] as String? ?? '');
+              default:
+                return (a['name'] as String? ?? '')
+                    .compareTo(b['name'] as String? ?? '');
+            }
+          }));
 
     return Padding(
       padding: const EdgeInsets.all(VetTheme.spacingLg),
@@ -70,6 +87,33 @@ class _PatientsScreenState extends State<PatientsScreen> {
               prefixIcon: Icon(Icons.search),
             ),
             onChanged: (v) => setState(() => _search = v),
+          ),
+          const SizedBox(height: VetTheme.spacingSm),
+          Row(
+            children: [
+              Text('Sortierung:',
+                  style:
+                      TextStyle(fontSize: 13, color: VetTheme.onSurfaceVariant)),
+              const SizedBox(width: 8),
+              _SortChip(
+                  label: 'Name',
+                  selected: _sortBy == 'name',
+                  onTap: () => setState(() => _sortBy = 'name')),
+              const SizedBox(width: 6),
+              _SortChip(
+                  label: 'Tierart',
+                  selected: _sortBy == 'species',
+                  onTap: () => setState(() => _sortBy = 'species')),
+              const SizedBox(width: 6),
+              _SortChip(
+                  label: 'Besitzer',
+                  selected: _sortBy == 'owner',
+                  onTap: () => setState(() => _sortBy = 'owner')),
+              const Spacer(),
+              Text('${filtered.length} Patienten',
+                  style:
+                      TextStyle(fontSize: 13, color: VetTheme.onSurfaceVariant)),
+            ],
           ),
           const SizedBox(height: VetTheme.spacingMd),
 
@@ -189,5 +233,40 @@ class _PatientCard extends StatelessWidget {
       default:
         return 'Tier';
     }
+  }
+}
+
+class _SortChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _SortChip(
+      {required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: selected
+              ? VetTheme.primary
+              : VetTheme.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(VetTheme.radiusFull),
+          border: Border.all(
+              color: selected
+                  ? VetTheme.primary
+                  : VetTheme.outlineVariant),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: selected ? VetTheme.onPrimary : VetTheme.onSurfaceVariant),
+        ),
+      ),
+    );
   }
 }

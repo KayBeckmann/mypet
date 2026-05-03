@@ -832,8 +832,10 @@ class _StatusBadge extends StatelessWidget {
 class _DetailCard extends StatelessWidget {
   final String title;
   final List<Widget> children;
+  final Widget? action;
 
-  const _DetailCard({required this.title, required this.children});
+  const _DetailCard(
+      {required this.title, required this.children, this.action});
 
   @override
   Widget build(BuildContext context) {
@@ -847,12 +849,19 @@ class _DetailCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  letterSpacing: 1.5,
-                  color: LivingLedgerTheme.onSurfaceVariant,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        letterSpacing: 1.5,
+                        color: LivingLedgerTheme.onSurfaceVariant,
+                      ),
                 ),
+              ),
+              if (action != null) action!,
+            ],
           ),
           const SizedBox(height: 16),
           ...children,
@@ -907,6 +916,12 @@ class _VaccinationCard extends StatelessWidget {
 
     return _DetailCard(
       title: 'IMPFPASS',
+      action: IconButton(
+        icon: const Icon(Icons.add_rounded, size: 20),
+        tooltip: 'Impfung eintragen',
+        color: LivingLedgerTheme.primary,
+        onPressed: () => _addVaccination(context, petId, health),
+      ),
       children: [
         if (loading)
           const Padding(
@@ -976,12 +991,164 @@ class _VaccinationCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  Tooltip(
+                    message: 'Löschen',
+                    child: InkWell(
+                      onTap: () async {
+                        final ok = await health.deleteVaccination(petId, v.id);
+                        if (context.mounted && !ok) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Fehler beim Löschen')),
+                          );
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(20),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(Icons.delete_outline_rounded,
+                            size: 16,
+                            color: LivingLedgerTheme.onSurfaceVariant),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
           }),
       ],
     );
+  }
+}
+
+Future<void> _addVaccination(BuildContext context, String petId,
+    OwnerHealthProvider health) async {
+  final nameCtrl = TextEditingController();
+  final batchCtrl = TextEditingController();
+  final manuCtrl = TextEditingController();
+  final notesCtrl = TextEditingController();
+  DateTime? validFrom;
+  DateTime? validUntil;
+  final fmt = DateFormat('dd.MM.yyyy');
+  final formKey = GlobalKey<FormState>();
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setDs) => AlertDialog(
+        title: const Text('Impfung eintragen'),
+        content: SizedBox(
+          width: 480,
+          child: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameCtrl,
+                    autofocus: true,
+                    decoration:
+                        const InputDecoration(labelText: 'Impfstoff *'),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Pflichtfeld'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: batchCtrl,
+                    decoration:
+                        const InputDecoration(labelText: 'Chargennummer'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: manuCtrl,
+                    decoration:
+                        const InputDecoration(labelText: 'Hersteller'),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.event, size: 16),
+                          label: Text(validFrom != null
+                              ? fmt.format(validFrom!)
+                              : 'Geimpft am'),
+                          onPressed: () async {
+                            final d = await showDatePicker(
+                              context: ctx,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now(),
+                            );
+                            if (d != null) setDs(() => validFrom = d);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.event_available, size: 16),
+                          label: Text(validUntil != null
+                              ? fmt.format(validUntil!)
+                              : 'Gültig bis'),
+                          onPressed: () async {
+                            final d = await showDatePicker(
+                              context: ctx,
+                              initialDate: DateTime.now()
+                                  .add(const Duration(days: 365)),
+                              firstDate: DateTime.now(),
+                              lastDate: DateTime(2040),
+                            );
+                            if (d != null) setDs(() => validUntil = d);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: notesCtrl,
+                    decoration:
+                        const InputDecoration(labelText: 'Notizen'),
+                    maxLines: 2,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Abbrechen')),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(ctx, true);
+              }
+            },
+            child: const Text('Eintragen'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  if (confirmed == true && context.mounted) {
+    final ok = await health.addVaccination(petId, {
+      'vaccine_name': nameCtrl.text.trim(),
+      if (batchCtrl.text.trim().isNotEmpty) 'batch_number': batchCtrl.text.trim(),
+      if (manuCtrl.text.trim().isNotEmpty) 'manufacturer': manuCtrl.text.trim(),
+      if (validFrom != null) 'valid_from': validFrom!.toIso8601String().split('T').first,
+      if (validUntil != null) 'valid_until': validUntil!.toIso8601String().split('T').first,
+      if (notesCtrl.text.trim().isNotEmpty) 'notes': notesCtrl.text.trim(),
+    });
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(ok ? 'Impfung eingetragen' : 'Fehler beim Eintragen'),
+      ));
+    }
   }
 }
 

@@ -166,4 +166,29 @@ class OwnerHealthProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> addVaccination(String petId, Map<String, dynamic> body) async {
+    try {
+      final res = await _api.post('/pets/$petId/vaccinations', body: body);
+      final vacc = Vaccination.fromJson(res['vaccination'] as Map<String, dynamic>);
+      _vaccinations[petId] = [...(_vaccinations[petId] ?? []), vacc]
+        ..sort((a, b) => (b.validUntil ?? DateTime(0))
+            .compareTo(a.validUntil ?? DateTime(0)));
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteVaccination(String petId, String vaccinationId) async {
+    try {
+      await _api.delete('/pets/$petId/vaccinations/$vaccinationId');
+      _vaccinations[petId]?.removeWhere((v) => v.id == vaccinationId);
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 }
