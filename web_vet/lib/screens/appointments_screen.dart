@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:mypet_shared/shared.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/appointment_provider.dart';
+import '../providers/patients_provider.dart';
 
 class VetAppointmentsScreen extends StatefulWidget {
   const VetAppointmentsScreen({super.key});
@@ -63,6 +66,12 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
                     onPressed: provider.load,
                     tooltip: 'Aktualisieren',
                   ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Neuer Termin'),
+                  onPressed: () => _createAppointment(context),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -222,6 +231,173 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(ok ? 'Termin abgesagt' : 'Fehler')),
         );
+      }
+    }
+  }
+
+  Future<void> _createAppointment(BuildContext context) async {
+    final patients = context.read<PatientsProvider>().patients;
+    if (patients.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Keine Patienten verfügbar')),
+      );
+      return;
+    }
+
+    final titleCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    final locationCtrl = TextEditingController();
+    final durationCtrl = TextEditingController(text: '30');
+    String? selectedPetId = patients.first['id'] as String?;
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+    TimeOfDay selectedTime = const TimeOfDay(hour: 10, minute: 0);
+    final formKey = GlobalKey<FormState>();
+    final dateFmt = DateFormat('dd.MM.yyyy');
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: const Text('Neuer Termin'),
+          content: SizedBox(
+            width: 480,
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: selectedPetId,
+                      decoration: const InputDecoration(labelText: 'Patient *'),
+                      items: patients
+                          .map((p) => DropdownMenuItem<String>(
+                                value: p['id'] as String,
+                                child: Text(
+                                    '${p['name']} (${p['owner_name'] ?? '—'})'),
+                              ))
+                          .toList(),
+                      onChanged: (v) => setDs(() => selectedPetId = v),
+                      validator: (v) =>
+                          v == null ? 'Patient erforderlich' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: titleCtrl,
+                      autofocus: true,
+                      decoration: const InputDecoration(labelText: 'Titel *'),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Titel erforderlich'
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.calendar_today, size: 16),
+                            label: Text(dateFmt.format(selectedDate)),
+                            onPressed: () async {
+                              final d = await showDatePicker(
+                                context: ctx,
+                                initialDate: selectedDate,
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime.now()
+                                    .add(const Duration(days: 365)),
+                              );
+                              if (d != null) setDs(() => selectedDate = d);
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.access_time, size: 16),
+                            label: Text(selectedTime.format(ctx)),
+                            onPressed: () async {
+                              final t = await showTimePicker(
+                                context: ctx,
+                                initialTime: selectedTime,
+                              );
+                              if (t != null) setDs(() => selectedTime = t);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: durationCtrl,
+                      decoration:
+                          const InputDecoration(labelText: 'Dauer (Minuten)'),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: locationCtrl,
+                      decoration: const InputDecoration(labelText: 'Ort'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: descCtrl,
+                      decoration:
+                          const InputDecoration(labelText: 'Beschreibung'),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Abbrechen')),
+            FilledButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(ctx, true);
+                }
+              },
+              child: const Text('Anlegen'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      final scheduledAt = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        selectedTime.hour,
+        selectedTime.minute,
+      );
+      final api = context.read<ApiService>();
+      try {
+        await api.post('/appointments', body: {
+          'pet_id': selectedPetId,
+          'title': titleCtrl.text.trim(),
+          'scheduled_at': scheduledAt.toIso8601String(),
+          'duration_minutes': int.tryParse(durationCtrl.text) ?? 30,
+          if (locationCtrl.text.trim().isNotEmpty)
+            'location': locationCtrl.text.trim(),
+          if (descCtrl.text.trim().isNotEmpty)
+            'description': descCtrl.text.trim(),
+        });
+        if (context.mounted) {
+          context.read<VetAppointmentProvider>().load();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Termin angelegt')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Fehler: $e')),
+          );
+        }
       }
     }
   }

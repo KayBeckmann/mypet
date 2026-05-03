@@ -34,13 +34,14 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
   List<Map<String, dynamic>> _vaccinations = [];
   List<Map<String, dynamic>> _medications = [];
   List<Map<String, dynamic>> _records = [];
+  List<Map<String, dynamic>> _feedingPlans = [];
   bool _loading = true;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 5, vsync: this);
+    _tabs = TabController(length: 6, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _load();
       context.read<ProviderNotesProvider>().loadForPet(widget.petId);
@@ -64,6 +65,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
         api.get('/pets/${widget.petId}/vaccinations'),
         api.get('/pets/${widget.petId}/medications'),
         api.get('/pets/${widget.petId}/records'),
+        api.get('/pets/${widget.petId}/feeding-plans'),
       ]);
       setState(() {
         _vaccinations = (results[0]['vaccinations'] as List? ?? [])
@@ -71,6 +73,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
         _medications = (results[1]['medications'] as List? ?? [])
             .cast<Map<String, dynamic>>();
         _records = (results[2]['records'] as List? ?? [])
+            .cast<Map<String, dynamic>>();
+        _feedingPlans = (results[3]['feeding_plans'] as List? ?? [])
             .cast<Map<String, dynamic>>();
         _loading = false;
       });
@@ -109,6 +113,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
             Tab(text: 'Meine Notizen'),
             Tab(text: 'Meine Leistungen'),
             Tab(text: 'Termine'),
+            Tab(text: 'Fütterung'),
           ],
         ),
       ),
@@ -143,6 +148,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                     _NotesTab(petId: widget.petId),
                     _ServicesTab(petId: widget.petId, fmt: _fmt),
                     _AppointmentsTab(petId: widget.petId),
+                    _ProviderFeedingTab(plans: _feedingPlans),
                   ],
                 ),
     );
@@ -1012,5 +1018,149 @@ class _AppointmentsTab extends StatelessWidget {
       case ProviderAppointmentStatus.noShow:
         return Colors.grey;
     }
+  }
+}
+
+// ── Fütterung Tab ─────────────────────────────────────────────────────────────
+
+class _ProviderFeedingTab extends StatelessWidget {
+  final List<Map<String, dynamic>> plans;
+  const _ProviderFeedingTab({required this.plans});
+
+  @override
+  Widget build(BuildContext context) {
+    final activePlans = plans.where((p) => p['is_active'] == true).toList();
+    final displayPlans = activePlans.isEmpty ? plans : activePlans;
+
+    if (plans.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.restaurant_menu_rounded,
+                size: 48, color: ProviderTheme.onSurfaceVariant),
+            SizedBox(height: 12),
+            Text('Kein Futterplan vorhanden',
+                style: TextStyle(color: ProviderTheme.onSurfaceVariant)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: displayPlans.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (_, i) {
+        final plan = displayPlans[i];
+        final meals = (plan['meals'] as List?)
+                ?.cast<Map<String, dynamic>>() ??
+            [];
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ProviderTheme.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: ProviderTheme.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.restaurant_menu_rounded,
+                      size: 18, color: ProviderTheme.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      plan['name'] as String? ?? '—',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 15),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: (plan['is_active'] == true
+                              ? ProviderTheme.secondary
+                              : ProviderTheme.onSurfaceVariant)
+                          .withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      plan['is_active'] == true ? 'Aktiv' : 'Inaktiv',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: plan['is_active'] == true
+                              ? ProviderTheme.secondary
+                              : ProviderTheme.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+              if ((plan['description'] as String?)?.isNotEmpty == true) ...[
+                const SizedBox(height: 4),
+                Text(plan['description'] as String,
+                    style: const TextStyle(
+                        color: ProviderTheme.onSurfaceVariant, fontSize: 13)),
+              ],
+              if (meals.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                ...meals.map((meal) {
+                  final components = (meal['components'] as List?)
+                          ?.cast<Map<String, dynamic>>() ??
+                      [];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time,
+                                size: 13,
+                                color: ProviderTheme.onSurfaceVariant),
+                            const SizedBox(width: 4),
+                            Text(
+                              meal['name'] as String? ?? '—',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                            if ((meal['time_of_day'] as String?)
+                                    ?.isNotEmpty ==
+                                true) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                meal['time_of_day'] as String,
+                                style: const TextStyle(
+                                    color: ProviderTheme.onSurfaceVariant,
+                                    fontSize: 12),
+                              ),
+                            ],
+                          ],
+                        ),
+                        ...components.map((c) => Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 20, top: 2),
+                              child: Text(
+                                '• ${c['food_name']} '
+                                '${c['amount_grams'] != null ? '${c['amount_grams']} ${c['unit'] ?? 'g'}' : ''}',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: ProviderTheme.onSurfaceVariant),
+                              ),
+                            )),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 }

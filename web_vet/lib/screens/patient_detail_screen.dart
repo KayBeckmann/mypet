@@ -24,15 +24,19 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabs;
   final _dateFormat = DateFormat('dd.MM.yyyy');
+  List<Map<String, dynamic>> _weightEntries = [];
+  List<Map<String, dynamic>> _feedingPlans = [];
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 7, vsync: this);
+    _tabs = TabController(length: 9, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MedicalProvider>().loadForPet(widget.petId);
       context.read<VetMediaProvider>().loadForPet(widget.petId);
       context.read<VetNotesProvider>().loadForPet(widget.petId);
+      _loadWeight();
+      _loadFeeding();
     });
   }
 
@@ -40,6 +44,32 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   void dispose() {
     _tabs.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadWeight() async {
+    try {
+      final api = context.read<ApiService>();
+      final data = await api.get('/pets/${widget.petId}/weight');
+      if (mounted) {
+        setState(() {
+          _weightEntries = (data['entries'] as List? ?? [])
+              .cast<Map<String, dynamic>>();
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadFeeding() async {
+    try {
+      final api = context.read<ApiService>();
+      final data = await api.get('/pets/${widget.petId}/feeding-plans');
+      if (mounted) {
+        setState(() {
+          _feedingPlans = (data['feeding_plans'] as List? ?? [])
+              .cast<Map<String, dynamic>>();
+        });
+      }
+    } catch (_) {}
   }
 
   // ── Medizinischer Eintrag anlegen ──
@@ -400,6 +430,8 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
             Tab(text: 'Notizen'),
             Tab(text: 'Compliance'),
             Tab(text: 'Termine'),
+            Tab(text: 'Gewicht'),
+            Tab(text: 'Fütterung'),
           ],
         ),
       ),
@@ -423,6 +455,12 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
                 _NotesTab(provider: notesProvider),
                 _ComplianceTab(medical: medical, petId: widget.petId),
                 _AppointmentsTab(appointments: petAppointments),
+                _WeightTab(
+                    entries: _weightEntries,
+                    dateFormat: _dateFormat,
+                    onRefresh: _loadWeight),
+                _FeedingTab(
+                    plans: _feedingPlans, onRefresh: _loadFeeding),
               ],
             ),
     );
@@ -1561,5 +1599,300 @@ class _AppointmentsTab extends StatelessWidget {
       case AppointmentStatus.noShow:
         return Colors.grey;
     }
+  }
+}
+
+// ── Gewicht Tab ──
+class _WeightTab extends StatelessWidget {
+  final List<Map<String, dynamic>> entries;
+  final DateFormat dateFormat;
+  final VoidCallback onRefresh;
+
+  const _WeightTab(
+      {required this.entries,
+      required this.dateFormat,
+      required this.onRefresh});
+
+  @override
+  Widget build(BuildContext context) {
+    if (entries.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.monitor_weight_outlined,
+                size: 48, color: VetTheme.onSurfaceVariant),
+            const SizedBox(height: 12),
+            const Text('Keine Gewichtsdaten',
+                style: TextStyle(color: VetTheme.onSurfaceVariant)),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              icon: const Icon(Icons.refresh),
+              label: const Text('Aktualisieren'),
+              onPressed: onRefresh,
+            ),
+          ],
+        ),
+      );
+    }
+
+    final sorted = [...entries]
+      ..sort((a, b) {
+        final da = DateTime.tryParse(a['measured_at'] as String? ?? '') ??
+            DateTime(0);
+        final db = DateTime.tryParse(b['measured_at'] as String? ?? '') ??
+            DateTime(0);
+        return db.compareTo(da);
+      });
+
+    final weights = sorted
+        .map((e) => (e['weight_kg'] as num?)?.toDouble() ?? 0.0)
+        .toList();
+    final latestKg = weights.isNotEmpty ? weights.first : null;
+
+    return Column(
+      children: [
+        if (latestKg != null)
+          Container(
+            margin: const EdgeInsets.all(VetTheme.spacingMd),
+            padding: const EdgeInsets.all(VetTheme.spacingMd),
+            decoration: BoxDecoration(
+              color: VetTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(VetTheme.radiusMd),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.monitor_weight_rounded,
+                    color: VetTheme.primary),
+                const SizedBox(width: 12),
+                Text(
+                  'Aktuell: ${latestKg.toStringAsFixed(2)} kg',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: VetTheme.primary),
+                ),
+                if (weights.length >= 2) ...[
+                  const SizedBox(width: 16),
+                  Builder(builder: (ctx) {
+                    final diff = weights.first - weights[1];
+                    final isUp = diff > 0;
+                    return Row(
+                      children: [
+                        Icon(
+                          isUp
+                              ? Icons.trending_up
+                              : Icons.trending_down,
+                          size: 16,
+                          color: isUp ? Colors.orange : VetTheme.secondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${isUp ? '+' : ''}${diff.toStringAsFixed(2)} kg',
+                          style: TextStyle(
+                              fontSize: 13,
+                              color:
+                                  isUp ? Colors.orange : VetTheme.secondary,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    );
+                  }),
+                ],
+              ],
+            ),
+          ),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: VetTheme.spacingMd),
+            itemCount: sorted.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (_, i) {
+              final e = sorted[i];
+              final kg = (e['weight_kg'] as num?)?.toDouble();
+              final dt =
+                  DateTime.tryParse(e['measured_at'] as String? ?? '');
+              final note = e['notes'] as String?;
+              return ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: VetTheme.primary.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.monitor_weight_rounded,
+                      size: 18, color: VetTheme.primary),
+                ),
+                title: Text(
+                  kg != null ? '${kg.toStringAsFixed(2)} kg' : '—',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: dt != null
+                    ? Text(dateFormat.format(dt),
+                        style: const TextStyle(fontSize: 12))
+                    : null,
+                trailing: note != null && note.isNotEmpty
+                    ? Tooltip(
+                        message: note,
+                        child: const Icon(Icons.notes_rounded,
+                            size: 16, color: VetTheme.onSurfaceVariant),
+                      )
+                    : null,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Fütterung Tab ──
+class _FeedingTab extends StatelessWidget {
+  final List<Map<String, dynamic>> plans;
+  final VoidCallback onRefresh;
+
+  const _FeedingTab({required this.plans, required this.onRefresh});
+
+  @override
+  Widget build(BuildContext context) {
+    final activePlans = plans.where((p) => p['is_active'] == true).toList();
+
+    if (plans.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.restaurant_menu_rounded,
+                size: 48, color: VetTheme.onSurfaceVariant),
+            const SizedBox(height: 12),
+            const Text('Kein Futterplan vorhanden',
+                style: TextStyle(color: VetTheme.onSurfaceVariant)),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              icon: const Icon(Icons.refresh),
+              label: const Text('Aktualisieren'),
+              onPressed: onRefresh,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(VetTheme.spacingMd),
+      itemCount: activePlans.isEmpty ? plans.length : activePlans.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (_, i) {
+        final plan = activePlans.isEmpty ? plans[i] : activePlans[i];
+        final meals = (plan['meals'] as List?)
+                ?.cast<Map<String, dynamic>>() ??
+            [];
+        return Container(
+          padding: const EdgeInsets.all(VetTheme.spacingMd),
+          decoration: BoxDecoration(
+            color: VetTheme.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(VetTheme.radiusMd),
+            border: Border.all(color: VetTheme.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.restaurant_menu_rounded,
+                      size: 18, color: VetTheme.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      plan['name'] as String? ?? '—',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 15),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: (plan['is_active'] == true
+                              ? VetTheme.secondary
+                              : VetTheme.onSurfaceVariant)
+                          .withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      plan['is_active'] == true ? 'Aktiv' : 'Inaktiv',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: plan['is_active'] == true
+                              ? VetTheme.secondary
+                              : VetTheme.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+              if ((plan['description'] as String?)?.isNotEmpty == true) ...[
+                const SizedBox(height: 4),
+                Text(plan['description'] as String,
+                    style: const TextStyle(
+                        color: VetTheme.onSurfaceVariant, fontSize: 13)),
+              ],
+              if (meals.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                ...meals.map((meal) {
+                  final components = (meal['components'] as List?)
+                          ?.cast<Map<String, dynamic>>() ??
+                      [];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time,
+                                size: 13,
+                                color: VetTheme.onSurfaceVariant),
+                            const SizedBox(width: 4),
+                            Text(
+                              meal['name'] as String? ?? '—',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                            if ((meal['time_of_day'] as String?)
+                                    ?.isNotEmpty ==
+                                true) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                meal['time_of_day'] as String,
+                                style: const TextStyle(
+                                    color: VetTheme.onSurfaceVariant,
+                                    fontSize: 12),
+                              ),
+                            ],
+                          ],
+                        ),
+                        ...components.map((c) => Padding(
+                              padding: const EdgeInsets.only(left: 20, top: 2),
+                              child: Text(
+                                '• ${c['food_name']} '
+                                '${c['amount_grams'] != null ? '${c['amount_grams']} ${c['unit'] ?? 'g'}' : ''}',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: VetTheme.onSurfaceVariant),
+                              ),
+                            )),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 }

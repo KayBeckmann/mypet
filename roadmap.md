@@ -792,6 +792,41 @@ services:
 
 ---
 
+## Phase 30: UX-Verbesserungen Termine & Detailansichten ✅ *(2026-05-03)*
+
+### M30.1 - No-Show & Ablaufende Impfungen für Dienstleister ✅
+- [x] `web_provider`: `markNoShow()` + "Nicht erschienen"-Button bei bestätigten Terminen
+- [x] `web_provider` Dashboard: Ablaufende-Impfungen-Panel (GET /vaccinations/expiring, 30 Tage)
+- [x] Klick → navigiert zur Kundendetailansicht
+
+### M30.2 - Navigation & Termine in Detailansichten ✅
+- [x] `web_vet` + `web_provider`: Terminkarten anklickbar → navigieren zur Patienten-/Kundendetailansicht
+- [x] `web_vet` PatientDetailScreen: 7. Tab "Termine" (gefiltert nach petId, chronologisch)
+- [x] `web_provider` CustomerDetailScreen: 5. Tab "Termine"
+
+### M30.3 - Bugfixes ✅
+- [x] `web_owner/auth_provider.dart`: Duplikat-Deklarationen `updateProfile`/`changePassword` entfernt
+- [x] `web_owner/marketplace_screen.dart`: fehlendes `],` + `_BookAppointmentDialog` → `BookAppointmentDialog`
+
+---
+
+## Phase 31: Termin anlegen, Gewicht & Fütterung in Detailansichten ✅ *(2026-05-03)*
+
+### M31.1 - Termin anlegen von Tierarzt- und Dienstleister-Seite ✅
+- [x] `web_vet` Termine-Screen: "Neuer Termin"-Button + Dialog (Patient, Datum/Zeit, Titel, Dauer, Ort)
+- [x] `web_provider` Termine-Screen: "Neuer Termin"-Button + Dialog (Kunde aus CustomersProvider)
+- [x] POST /appointments mit provider_id (Standard: eingeloggter User)
+
+### M31.2 - Gewichtsverlauf-Tab im Patientendetail ✅
+- [x] `web_vet` PatientDetailScreen: 8. Tab "Gewicht" (GET /pets/:id/weight)
+- [x] Aktuelles Gewicht + Trend-Anzeige (↑/↓ vs. Voreintrag), Liste aller Einträge mit Datum/Notiz
+
+### M31.3 - Fütterungsplan-Tab in Detailansichten ✅
+- [x] `web_vet` PatientDetailScreen: 9. Tab "Fütterung" (aktive Pläne, Mahlzeiten mit Zutaten, read-only)
+- [x] `web_provider` CustomerDetailScreen: 6. Tab "Fütterung" (parallel geladen, read-only)
+
+---
+
 ## Legende
 
 - [ ] Offen
