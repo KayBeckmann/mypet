@@ -113,51 +113,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Profil aktualisieren
-  Future<bool> updateProfile({String? name, String? email}) async {
-    if (_isDemoMode) return false;
-
-    try {
-      final body = <String, dynamic>{};
-      if (name != null) body['name'] = name;
-      if (email != null) body['email'] = email;
-
-      final response = await _api.put('/account', body: body);
-      _user = User.fromJson(response['user'] as Map<String, dynamic>);
-      notifyListeners();
-      return true;
-    } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
-      return false;
-    } catch (_) {
-      _error = 'Verbindung zum Server fehlgeschlagen';
-      notifyListeners();
-      return false;
-    }
-  }
-
-  /// Passwort ändern
-  Future<bool> changePassword(String currentPassword, String newPassword) async {
-    if (_isDemoMode) return false;
-
-    try {
-      await _api.put('/account/password', body: {
-        'current_password': currentPassword,
-        'new_password': newPassword,
-      });
-      return true;
-    } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
-      return false;
-    } catch (_) {
-      _error = 'Verbindung zum Server fehlgeschlagen';
-      notifyListeners();
-      return false;
-    }
-  }
-
   /// Abmelden
   void logout() {
     _user = null;

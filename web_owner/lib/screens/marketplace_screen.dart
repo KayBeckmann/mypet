@@ -311,7 +311,7 @@ class _OrgCard extends StatelessWidget {
                 final pets = context.read<PetProvider>().pets;
                 showDialog(
                   context: context,
-                  builder: (_) => _BookAppointmentDialog(
+                  builder: (_) => BookAppointmentDialog(
                     pets: pets,
                     preselectedOrg: org,
                   ),
