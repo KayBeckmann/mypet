@@ -873,6 +873,24 @@ services:
 
 ---
 
+## Phase 35: Termin-Validierung, Tier-Suche & Erinnerungs-Filter ✅ *(2026-05-03)*
+
+### M35.1 - Backend: Appointment-Validierung ✅
+- [x] `POST /appointments`: scheduled_at in der Vergangenheit → 400 (5-Min-Puffer)
+
+### M35.2 - web_owner Animals-Screen Suche ✅
+- [x] Suchfeld erscheint ab 3 Tieren, filtert nach Name/Rasse/Spezies
+- [x] Subtitle zeigt "X von Y Tieren" wenn gefiltert
+
+### M35.3 - web_owner Erinnerungs-Filter ✅
+- [x] Typ-Filter-Chips: Alle / Impfungen / Medikamente / Termine / Sonstiges
+- [x] Animierter Filter-Chip-Style
+
+### M35.4 - Dashboard Medikamenten-Fix ✅
+- [x] Medikamenten-Panel lädt jetzt alle Tiere in `initState` (nicht nur aktiv gewähltes)
+
+---
+
 ## Legende
 
 - [ ] Offen
