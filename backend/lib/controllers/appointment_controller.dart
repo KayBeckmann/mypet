@@ -20,6 +20,7 @@ class AppointmentController {
     router.put('/<id>/complete', _complete);
     router.put('/<id>/no-show', _noShow);
     router.put('/<id>/cancel', _cancel);
+    router.put('/<id>/fee', _setFee);
     router.delete('/<id>', _delete);
 
     return router;
@@ -416,9 +417,59 @@ class AppointmentController {
       'location': a['location'],
       'notes': a['notes'],
       'cancelled_reason': a['cancelled_reason'],
+      'service_fee_cents': a['service_fee_cents'] as int?,
+      'service_fee_currency': a['service_fee_currency'] as String? ?? 'EUR',
+      'service_fee_note': a['service_fee_note'] as String?,
       'created_at': (a['created_at'] as DateTime).toIso8601String(),
       'updated_at': (a['updated_at'] as DateTime).toIso8601String(),
     };
+  }
+
+  /// PUT /appointments/:id/fee
+  Future<Response> _setFee(Request request, String id) async {
+    try {
+      final userId = request.context['userId'] as String;
+      final body =
+          jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+
+      final feeCents = body['service_fee_cents'] as int?;
+      final currency = body['service_fee_currency'] as String? ?? 'EUR';
+      final feeNote = body['service_fee_note'] as String?;
+
+      // Only the provider of the appointment can set the fee
+      final existing = await _db.queryOne(
+        'SELECT provider_id FROM appointments WHERE id = @id::uuid',
+        parameters: {'id': id},
+      );
+      if (existing == null) return _error(404, 'Termin nicht gefunden');
+
+      final providerId = existing['provider_id']?.toString();
+      if (providerId != userId) {
+        return _error(403, 'Nur der Dienstleister kann das Honorar setzen');
+      }
+
+      final updated = await _db.queryOne('''
+        UPDATE appointments
+        SET service_fee_cents = @fee,
+            service_fee_currency = @currency,
+            service_fee_note = @note
+        WHERE id = @id::uuid
+        RETURNING *
+      ''', parameters: {
+        'id': id,
+        'fee': feeCents,
+        'currency': currency,
+        'note': feeNote,
+      });
+
+      return Response.ok(
+        jsonEncode({'appointment': _sanitize(updated!)}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ setFee Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
   }
 
   Response _error(int statusCode, String message) {

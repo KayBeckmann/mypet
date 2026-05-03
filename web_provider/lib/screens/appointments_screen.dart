@@ -144,6 +144,19 @@ class _ProviderAppointmentsScreenState
                         _AppointmentList(
                           appointments: provider.past,
                           emptyText: 'Keine vergangenen Termine',
+                          actions: (a) => a.status ==
+                                  ProviderAppointmentStatus.completed
+                              ? [
+                                  _ActionBtn(
+                                    a.serviceFeeCents != null
+                                        ? 'Honorar bearbeiten'
+                                        : 'Honorar setzen',
+                                    ProviderTheme.secondary,
+                                    Icons.euro_rounded,
+                                    () => _setFee(context, a),
+                                  ),
+                                ]
+                              : [],
                         ),
                       ],
                     ),
@@ -152,6 +165,77 @@ class _ProviderAppointmentsScreenState
         ),
       ),
     );
+  }
+
+  Future<void> _setFee(BuildContext context, ProviderAppointment a) async {
+    final feeCtrl = TextEditingController(
+      text: a.serviceFeeCents != null
+          ? (a.serviceFeeCents! / 100).toStringAsFixed(2)
+          : '',
+    );
+    final noteCtrl = TextEditingController(text: a.serviceFeeNote ?? '');
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Honorar setzen'),
+        content: SizedBox(
+          width: 360,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: feeCtrl,
+                autofocus: true,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Betrag (€)',
+                  hintText: 'z.B. 45.00',
+                  prefixIcon: Icon(Icons.euro_rounded),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: noteCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Notiz (optional)',
+                  hintText: 'z.B. Grunduntersuchung + Impfung',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Abbrechen'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Speichern'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      final feeText = feeCtrl.text.trim().replaceAll(',', '.');
+      final feeEuros = double.tryParse(feeText);
+      final feeCents = feeEuros != null ? (feeEuros * 100).round() : null;
+      final ok = await context.read<ProviderAppointmentProvider>().setFee(
+            a.id,
+            feeCents: feeCents,
+            feeNote: noteCtrl.text.trim().isNotEmpty ? noteCtrl.text.trim() : null,
+          );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(ok ? 'Honorar gespeichert' : 'Fehler'),
+          backgroundColor: ok ? null : ProviderTheme.error,
+        ));
+      }
+    }
   }
 
   Future<void> _confirm(BuildContext context, ProviderAppointment a) async {
@@ -508,6 +592,9 @@ class _AppointmentCard extends StatelessWidget {
                           appointment.ownerName!),
                     if (appointment.location != null)
                       _Row(Icons.location_on_outlined, appointment.location!),
+                    if (appointment.serviceFeeFormatted != null)
+                      _Row(Icons.euro_rounded, appointment.serviceFeeFormatted!,
+                          color: ProviderTheme.secondary),
                   ],
                 ),
               ),
@@ -545,15 +632,18 @@ class _AppointmentCard extends StatelessWidget {
     );
   }
 
-  Widget _Row(IconData icon, String text) => Padding(
+  Widget _Row(IconData icon, String text, {Color? color}) => Padding(
         padding: const EdgeInsets.only(top: 2),
         child: Row(
           children: [
-            Icon(icon, size: 13, color: ProviderTheme.onSurfaceVariant),
+            Icon(icon, size: 13,
+                color: color ?? ProviderTheme.onSurfaceVariant),
             const SizedBox(width: 4),
             Text(text,
                 style: TextStyle(
-                    color: ProviderTheme.onSurfaceVariant, fontSize: 13)),
+                    color: color ?? ProviderTheme.onSurfaceVariant,
+                    fontSize: 13,
+                    fontWeight: color != null ? FontWeight.w600 : null)),
           ],
         ),
       );

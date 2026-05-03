@@ -107,30 +107,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 16),
 
             // Summary cards
-            Row(
-              children: [
-                _SummaryCard(
-                  icon: Icons.pending_actions_rounded,
-                  label: 'Offene Anfragen',
-                  value: '${appointmentProvider.pending.length}',
-                  color: Colors.orange,
-                ),
-                const SizedBox(width: 16),
-                _SummaryCard(
-                  icon: Icons.calendar_month_rounded,
-                  label: 'Bestätigte Termine',
-                  value: '${appointmentProvider.confirmed.length}',
-                  color: ProviderTheme.secondary,
-                ),
-                const SizedBox(width: 16),
-                _SummaryCard(
-                  icon: Icons.pets_rounded,
-                  label: 'Kunden (Tiere)',
-                  value: '${customersProvider.pets.length}',
-                  color: ProviderTheme.primary,
-                ),
-              ],
-            ),
+            Builder(builder: (context) {
+              final now = DateTime.now();
+              final thisMonth = appointmentProvider.past
+                  .where((a) =>
+                      a.status == ProviderAppointmentStatus.completed &&
+                      a.scheduledAt.year == now.year &&
+                      a.scheduledAt.month == now.month)
+                  .toList();
+              final revenueCents = thisMonth
+                  .where((a) => a.serviceFeeCents != null)
+                  .fold(0, (sum, a) => sum + a.serviceFeeCents!);
+              final revenueFormatted = revenueCents > 0
+                  ? '${(revenueCents / 100).toStringAsFixed(2).replaceAll('.', ',')} €'
+                  : '–';
+              return Row(
+                children: [
+                  _SummaryCard(
+                    icon: Icons.pending_actions_rounded,
+                    label: 'Offene Anfragen',
+                    value: '${appointmentProvider.pending.length}',
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(width: 16),
+                  _SummaryCard(
+                    icon: Icons.calendar_month_rounded,
+                    label: 'Bestätigte Termine',
+                    value: '${appointmentProvider.confirmed.length}',
+                    color: ProviderTheme.secondary,
+                  ),
+                  const SizedBox(width: 16),
+                  _SummaryCard(
+                    icon: Icons.pets_rounded,
+                    label: 'Kunden (Tiere)',
+                    value: '${customersProvider.pets.length}',
+                    color: ProviderTheme.primary,
+                  ),
+                  const SizedBox(width: 16),
+                  _SummaryCard(
+                    icon: Icons.euro_rounded,
+                    label: 'Umsatz diesen Monat',
+                    value: revenueFormatted,
+                    color: Colors.green.shade700,
+                  ),
+                ],
+              );
+            }),
             const SizedBox(height: 24),
 
             if (_expiringVaccinations.isNotEmpty) ...[

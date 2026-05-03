@@ -26,6 +26,8 @@ class ProviderAppointment {
   final String? location;
   final String? notes;
   final String? cancelledReason;
+  final int? serviceFeeCents;
+  final String? serviceFeeNote;
 
   const ProviderAppointment({
     required this.id,
@@ -44,6 +46,8 @@ class ProviderAppointment {
     this.location,
     this.notes,
     this.cancelledReason,
+    this.serviceFeeCents,
+    this.serviceFeeNote,
   });
 
   factory ProviderAppointment.fromJson(Map<String, dynamic> j) {
@@ -64,7 +68,15 @@ class ProviderAppointment {
       location: j['location'] as String?,
       notes: j['notes'] as String?,
       cancelledReason: j['cancelled_reason'] as String?,
+      serviceFeeCents: j['service_fee_cents'] as int?,
+      serviceFeeNote: j['service_fee_note'] as String?,
     );
+  }
+
+  String? get serviceFeeFormatted {
+    if (serviceFeeCents == null) return null;
+    final euros = serviceFeeCents! / 100;
+    return euros.toStringAsFixed(2).replaceAll('.', ',') + ' €';
   }
 
   static ProviderAppointmentStatus _parse(String s) {
@@ -162,6 +174,22 @@ class ProviderAppointmentProvider extends ChangeNotifier {
   Future<bool> confirm(String id) async => _action(id, 'confirm');
   Future<bool> complete(String id) async => _action(id, 'complete');
   Future<bool> markNoShow(String id) async => _action(id, 'no-show');
+
+  Future<bool> setFee(String id, {int? feeCents, String? feeNote}) async {
+    try {
+      final data = await _api.put('/appointments/$id/fee', body: {
+        if (feeCents != null) 'service_fee_cents': feeCents,
+        if (feeNote != null && feeNote.isNotEmpty) 'service_fee_note': feeNote,
+      });
+      _replace(ProviderAppointment.fromJson(
+          data['appointment'] as Map<String, dynamic>));
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 
   Future<bool> cancel(String id, {String? reason}) async {
     try {
