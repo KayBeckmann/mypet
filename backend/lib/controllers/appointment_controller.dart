@@ -289,6 +289,24 @@ class AppointmentController {
         parameters: {'id': id},
       );
       if (appt == null) return _error(404, 'Termin nicht gefunden');
+
+      // Terminbezogene Berechtigung sofort ablaufen lassen
+      final providerId = appt['provider_id']?.toString();
+      final petId = appt['pet_id']?.toString();
+      if (providerId != null && petId != null) {
+        await _db.queryAll(
+          '''
+          UPDATE access_permissions
+          SET valid_until = NOW()
+          WHERE user_id = @user_id::uuid
+            AND pet_id = @pet_id::uuid
+            AND notes = 'Automatisch bei Terminbestätigung'
+            AND valid_until > NOW()
+          ''',
+          parameters: {'user_id': providerId, 'pet_id': petId},
+        );
+      }
+
       return Response.ok(
         jsonEncode({'appointment': _sanitize(appt)}),
         headers: {'Content-Type': 'application/json'},

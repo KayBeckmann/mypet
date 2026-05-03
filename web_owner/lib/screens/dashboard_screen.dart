@@ -8,6 +8,7 @@ import '../providers/auth_provider.dart';
 import '../providers/pet_provider.dart';
 import '../providers/appointment_provider.dart';
 import '../providers/reminder_provider.dart';
+import '../providers/medication_provider.dart';
 import '../models/appointment.dart';
 import '../widgets/pet_card.dart';
 import '../widgets/appointment_card.dart';
@@ -50,7 +51,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final petProvider = context.watch<PetProvider>();
     final appointmentProvider = context.watch<AppointmentProvider>();
     final reminderProvider = context.watch<ReminderProvider>();
+    final medicationProvider = context.watch<MedicationProvider>();
     final userName = auth.user?.name ?? 'Tierfreund';
+    final activeMeds = medicationProvider.medications
+        .where((m) => m.isActive && !m.isExpired)
+        .toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(40, 24, 40, 40),
@@ -169,7 +174,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(width: 32),
 
-          // ── Right Panel: Appointments + Reminders ──
+          // ── Right Panel: Appointments + Meds + Reminders ──
           SizedBox(
             width: 300,
             child: Column(
@@ -177,6 +182,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _AppointmentsPanel(
                   appointments: appointmentProvider.upcoming,
                 ),
+                if (activeMeds.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  _MedicationsPanel(medications: activeMeds),
+                ],
                 const SizedBox(height: 20),
                 _RemindersPanel(
                   reminders: reminderProvider.upcoming,
@@ -418,6 +427,108 @@ class _RemindersPanel extends StatelessWidget {
               child: const Text('Alle Erinnerungen →'),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MedicationsPanel extends StatelessWidget {
+  final List<Medication> medications;
+  const _MedicationsPanel({required this.medications});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: LivingLedgerTheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusXl),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Aktive Medikamente',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => context.go('/medications'),
+                style: TextButton.styleFrom(
+                    minimumSize: Size.zero, padding: EdgeInsets.zero),
+                child: Text('Alle →',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: LivingLedgerTheme.primary)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...medications.take(4).map((m) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: (m.endsSoon
+                                ? LivingLedgerTheme.tertiary
+                                : LivingLedgerTheme.primary)
+                            .withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.medication_rounded,
+                        size: 16,
+                        color: m.endsSoon
+                            ? LivingLedgerTheme.tertiary
+                            : LivingLedgerTheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(m.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                          if (m.dosage != null)
+                            Text(m.dosage!,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: LivingLedgerTheme.onSurfaceVariant)),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      m.frequencyLabel,
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: m.endsSoon
+                              ? LivingLedgerTheme.tertiary
+                              : LivingLedgerTheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              )),
+          if (medications.length > 4)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                '+ ${medications.length - 4} weitere',
+                style: TextStyle(
+                    fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant),
+              ),
+            ),
         ],
       ),
     );

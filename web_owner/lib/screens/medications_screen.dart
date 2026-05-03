@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/medication_provider.dart';
 import '../providers/pet_provider.dart';
+import '../providers/reminder_provider.dart';
 import '../models/pet.dart';
 
 class MedicationsScreen extends StatefulWidget {
@@ -358,6 +359,57 @@ class _MedicationCard extends StatelessWidget {
                         ),
                     ],
                   ),
+                  if (m.endsSoon && m.endDate != null) ...[
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () async {
+                        final ok = await context
+                            .read<ReminderProvider>()
+                            .create(
+                              title: 'Medikament aufbrauchen: ${m.name}',
+                              message:
+                                  'Endet am ${fmt.format(m.endDate!)}',
+                              type: 'medication',
+                              petId: petId,
+                              remindAt: m.endDate!
+                                  .subtract(const Duration(days: 1)),
+                            );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(ok
+                                ? 'Erinnerung angelegt'
+                                : 'Fehler'),
+                          ));
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: LivingLedgerTheme.tertiary
+                              .withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.alarm_add_rounded,
+                                size: 13,
+                                color: LivingLedgerTheme.tertiary),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Erinnerung anlegen',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: LivingLedgerTheme.tertiary,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
