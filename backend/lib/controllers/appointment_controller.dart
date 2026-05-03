@@ -113,6 +113,14 @@ class AppointmentController {
         return _error(400, 'scheduled_at ist erforderlich');
       }
 
+      final scheduledDate = DateTime.tryParse(scheduledAt);
+      if (scheduledDate == null) {
+        return _error(400, 'scheduled_at hat ein ungültiges Format');
+      }
+      if (scheduledDate.isBefore(DateTime.now().subtract(const Duration(minutes: 5)))) {
+        return _error(400, 'Termin kann nicht in der Vergangenheit liegen');
+      }
+
       // Tier-Eigentümer ermitteln
       final pet = await _db.queryOne(
         'SELECT owner_id FROM pets WHERE id = @id::uuid',

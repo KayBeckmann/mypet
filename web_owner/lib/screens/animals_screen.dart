@@ -5,13 +5,27 @@ import '../config/theme.dart';
 import '../providers/pet_provider.dart';
 import '../widgets/pet_card.dart';
 
-class AnimalsScreen extends StatelessWidget {
+class AnimalsScreen extends StatefulWidget {
   const AnimalsScreen({super.key});
+
+  @override
+  State<AnimalsScreen> createState() => _AnimalsScreenState();
+}
+
+class _AnimalsScreenState extends State<AnimalsScreen> {
+  String _search = '';
 
   @override
   Widget build(BuildContext context) {
     final petProvider = context.watch<PetProvider>();
-    final pets = petProvider.pets;
+    final pets = _search.isEmpty
+        ? petProvider.pets
+        : petProvider.pets
+            .where((p) =>
+                p.name.toLowerCase().contains(_search.toLowerCase()) ||
+                p.breed.toLowerCase().contains(_search.toLowerCase()) ||
+                p.species.name.toLowerCase().contains(_search.toLowerCase()))
+            .toList();
 
     return RefreshIndicator(
       onRefresh: () => petProvider.loadPets(),
@@ -35,7 +49,9 @@ class AnimalsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${pets.length} Tiere registriert',
+                      _search.isEmpty
+                          ? '${petProvider.pets.length} Tiere registriert'
+                          : '${pets.length} von ${petProvider.pets.length} Tieren',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: LivingLedgerTheme.onSurfaceVariant,
                           ),
@@ -67,7 +83,34 @@ class AnimalsScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
+
+            // Search bar (only when ≥3 pets)
+            if (petProvider.pets.length >= 3) ...[
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Tiere suchen …',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _search.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => setState(() => _search = ''),
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: LivingLedgerTheme.surfaceContainerLowest,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                          LivingLedgerTheme.radiusFull),
+                      borderSide: BorderSide.none),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                ),
+                onChanged: (v) => setState(() => _search = v),
+              ),
+              const SizedBox(height: 16),
+            ] else
+              const SizedBox(height: 16),
 
             // Animals Grid or Empty State
             if (pets.isEmpty)

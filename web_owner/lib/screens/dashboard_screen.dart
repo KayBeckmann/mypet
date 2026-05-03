@@ -29,7 +29,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadExpiringVaccinations();
+      _loadMedications();
     });
+  }
+
+  void _loadMedications() {
+    final pets = context.read<PetProvider>().pets;
+    final medProvider = context.read<MedicationProvider>();
+    for (final pet in pets) {
+      medProvider.loadForPet(pet.id);
+    }
   }
 
   Future<void> _loadExpiringVaccinations() async {

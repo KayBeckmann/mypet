@@ -13,6 +13,8 @@ class RemindersScreen extends StatefulWidget {
 }
 
 class _RemindersScreenState extends State<RemindersScreen> {
+  String? _typeFilter; // null = alle
+
   @override
   void initState() {
     super.initState();
@@ -24,6 +26,11 @@ class _RemindersScreenState extends State<RemindersScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ReminderProvider>();
+    final filtered = _typeFilter == null
+        ? provider.reminders
+        : provider.reminders
+            .where((r) => r.reminderType == _typeFilter)
+            .toList();
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -64,7 +71,43 @@ class _RemindersScreenState extends State<RemindersScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
+
+          // Type filter chips
+          if (provider.reminders.isNotEmpty)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _FilterChip(
+                      label: 'Alle',
+                      selected: _typeFilter == null,
+                      onTap: () => setState(() => _typeFilter = null)),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                      label: 'Impfungen',
+                      selected: _typeFilter == 'vaccination',
+                      onTap: () => setState(() => _typeFilter = 'vaccination')),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                      label: 'Medikamente',
+                      selected: _typeFilter == 'medication',
+                      onTap: () => setState(() => _typeFilter = 'medication')),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                      label: 'Termine',
+                      selected: _typeFilter == 'appointment',
+                      onTap: () => setState(() => _typeFilter = 'appointment')),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                      label: 'Sonstiges',
+                      selected: _typeFilter == 'custom',
+                      onTap: () => setState(() => _typeFilter = 'custom')),
+                ],
+              ),
+            ),
+
+          const SizedBox(height: 16),
 
           // Content
           if (provider.isLoading)
@@ -97,12 +140,20 @@ class _RemindersScreenState extends State<RemindersScreen> {
             )
           else
             Expanded(
-              child: ListView.separated(
-                itemCount: provider.reminders.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (_, i) =>
-                    _ReminderCard(reminder: provider.reminders[i]),
-              ),
+              child: filtered.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Keine Erinnerungen für diesen Filter',
+                        style: TextStyle(
+                            color: LivingLedgerTheme.onSurfaceVariant),
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (_, i) =>
+                          _ReminderCard(reminder: filtered[i]),
+                    ),
             ),
         ],
       ),
@@ -431,6 +482,46 @@ class _ReminderCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FilterChip(
+      {required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? LivingLedgerTheme.primary
+              : LivingLedgerTheme.surfaceContainerLowest,
+          borderRadius:
+              BorderRadius.circular(LivingLedgerTheme.radiusFull),
+          border: Border.all(
+              color: selected
+                  ? LivingLedgerTheme.primary
+                  : LivingLedgerTheme.outlineVariant),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: selected
+                  ? LivingLedgerTheme.onPrimary
+                  : LivingLedgerTheme.onSurfaceVariant),
         ),
       ),
     );
