@@ -858,6 +858,21 @@ services:
 
 ---
 
+## Phase 34: No-show Fix, Medikamenten-Erinnerung & Dashboard-Panel ✅ *(2026-05-03)*
+
+### M34.1 - Backend: no-show widerruft Zugriff ✅
+- [x] `_noShow` im AppointmentController setzt terminbezogene access_permissions auf NOW() (wie `_complete`)
+
+### M34.2 - Medikamenten-Erinnerung (web_owner) ✅
+- [x] MedicationsScreen: "Erinnerung anlegen"-Button wenn Medikament ≤3 Tage bis Ablauf
+- [x] Legt Reminder 1 Tag vor Enddate an, Typ = 'medication'
+
+### M34.3 - Dashboard Medikamenten-Panel (web_owner) ✅
+- [x] Rechtes Panel zeigt aktive Medikamente (max 4) mit Dosierung, Frequenz, Link zu /medications
+- [x] Ablaufende Medikamente (endsSoon) in Amber-Farbe hervorgehoben
+
+---
+
 ## Legende
 
 - [ ] Offen
