@@ -80,10 +80,13 @@ class FamilyProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> inviteMember(String familyId, String email) async {
+  Future<bool> inviteMember(String familyId, String email,
+      {String? message}) async {
     try {
-      await _api.post('/families/$familyId/members', body: {'email': email});
-      await loadFamilies();
+      await _api.post('/families/$familyId/members', body: {
+        'email': email,
+        if (message != null) 'message': message,
+      });
       return true;
     } on ApiException catch (e) {
       _error = e.message;

@@ -4,6 +4,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../models/appointment.dart';
 import '../providers/appointment_provider.dart';
+import '../providers/family_invitation_provider.dart';
 import '../providers/reminder_provider.dart';
 
 class SidebarItem {
@@ -49,6 +50,8 @@ class Sidebar extends StatelessWidget {
   Map<String, int> _buildBadges(BuildContext context) {
     final reminderProvider = context.watch<ReminderProvider>();
     final appointmentProvider = context.watch<AppointmentProvider>();
+    final familyInvitations =
+        context.watch<FamilyInvitationProvider>().pendingCount;
     final overdue = reminderProvider.reminders
         .where((r) => r.status == 'pending' && r.isPast)
         .length;
@@ -58,6 +61,7 @@ class Sidebar extends StatelessWidget {
     return {
       if (overdue > 0) '/reminders': overdue,
       if (pendingAppts > 0) '/appointments': pendingAppts,
+      if (familyInvitations > 0) '/families': familyInvitations,
     };
   }
 

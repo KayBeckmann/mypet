@@ -4,6 +4,7 @@ import 'package:mypet_shared/shared.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../config/theme.dart';
+import '../providers/family_invitation_provider.dart';
 import '../providers/family_provider.dart';
 
 class FamiliesScreen extends StatefulWidget {
@@ -204,12 +205,31 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<FamilyProvider>();
+    final invitations = context.watch<FamilyInvitationProvider>();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(40, 24, 40, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Einladungs-Banner
+          if (invitations.invitations.isNotEmpty) ...[
+            ...invitations.invitations.map((inv) => _InvitationBanner(
+                  invitation: inv,
+                  onAccept: () async {
+                    final ok = await invitations.accept(inv.id);
+                    if (ok && context.mounted) {
+                      provider.loadFamilies();
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(
+                            'Du bist jetzt Mitglied von "${inv.familyName}"'),
+                      ));
+                    }
+                  },
+                  onReject: () => invitations.reject(inv.id),
+                )),
+            const SizedBox(height: 16),
+          ],
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -283,24 +303,43 @@ class _FamilyCard extends StatefulWidget {
 
 class _FamilyCardState extends State<_FamilyCard> {
   Future<void> _inviteMember() async {
-    final controller = TextEditingController();
+    final emailCtrl = TextEditingController();
+    final msgCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Mitglied zu „${widget.family.name}" einladen'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'E-Mail-Adresse',
+        content: SizedBox(
+          width: 400,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: emailCtrl,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: 'E-Mail-Adresse *',
+                    hintText: 'nutzer@beispiel.de',
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) =>
+                      (v == null || !v.contains('@')) ? 'Ungültige E-Mail' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: msgCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Nachricht (optional)',
+                    hintText: 'z.B. "Hey, tritt unserer Familienpflege bei!"',
+                  ),
+                  maxLines: 2,
+                ),
+              ],
             ),
-            keyboardType: TextInputType.emailAddress,
-            validator: (v) =>
-                (v == null || !v.contains('@')) ? 'Ungültige E-Mail' : null,
           ),
         ),
         actions: [
@@ -312,7 +351,7 @@ class _FamilyCardState extends State<_FamilyCard> {
             onPressed: () {
               if (formKey.currentState!.validate()) Navigator.pop(ctx, true);
             },
-            child: const Text('Einladen'),
+            child: const Text('Einladung senden'),
           ),
         ],
       ),
@@ -321,11 +360,14 @@ class _FamilyCardState extends State<_FamilyCard> {
     if (confirmed == true && mounted) {
       final ok = await context
           .read<FamilyProvider>()
-          .inviteMember(widget.family.id, controller.text.trim());
+          .inviteMember(widget.family.id, emailCtrl.text.trim(),
+              message: msgCtrl.text.trim().isEmpty ? null : msgCtrl.text.trim());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ok ? 'Einladung gesendet' : 'Einladung fehlgeschlagen'),
+            content: Text(ok
+                ? 'Einladung gesendet — erscheint im Dashboard von ${emailCtrl.text.trim()}'
+                : 'Fehler: Benutzer nicht gefunden oder bereits eingeladen'),
           ),
         );
       }
@@ -654,6 +696,77 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Text(message,
           style: const TextStyle(color: LivingLedgerTheme.error)),
+    );
+  }
+}
+
+class _InvitationBanner extends StatelessWidget {
+  final FamilyInvitation invitation;
+  final VoidCallback onAccept;
+  final VoidCallback onReject;
+
+  const _InvitationBanner({
+    required this.invitation,
+    required this.onAccept,
+    required this.onReject,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: LivingLedgerTheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusLg),
+        border: Border.all(
+            color: LivingLedgerTheme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.family_restroom_rounded,
+              color: LivingLedgerTheme.primary, size: 28),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${invitation.invitedByName} lädt dich ein',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  '"${invitation.familyName}" · ${invitation.memberCount} Mitglieder',
+                  style: TextStyle(
+                      fontSize: 13, color: LivingLedgerTheme.onSurfaceVariant),
+                ),
+                if (invitation.message?.isNotEmpty == true)
+                  Text(
+                    '"${invitation.message}"',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: LivingLedgerTheme.onSurfaceVariant),
+                  ),
+              ],
+            ),
+          ),
+          FilledButton(
+            onPressed: onAccept,
+            child: const Text('Annehmen'),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton(
+            onPressed: onReject,
+            style: OutlinedButton.styleFrom(
+                foregroundColor: LivingLedgerTheme.error,
+                side: BorderSide(
+                    color:
+                        LivingLedgerTheme.error.withValues(alpha: 0.5))),
+            child: const Text('Ablehnen'),
+          ),
+        ],
+      ),
     );
   }
 }

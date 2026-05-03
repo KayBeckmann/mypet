@@ -14,6 +14,7 @@ import 'providers/weight_provider.dart';
 import 'providers/reminder_provider.dart';
 import 'providers/health_provider.dart';
 import 'providers/medication_provider.dart';
+import 'providers/family_invitation_provider.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -72,6 +73,9 @@ class _MyPetOwnerAppState extends State<MyPetOwnerApp> {
         ChangeNotifierProvider(
           create: (_) => MedicationProvider(api: _apiService),
         ),
+        ChangeNotifierProvider(
+          create: (_) => FamilyInvitationProvider(api: _apiService),
+        ),
       ],
       child: const _AppWithAuth(),
     );
@@ -103,6 +107,7 @@ class _AppWithAuthState extends State<_AppWithAuth> {
         petProvider.loadPets();
         appointmentProvider.load();
         context.read<ReminderProvider>().load();
+        context.read<FamilyInvitationProvider>().load();
       }
     }
     if (!authProvider.isAuthenticated && _petsLoaded) {

@@ -27,6 +27,7 @@ const List<Migration> migrations = [
   _migration023CreateReminders,
   _migration024AddEncryptionColumns,
   _migration025CreateFamilyInviteCodes,
+  _migration026CreateFamilyInvitations,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -881,5 +882,39 @@ const _migration025CreateFamilyInviteCodes = Migration(
   ''',
   down: '''
     DROP TABLE IF EXISTS family_invite_codes;
+  ''',
+);
+
+/// Migration 026: Interne Familien-Einladungen
+const _migration026CreateFamilyInvitations = Migration(
+  version: 26,
+  name: 'create_family_invitations',
+  up: '''
+    CREATE TYPE family_invitation_status AS ENUM ('pending', 'accepted', 'rejected', 'revoked');
+
+    CREATE TABLE family_invitations (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      family_id UUID NOT NULL REFERENCES families(id) ON DELETE CASCADE,
+      invitee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      invited_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      status family_invitation_status NOT NULL DEFAULT 'pending',
+      message TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      UNIQUE (family_id, invitee_id)
+    );
+
+    CREATE INDEX idx_family_invitations_invitee ON family_invitations(invitee_id);
+    CREATE INDEX idx_family_invitations_family ON family_invitations(family_id);
+    CREATE INDEX idx_family_invitations_status ON family_invitations(status);
+
+    CREATE TRIGGER update_family_invitations_updated_at
+      BEFORE UPDATE ON family_invitations
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  ''',
+  down: '''
+    DROP TRIGGER IF EXISTS update_family_invitations_updated_at ON family_invitations;
+    DROP TABLE IF EXISTS family_invitations;
+    DROP TYPE IF EXISTS family_invitation_status;
   ''',
 );

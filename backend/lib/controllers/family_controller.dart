@@ -21,10 +21,15 @@ class FamilyController {
     router.delete('/<id>', _deleteFamily);
 
     router.get('/<id>/members', _listMembers);
-    router.post('/<id>/members', _addMember);
+    router.post('/<id>/members', _sendInvitation);
     router.delete('/<id>/members/<userId>', _removeMember);
 
-    // Einladungscodes
+    // Interne Einladungen (für aktuellen User)
+    router.get('/invitations', _listMyInvitations);
+    router.post('/invitations/<invId>/accept', _acceptInvitation);
+    router.post('/invitations/<invId>/reject', _rejectInvitation);
+
+    // QR-/Code-basiertes Beitreten (bestehend)
     router.post('/<id>/invite-code', _generateInviteCode);
     router.get('/join/<code>', _lookupInviteCode);
     router.post('/join/<code>', _joinByCode);
@@ -225,55 +230,170 @@ class FamilyController {
     }
   }
 
-  Future<Response> _addMember(Request request, String id) async {
+  /// POST /families/:id/members  → sendet interne Einladung per E-Mail-Suche
+  Future<Response> _sendInvitation(Request request, String id) async {
     try {
       final userId = request.context['userId'] as String;
 
       if (!await _isOwner(id, userId)) {
-        return _error(403, 'Nur der Ersteller kann Mitglieder hinzufügen');
+        return _error(403, 'Nur der Ersteller kann Mitglieder einladen');
       }
 
       final body =
           jsonDecode(await request.readAsString()) as Map<String, dynamic>;
       final email = body['email'] as String?;
+      final message = body['message'] as String?;
 
       if (email == null || email.trim().isEmpty || !email.contains('@')) {
         return _error(400, 'Gültige E-Mail-Adresse ist erforderlich');
       }
 
-      final user = await _db.queryOne(
-        'SELECT id FROM users WHERE email = @email',
+      final invitee = await _db.queryOne(
+        'SELECT id, name FROM users WHERE email = @email',
         parameters: {'email': email.toLowerCase().trim()},
       );
-      if (user == null) {
+      if (invitee == null) {
         return _error(404, 'Benutzer mit dieser E-Mail nicht gefunden');
+      }
+      final inviteeId = invitee['id'].toString();
+
+      // Bereits Mitglied?
+      if (await _isMember(id, inviteeId)) {
+        return _error(409, 'Benutzer ist bereits Mitglied dieser Familie');
       }
 
       try {
-        final member = await _db.queryOne(
+        final inv = await _db.queryOne(
           '''
-          INSERT INTO family_members (family_id, user_id, role)
-          VALUES (@family_id::uuid, @user_id::uuid, 'member')
-          RETURNING id, family_id, user_id, role, joined_at
+          INSERT INTO family_invitations
+            (family_id, invitee_id, invited_by, message)
+          VALUES
+            (@family_id::uuid, @invitee_id::uuid, @invited_by::uuid, @message)
+          ON CONFLICT (family_id, invitee_id) DO UPDATE
+            SET status = 'pending', message = @message, updated_at = NOW()
+          RETURNING id, family_id, invitee_id, invited_by, status, message, created_at
           ''',
           parameters: {
             'family_id': id,
-            'user_id': user['id'].toString(),
+            'invitee_id': inviteeId,
+            'invited_by': userId,
+            'message': message,
           },
         );
         return Response(
           201,
-          body: jsonEncode({'member': _serializeMember(member!)}),
+          body: jsonEncode({'invitation': _serializeInvitation(inv!)}),
           headers: {'Content-Type': 'application/json'},
         );
       } catch (e) {
-        if (e.toString().contains('unique')) {
-          return _error(409, 'Benutzer ist bereits Mitglied');
-        }
         rethrow;
       }
     } catch (e) {
-      print('❌ Family-Member-Add-Fehler: $e');
+      print('❌ Family-Invite-Send-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// GET /families/invitations  → offene Einladungen für aktuellen User
+  Future<Response> _listMyInvitations(Request request) async {
+    try {
+      final userId = request.context['userId'] as String;
+
+      final invitations = await _db.queryAll(
+        '''
+        SELECT fi.id, fi.family_id, fi.invitee_id, fi.invited_by,
+               fi.status, fi.message, fi.created_at,
+               f.name AS family_name,
+               u.name AS invited_by_name,
+               (SELECT COUNT(*) FROM family_members WHERE family_id = fi.family_id)::int AS member_count
+        FROM family_invitations fi
+        INNER JOIN families f ON f.id = fi.family_id
+        INNER JOIN users u ON u.id = fi.invited_by
+        WHERE fi.invitee_id = @user_id::uuid
+          AND fi.status = 'pending'
+        ORDER BY fi.created_at DESC
+        ''',
+        parameters: {'user_id': userId},
+      );
+
+      return Response.ok(
+        jsonEncode({
+          'invitations': invitations.map(_serializeInvitationFull).toList(),
+          'count': invitations.length,
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Family-Invitations-List-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// POST /families/invitations/:invId/accept
+  Future<Response> _acceptInvitation(Request request, String invId) async {
+    try {
+      final userId = request.context['userId'] as String;
+
+      final inv = await _db.queryOne(
+        '''
+        SELECT family_id FROM family_invitations
+        WHERE id = @id::uuid AND invitee_id = @user_id::uuid AND status = 'pending'
+        ''',
+        parameters: {'id': invId, 'user_id': userId},
+      );
+      if (inv == null) return _error(404, 'Einladung nicht gefunden');
+
+      final familyId = inv['family_id'].toString();
+
+      await _db.transaction((tx) async {
+        await tx.execute(
+          Sql.named('''
+            UPDATE family_invitations SET status = 'accepted', updated_at = NOW()
+            WHERE id = @id::uuid
+          '''),
+          parameters: {'id': invId},
+        );
+        await tx.execute(
+          Sql.named('''
+            INSERT INTO family_members (family_id, user_id, role)
+            VALUES (@family_id::uuid, @user_id::uuid, 'member')
+            ON CONFLICT DO NOTHING
+          '''),
+          parameters: {'family_id': familyId, 'user_id': userId},
+        );
+      });
+
+      return Response.ok(
+        jsonEncode({'message': 'Einladung angenommen', 'family_id': familyId}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Family-Invitation-Accept-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// POST /families/invitations/:invId/reject
+  Future<Response> _rejectInvitation(Request request, String invId) async {
+    try {
+      final userId = request.context['userId'] as String;
+
+      final result = await _db.queryOne(
+        '''
+        UPDATE family_invitations SET status = 'rejected', updated_at = NOW()
+        WHERE id = @id::uuid AND invitee_id = @user_id::uuid AND status = 'pending'
+        RETURNING id
+        ''',
+        parameters: {'id': invId, 'user_id': userId},
+      );
+      if (result == null) return _error(404, 'Einladung nicht gefunden');
+
+      return Response.ok(
+        jsonEncode({'message': 'Einladung abgelehnt'}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Family-Invitation-Reject-Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }
@@ -479,6 +599,27 @@ class FamilyController {
     );
     if (row == null) return false;
     return row['role'].toString() == 'owner';
+  }
+
+  Map<String, dynamic> _serializeInvitation(Map<String, dynamic> inv) {
+    return {
+      'id': inv['id'].toString(),
+      'family_id': inv['family_id'].toString(),
+      'invitee_id': inv['invitee_id'].toString(),
+      'invited_by': inv['invited_by'].toString(),
+      'status': inv['status'].toString(),
+      'message': inv['message'],
+      'created_at': (inv['created_at'] as DateTime).toIso8601String(),
+    };
+  }
+
+  Map<String, dynamic> _serializeInvitationFull(Map<String, dynamic> inv) {
+    return {
+      ..._serializeInvitation(inv),
+      'family_name': inv['family_name'],
+      'invited_by_name': inv['invited_by_name'],
+      'member_count': inv['member_count'],
+    };
   }
 
   Map<String, dynamic> _serialize(Map<String, dynamic> family) {

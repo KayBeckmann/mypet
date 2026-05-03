@@ -9,6 +9,8 @@ import '../providers/pet_provider.dart';
 import '../providers/appointment_provider.dart';
 import '../providers/reminder_provider.dart';
 import '../providers/medication_provider.dart';
+import '../providers/family_invitation_provider.dart';
+import '../providers/family_provider.dart';
 import '../models/appointment.dart';
 import '../widgets/pet_card.dart';
 import '../widgets/appointment_card.dart';
@@ -61,6 +63,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final appointmentProvider = context.watch<AppointmentProvider>();
     final reminderProvider = context.watch<ReminderProvider>();
     final medicationProvider = context.watch<MedicationProvider>();
+    final familyInvitations = context.watch<FamilyInvitationProvider>();
     final userName = auth.user?.name ?? 'Tierfreund';
     final activeMeds = petProvider.pets
         .expand((p) => medicationProvider.forPet(p.id))
@@ -120,6 +123,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
+                // Familien-Einladungen
+                if (familyInvitations.invitations.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  ...familyInvitations.invitations.map((inv) =>
+                      _FamilyInvitationBanner(
+                        invitation: inv,
+                        onAccept: () async {
+                          final ok = await familyInvitations.accept(inv.id);
+                          if (ok && context.mounted) {
+                            context.read<FamilyProvider>().loadFamilies();
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(
+                                  'Du bist jetzt Mitglied von "${inv.familyName}"'),
+                            ));
+                          }
+                        },
+                        onReject: () => familyInvitations.reject(inv.id),
+                      )),
+                ],
+
                 const SizedBox(height: 24),
 
                 // Ablaufende Impfungen
@@ -539,6 +562,95 @@ class _MedicationsPanel extends StatelessWidget {
                     fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FamilyInvitationBanner extends StatelessWidget {
+  final FamilyInvitation invitation;
+  final VoidCallback onAccept;
+  final VoidCallback onReject;
+
+  const _FamilyInvitationBanner({
+    required this.invitation,
+    required this.onAccept,
+    required this.onReject,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: LivingLedgerTheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusLg),
+        border: Border.all(
+            color: LivingLedgerTheme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: LivingLedgerTheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.family_restroom_rounded,
+                color: LivingLedgerTheme.primary, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${invitation.invitedByName} lädt dich zur Familie ein',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  '"${invitation.familyName}" · ${invitation.memberCount} Mitglieder',
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: LivingLedgerTheme.onSurfaceVariant),
+                ),
+                if (invitation.message != null &&
+                    invitation.message!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '"${invitation.message}"',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: LivingLedgerTheme.onSurfaceVariant),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          FilledButton(
+            onPressed: onAccept,
+            style: FilledButton.styleFrom(
+                backgroundColor: LivingLedgerTheme.primary,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 8)),
+            child: const Text('Annehmen'),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton(
+            onPressed: onReject,
+            style: OutlinedButton.styleFrom(
+                foregroundColor: LivingLedgerTheme.error,
+                side: BorderSide(
+                    color: LivingLedgerTheme.error.withValues(alpha: 0.5)),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 8)),
+            child: const Text('Ablehnen'),
+          ),
         ],
       ),
     );
