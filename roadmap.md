@@ -891,6 +891,21 @@ services:
 
 ---
 
+## Phase 36: Impfungen für Besitzer & Patienten-Sortierung ✅ *(2026-05-03)*
+
+### M36.1 - Impfungs-CRUD für Besitzer ✅
+- [x] `OwnerHealthProvider`: `addVaccination()` + `deleteVaccination()`
+- [x] `_VaccinationCard`: "Impfung eintragen"-Button (Impfstoff/Charge/Hersteller/Datum/Ablauf)
+- [x] `_VaccinationCard`: Löschen-Button auf jeder Impfzeile
+- [x] `_DetailCard`: optionaler `action`-Parameter im Header
+
+### M36.2 - web_vet Patienten-Sortierung ✅
+- [x] Sortier-Chips: Name / Tierart / Besitzer
+- [x] Suche jetzt auch auf Besitzername
+- [x] Patienten-Zähler neben Sortierung
+
+---
+
 ## Legende
 
 - [ ] Offen
