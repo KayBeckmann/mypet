@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:mypet_shared/shared.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../config/theme.dart';
 import '../providers/family_provider.dart';
 
@@ -69,6 +72,135 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
     }
   }
 
+  Future<void> _showJoinDialog() async {
+    final codeCtrl = TextEditingController();
+    Map<String, dynamic>? preview;
+    bool loading = false;
+    String? error;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: const Text('Familie beitreten'),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: codeCtrl,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    labelText: 'Einladungscode (8 Zeichen)',
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: () async {
+                        setDs(() {
+                          loading = true;
+                          error = null;
+                          preview = null;
+                        });
+                        try {
+                          final api = context.read<ApiService>();
+                          final data = await api.get(
+                              '/families/join/${codeCtrl.text.trim().toUpperCase()}');
+                          setDs(() {
+                            preview = data;
+                            loading = false;
+                          });
+                        } catch (e) {
+                          setDs(() {
+                            error = 'Code ungültig oder abgelaufen';
+                            loading = false;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ),
+                if (loading) ...[
+                  const SizedBox(height: 12),
+                  const CircularProgressIndicator(),
+                ],
+                if (error != null) ...[
+                  const SizedBox(height: 12),
+                  Text(error!,
+                      style: TextStyle(color: LivingLedgerTheme.error)),
+                ],
+                if (preview != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: LivingLedgerTheme.primary.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.people_rounded,
+                            color: LivingLedgerTheme.primary, size: 32),
+                        const SizedBox(height: 8),
+                        Text(
+                          preview!['family_name'] as String? ?? '—',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 18),
+                        ),
+                        Text(
+                          'Erstellt von: ${preview!['created_by_name']}',
+                          style: TextStyle(
+                              color: LivingLedgerTheme.onSurfaceVariant),
+                        ),
+                        Text(
+                          '${preview!['member_count']} Mitglieder',
+                          style: TextStyle(
+                              color: LivingLedgerTheme.onSurfaceVariant,
+                              fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Abbrechen')),
+            FilledButton(
+              onPressed: preview == null
+                  ? null
+                  : () async {
+                      try {
+                        final api = context.read<ApiService>();
+                        await api.post(
+                            '/families/join/${codeCtrl.text.trim().toUpperCase()}',
+                            body: {});
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        if (context.mounted) {
+                          context
+                              .read<FamilyProvider>()
+                              .loadFamilies();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(
+                                    'Erfolgreich "${preview!['family_name']}" beigetreten')),
+                          );
+                        }
+                      } catch (_) {
+                        setDs(() => error = 'Beitreten fehlgeschlagen');
+                      }
+                    },
+              child: const Text('Beitreten'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<FamilyProvider>();
@@ -97,10 +229,20 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
                   ),
                 ],
               ),
-              ElevatedButton.icon(
-                onPressed: _showCreateDialog,
-                icon: const Icon(Icons.add),
-                label: const Text('Familie erstellen'),
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _showJoinDialog,
+                    icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                    label: const Text('Per Code beitreten'),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: _showCreateDialog,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Familie erstellen'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -190,6 +332,110 @@ class _FamilyCardState extends State<_FamilyCard> {
     }
   }
 
+  Future<void> _showInviteCode() async {
+    String? code;
+    String? expiresAt;
+    bool loading = true;
+
+    try {
+      final api = context.read<ApiService>();
+      final data = await api.post(
+          '/families/${widget.family.id}/invite-code', body: {});
+      code = data['code'] as String?;
+      expiresAt = data['expires_at'] as String?;
+      loading = false;
+    } catch (_) {
+      loading = false;
+    }
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Familie „${widget.family.name}" beitreten'),
+        content: SizedBox(
+          width: 360,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (code == null)
+                const Text('Fehler beim Generieren des Codes')
+              else ...[
+                // QR Code
+                QrImageView(
+                  data: code,
+                  version: QrVersions.auto,
+                  size: 200,
+                  backgroundColor: Colors.white,
+                ),
+                const SizedBox(height: 16),
+
+                // Code als Text
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: LivingLedgerTheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: LivingLedgerTheme.outlineVariant),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        code,
+                        style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 4),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.copy_rounded, size: 18),
+                        tooltip: 'Code kopieren',
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: code!));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Code kopiert')),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Gültig 7 Tage · Einmalig verwendbar',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: LivingLedgerTheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Das andere Familienmitglied gibt diesen Code in der App unter '
+                  '"Familien → Per Code beitreten" ein.',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: LivingLedgerTheme.onSurfaceVariant),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Schließen')),
+        ],
+      ),
+    );
+  }
+
   Future<void> _removeMember(Map<String, dynamic> member) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -259,8 +505,13 @@ class _FamilyCardState extends State<_FamilyCard> {
                   ),
                 ),
                 IconButton(
+                  icon: const Icon(Icons.qr_code_rounded),
+                  tooltip: 'Einladungslink / QR-Code',
+                  onPressed: _showInviteCode,
+                ),
+                IconButton(
                   icon: const Icon(Icons.person_add_outlined),
-                  tooltip: 'Mitglied einladen',
+                  tooltip: 'Mitglied per E-Mail einladen',
                   onPressed: _inviteMember,
                 ),
               ],

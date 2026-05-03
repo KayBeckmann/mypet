@@ -219,10 +219,12 @@ class AppointmentController {
         await _db.queryAll(
           '''
           INSERT INTO access_permissions
-            (user_id, pet_id, access_level, granted_by, valid_from, valid_until, notes)
+            (pet_id, granted_by, subject_type, subject_user_id,
+             permission, starts_at, ends_at, note)
           VALUES
-            (@user_id::uuid, @pet_id::uuid, 'read'::access_level,
-             @granted_by::uuid, NOW(), @valid_until::timestamp,
+            (@pet_id::uuid, @granted_by::uuid,
+             'user'::access_subject_type, @user_id::uuid,
+             'read'::access_permission_type, NOW(), @ends_at::timestamp,
              'Automatisch bei Terminbestätigung')
           ON CONFLICT DO NOTHING
           ''',
@@ -230,7 +232,7 @@ class AppointmentController {
             'user_id': providerId,
             'pet_id': petId,
             'granted_by': appointment['owner_id'].toString(),
-            'valid_until': expiresAt.toIso8601String(),
+            'ends_at': expiresAt.toIso8601String(),
           },
         );
       }
@@ -265,11 +267,11 @@ class AppointmentController {
         await _db.queryAll(
           '''
           UPDATE access_permissions
-          SET valid_until = NOW()
-          WHERE user_id = @user_id::uuid
+          SET ends_at = NOW()
+          WHERE subject_user_id = @user_id::uuid
             AND pet_id = @pet_id::uuid
-            AND notes = 'Automatisch bei Terminbestätigung'
-            AND valid_until > NOW()
+            AND note = 'Automatisch bei Terminbestätigung'
+            AND ends_at > NOW()
           ''',
           parameters: {'user_id': providerId, 'pet_id': petId},
         );
@@ -305,11 +307,11 @@ class AppointmentController {
         await _db.queryAll(
           '''
           UPDATE access_permissions
-          SET valid_until = NOW()
-          WHERE user_id = @user_id::uuid
+          SET ends_at = NOW()
+          WHERE subject_user_id = @user_id::uuid
             AND pet_id = @pet_id::uuid
-            AND notes = 'Automatisch bei Terminbestätigung'
-            AND valid_until > NOW()
+            AND note = 'Automatisch bei Terminbestätigung'
+            AND ends_at > NOW()
           ''',
           parameters: {'user_id': providerId, 'pet_id': petId},
         );

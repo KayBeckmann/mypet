@@ -4,6 +4,7 @@ import '../database/database.dart';
 /// Gibt true zurück wenn:
 /// - Benutzer ist Superadmin
 /// - Benutzer ist Eigentümer des Tieres
+/// - Benutzer ist Familienmitglied des Eigentümers (read-only, es sei denn requireWrite)
 /// - Benutzer hat eine aktive Zugriffsberechtigung (direkt oder via Organisation)
 Future<bool> petHasAccess(
   Database db,
@@ -21,6 +22,27 @@ Future<bool> petHasAccess(
   );
   if (pet == null) return false;
   if (pet['owner_id'].toString() == userId) return true;
+
+  // Familien-Check: Ist der anfragende User im gleichen Familienverband
+  // wie der Tierbesitzer? (nur Lesezugriff)
+  if (!requireWrite) {
+    final familyAccess = await db.queryOne(
+      '''
+      SELECT fm1.family_id
+      FROM family_members fm1
+      INNER JOIN family_members fm2 ON fm1.family_id = fm2.family_id
+      WHERE fm1.user_id = @user_id::uuid
+        AND fm2.user_id = @owner_id::uuid
+        AND fm1.user_id != fm2.user_id
+      LIMIT 1
+      ''',
+      parameters: {
+        'user_id': userId,
+        'owner_id': pet['owner_id'].toString(),
+      },
+    );
+    if (familyAccess != null) return true;
+  }
 
   final permLevel =
       requireWrite ? "'write', 'manage'" : "'read', 'write', 'manage'";

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'package:postgres/postgres.dart';
@@ -22,6 +23,11 @@ class FamilyController {
     router.get('/<id>/members', _listMembers);
     router.post('/<id>/members', _addMember);
     router.delete('/<id>/members/<userId>', _removeMember);
+
+    // Einladungscodes
+    router.post('/<id>/invite-code', _generateInviteCode);
+    router.get('/join/<code>', _lookupInviteCode);
+    router.post('/join/<code>', _joinByCode);
 
     return router;
   }
@@ -312,6 +318,142 @@ class FamilyController {
       );
     } catch (e) {
       print('❌ Family-Member-Remove-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// POST /families/:id/invite-code  → erzeugt 6-stelligen Einladungscode
+  Future<Response> _generateInviteCode(Request request, String id) async {
+    try {
+      final userId = request.context['userId'] as String;
+      if (!await _isOwner(id, userId)) {
+        return _error(403, 'Nur der Ersteller kann Einladungscodes erstellen');
+      }
+
+      // Zufälligen 8-stelligen alphanumerischen Code erzeugen
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      final rand = Random.secure();
+      final code =
+          List.generate(8, (_) => chars[rand.nextInt(chars.length)]).join();
+
+      final expiresAt =
+          DateTime.now().add(const Duration(days: 7)).toIso8601String();
+
+      await _db.queryAll(
+        '''
+        INSERT INTO family_invite_codes (family_id, code, created_by, expires_at)
+        VALUES (@family_id::uuid, @code, @created_by::uuid, @expires_at::timestamp)
+        ON CONFLICT (family_id) DO UPDATE
+          SET code = @code, created_by = @created_by::uuid,
+              expires_at = @expires_at::timestamp, used_by = NULL
+        ''',
+        parameters: {
+          'family_id': id,
+          'code': code,
+          'created_by': userId,
+          'expires_at': expiresAt,
+        },
+      );
+
+      return Response.ok(
+        jsonEncode({'code': code, 'expires_at': expiresAt}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ InviteCode-Generate-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// GET /families/join/:code  → zeigt Familieninfo ohne beizutreten
+  Future<Response> _lookupInviteCode(Request request, String code) async {
+    try {
+      final row = await _db.queryOne(
+        '''
+        SELECT ic.family_id, ic.expires_at, f.name AS family_name,
+               u.name AS created_by_name,
+               (SELECT COUNT(*) FROM family_members WHERE family_id = ic.family_id)::int AS member_count
+        FROM family_invite_codes ic
+        INNER JOIN families f ON f.id = ic.family_id
+        INNER JOIN users u ON u.id = ic.created_by
+        WHERE ic.code = @code
+          AND ic.expires_at > NOW()
+          AND ic.used_by IS NULL
+        ''',
+        parameters: {'code': code.toUpperCase()},
+      );
+
+      if (row == null) {
+        return _error(404, 'Code ungültig oder abgelaufen');
+      }
+
+      return Response.ok(
+        jsonEncode({
+          'family_id': row['family_id'].toString(),
+          'family_name': row['family_name'],
+          'created_by_name': row['created_by_name'],
+          'member_count': row['member_count'],
+          'expires_at': (row['expires_at'] as DateTime).toIso8601String(),
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ InviteCode-Lookup-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// POST /families/join/:code  → tritt Familie bei
+  Future<Response> _joinByCode(Request request, String code) async {
+    try {
+      final userId = request.context['userId'] as String;
+
+      final invite = await _db.queryOne(
+        '''
+        SELECT ic.family_id, f.name AS family_name
+        FROM family_invite_codes ic
+        INNER JOIN families f ON f.id = ic.family_id
+        WHERE ic.code = @code
+          AND ic.expires_at > NOW()
+          AND ic.used_by IS NULL
+        ''',
+        parameters: {'code': code.toUpperCase()},
+      );
+
+      if (invite == null) {
+        return _error(404, 'Code ungültig oder abgelaufen');
+      }
+
+      final familyId = invite['family_id'].toString();
+
+      // Bereits Mitglied?
+      if (await _isMember(familyId, userId)) {
+        return _error(409, 'Du bist bereits Mitglied dieser Familie');
+      }
+
+      await _db.transaction((tx) async {
+        await tx.execute(
+          Sql.named('''
+            INSERT INTO family_members (family_id, user_id, role)
+            VALUES (@family_id::uuid, @user_id::uuid, 'member')
+          '''),
+          parameters: {'family_id': familyId, 'user_id': userId},
+        );
+        await tx.execute(
+          Sql.named('''
+            UPDATE family_invite_codes SET used_by = @user_id::uuid
+            WHERE code = @code
+          '''),
+          parameters: {'user_id': userId, 'code': code.toUpperCase()},
+        );
+      });
+
+      return Response.ok(
+        jsonEncode({'family_id': familyId, 'family_name': invite['family_name']}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ InviteCode-Join-Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }

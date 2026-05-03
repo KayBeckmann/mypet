@@ -26,6 +26,7 @@ const List<Migration> migrations = [
   _migration022CreateWeightHistory,
   _migration023CreateReminders,
   _migration024AddEncryptionColumns,
+  _migration025CreateFamilyInviteCodes,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -859,5 +860,26 @@ const _migration024AddEncryptionColumns = Migration(
   down: '''
     ALTER TABLE pet_notes DROP COLUMN IF EXISTS is_encrypted;
     ALTER TABLE medical_records DROP COLUMN IF EXISTS is_encrypted;
+  ''',
+);
+
+/// Migration 025: Familien-Einladungscodes
+const _migration025CreateFamilyInviteCodes = Migration(
+  version: 25,
+  name: 'create_family_invite_codes',
+  up: '''
+    CREATE TABLE family_invite_codes (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      family_id UUID NOT NULL UNIQUE REFERENCES families(id) ON DELETE CASCADE,
+      code VARCHAR(16) NOT NULL UNIQUE,
+      created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      used_by UUID REFERENCES users(id) ON DELETE SET NULL,
+      expires_at TIMESTAMP NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX idx_family_invite_codes_code ON family_invite_codes(code);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS family_invite_codes;
   ''',
 );
