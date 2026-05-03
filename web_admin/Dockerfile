@@ -11,7 +11,7 @@ RUN flutter pub get
 
 COPY web_admin/ /app/web_admin/
 
-RUN flutter build web --release
+RUN flutter build web --release --web-renderer html
 
 FROM nginx:alpine
 

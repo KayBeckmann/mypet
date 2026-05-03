@@ -11,7 +11,7 @@ RUN flutter pub get
 
 COPY web_provider/ /app/web_provider/
 
-RUN flutter build web --release
+RUN flutter build web --release --web-renderer html
 
 # Production Image mit Nginx
 FROM nginx:alpine

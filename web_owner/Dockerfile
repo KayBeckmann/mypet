@@ -13,7 +13,7 @@ RUN flutter pub get
 # Restlichen Quellcode kopieren
 COPY web_owner/ /app/web_owner/
 
-RUN flutter build web --release
+RUN flutter build web --release --web-renderer html
 
 # Production Image mit Nginx
 FROM nginx:alpine
