@@ -846,6 +846,18 @@ services:
 
 ---
 
+## Phase 33: Owner-Dashboard Impfungen & Pet-Alter ✅ *(2026-05-03)*
+
+### M33.1 - Ablaufende Impfungen im Besitzer-Dashboard ✅
+- [x] `DashboardScreen` zu `StatefulWidget` umgebaut
+- [x] Lädt `GET /vaccinations/expiring?days=30` beim Start
+- [x] Zeigt Amber-Panel mit Ampelfarben (≤7 Tage = rot), Link zu /animals
+
+### M33.2 - Pet-Alter auf der Karte ✅
+- [x] `PetCard`: zeigt Alter in Jahren neben Rasse (z.B. "LABRADOR · 3 J.")
+
+---
+
 ## Legende
 
 - [ ] Offen
