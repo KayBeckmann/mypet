@@ -30,6 +30,7 @@ import 'package:mypet_backend/controllers/note_controller.dart';
 import 'package:mypet_backend/controllers/transfer_controller.dart';
 import 'package:mypet_backend/controllers/weight_controller.dart';
 import 'package:mypet_backend/controllers/reminder_controller.dart';
+import 'package:mypet_backend/controllers/prescription_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
@@ -139,6 +140,9 @@ Future<void> main(List<String> args) async {
   // Reminder Controller
   final reminderController = ReminderController(db: db);
 
+  // Rezepte Controller
+  final prescriptionController = PrescriptionController(db);
+
   app.mount(
     '/account',
     const Pipeline()
@@ -157,6 +161,7 @@ Future<void> main(List<String> args) async {
       .add(noteController.router.call)
       .add(transferController.router.call)
       .add(weightController.router.call)
+      .add(prescriptionController.router.call)
       .handler;
   app.mount(
     '/pets',

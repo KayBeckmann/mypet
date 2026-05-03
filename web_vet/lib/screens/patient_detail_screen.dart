@@ -12,6 +12,7 @@ import '../providers/medical_provider.dart';
 import '../providers/media_provider.dart';
 import '../providers/notes_provider.dart';
 import '../providers/patients_provider.dart';
+import '../providers/prescription_provider.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final String petId;
@@ -31,11 +32,12 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 9, vsync: this);
+    _tabs = TabController(length: 10, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MedicalProvider>().loadForPet(widget.petId);
       context.read<VetMediaProvider>().loadForPet(widget.petId);
       context.read<VetNotesProvider>().loadForPet(widget.petId);
+      context.read<PrescriptionProvider>().loadForPet(widget.petId);
       _loadWeight();
       _loadFeeding();
     });
@@ -384,6 +386,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
     final medical = context.watch<MedicalProvider>();
     final mediaProvider = context.watch<VetMediaProvider>();
     final notesProvider = context.watch<VetNotesProvider>();
+    final prescProvider = context.watch<PrescriptionProvider>();
     final patientsProvider = context.watch<PatientsProvider>();
     final apptProvider = context.watch<VetAppointmentProvider>();
     final petAppointments = apptProvider.appointments
@@ -423,10 +426,12 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
+          isScrollable: true,
           tabs: const [
             Tab(text: 'Akte'),
             Tab(text: 'Impfungen'),
             Tab(text: 'Medikamente'),
+            Tab(text: 'Rezepte'),
             Tab(text: 'Bildarchiv'),
             Tab(text: 'Notizen'),
             Tab(text: 'Compliance'),
@@ -452,6 +457,8 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
                 _MedicationsTab(
                     medications: medical.medications,
                     onAdd: _addMedication),
+                _PrescriptionsTab(
+                    provider: prescProvider, petId: widget.petId),
                 _MediaTab(provider: mediaProvider, petId: widget.petId),
                 _NotesTab(provider: notesProvider),
                 _ComplianceTab(medical: medical, petId: widget.petId),
@@ -1894,6 +1901,339 @@ class _FeedingTab extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// ── Rezepte Tab ──
+class _PrescriptionsTab extends StatefulWidget {
+  final PrescriptionProvider provider;
+  final String petId;
+
+  const _PrescriptionsTab({required this.provider, required this.petId});
+
+  @override
+  State<_PrescriptionsTab> createState() => _PrescriptionsTabState();
+}
+
+class _PrescriptionsTabState extends State<_PrescriptionsTab> {
+  Future<void> _showAddDialog() async {
+    final drugCtrl = TextEditingController();
+    final dosageCtrl = TextEditingController();
+    final freqCtrl = TextEditingController();
+    final instrCtrl = TextEditingController();
+    final notesCtrl = TextEditingController();
+    int? durationDays;
+    DateTime? validUntil;
+    int refills = 0;
+    final formKey = GlobalKey<FormState>();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: const Text('Rezept ausstellen'),
+          content: SizedBox(
+            width: 500,
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: drugCtrl,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Medikament *',
+                        hintText: 'z.B. Amoxicillin 250mg',
+                      ),
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Pflichtfeld' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: dosageCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Dosierung',
+                              hintText: 'z.B. 1 Tablette à 250mg',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: freqCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Häufigkeit',
+                              hintText: 'z.B. 2x täglich',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: durationDays?.toString(),
+                            decoration: const InputDecoration(
+                              labelText: 'Dauer (Tage)',
+                              hintText: 'z.B. 7',
+                            ),
+                            keyboardType: TextInputType.number,
+                            onChanged: (v) =>
+                                durationDays = int.tryParse(v),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: refills.toString(),
+                            decoration: const InputDecoration(
+                              labelText: 'Wiederholungen',
+                            ),
+                            keyboardType: TextInputType.number,
+                            onChanged: (v) =>
+                                refills = int.tryParse(v) ?? 0,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.event, size: 16),
+                      label: Text(validUntil != null
+                          ? 'Gültig bis: ${validUntil!.day.toString().padLeft(2, '0')}.${validUntil!.month.toString().padLeft(2, '0')}.${validUntil!.year}'
+                          : 'Gültigkeitsdatum (optional)'),
+                      onPressed: () async {
+                        final d = await showDatePicker(
+                          context: ctx,
+                          initialDate:
+                              DateTime.now().add(const Duration(days: 30)),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now()
+                              .add(const Duration(days: 365 * 2)),
+                        );
+                        if (d != null) setDs(() => validUntil = d);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: instrCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Anwendungshinweise',
+                        hintText: 'z.B. Nach dem Fressen geben',
+                      ),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: notesCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Notizen (intern)',
+                      ),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Abbrechen'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(ctx, true);
+                }
+              },
+              child: const Text('Rezept ausstellen'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final ok = await widget.provider.create(
+        petId: widget.petId,
+        drugName: drugCtrl.text.trim(),
+        dosage: dosageCtrl.text.trim().isNotEmpty
+            ? dosageCtrl.text.trim()
+            : null,
+        frequency: freqCtrl.text.trim().isNotEmpty
+            ? freqCtrl.text.trim()
+            : null,
+        durationDays: durationDays,
+        instructions: instrCtrl.text.trim().isNotEmpty
+            ? instrCtrl.text.trim()
+            : null,
+        validUntil: validUntil?.toIso8601String(),
+        refillsRemaining: refills,
+        notes: notesCtrl.text.trim().isNotEmpty ? notesCtrl.text.trim() : null,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(ok ? 'Rezept ausgestellt' : (widget.provider.error ?? 'Fehler')),
+          backgroundColor: ok ? null : VetTheme.error,
+        ));
+      }
+    }
+  }
+
+  Future<void> _confirmDelete(Prescription p) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Rezept löschen'),
+        content: Text('Rezept für „${p.drugName}" wirklich löschen?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Abbrechen'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VetTheme.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Löschen'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await widget.provider.delete(p.id);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final prescriptions = widget.provider.prescriptions;
+    final df = DateFormat('dd.MM.yyyy');
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(VetTheme.spacingMd),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              ElevatedButton.icon(
+                onPressed: _showAddDialog,
+                icon: const Icon(Icons.receipt_long, size: 18),
+                label: const Text('Rezept ausstellen'),
+              ),
+            ],
+          ),
+        ),
+        if (widget.provider.isLoading)
+          const Expanded(
+              child: Center(child: CircularProgressIndicator()))
+        else if (prescriptions.isEmpty)
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.receipt_long_outlined,
+                      size: 48,
+                      color: VetTheme.onSurfaceVariant
+                          .withValues(alpha: 0.4)),
+                  const SizedBox(height: 12),
+                  const Text('Keine Rezepte ausgestellt',
+                      style: TextStyle(color: VetTheme.onSurfaceVariant)),
+                ],
+              ),
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: VetTheme.spacingMd,
+                  vertical: VetTheme.spacingSm),
+              itemCount: prescriptions.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: VetTheme.spacingSm),
+              itemBuilder: (_, i) {
+                final p = prescriptions[i];
+                final expired = p.isExpired;
+                return Card(
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.receipt_long,
+                      color: expired
+                          ? VetTheme.onSurfaceVariant
+                          : VetTheme.primary,
+                    ),
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            p.drugName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: expired
+                                  ? VetTheme.onSurfaceVariant
+                                  : null,
+                              decoration: expired
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
+                        ),
+                        if (expired)
+                          Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: VetTheme.error.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text('Abgelaufen',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    color: VetTheme.error)),
+                          ),
+                      ],
+                    ),
+                    subtitle: Text([
+                      if (p.dosage != null) p.dosage!,
+                      if (p.frequency != null) p.frequency!,
+                      if (p.durationDays != null)
+                        '${p.durationDays} Tage',
+                      'Ausgestellt: ${df.format(p.issuedAt)}',
+                      if (p.issuedByName != null) 'Dr. ${p.issuedByName}',
+                      if (p.validUntil != null)
+                        'Gültig bis: ${df.format(p.validUntil!)}',
+                      if (p.refillsRemaining > 0)
+                        '${p.refillsRemaining}× Wiederholung',
+                    ].join(' · ')),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                      color: VetTheme.error,
+                      tooltip: 'Löschen',
+                      onPressed: () => _confirmDelete(p),
+                    ),
+                    isThreeLine: true,
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }

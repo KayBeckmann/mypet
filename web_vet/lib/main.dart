@@ -10,6 +10,7 @@ import 'providers/medical_provider.dart';
 import 'providers/appointment_provider.dart';
 import 'providers/media_provider.dart';
 import 'providers/notes_provider.dart';
+import 'providers/prescription_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +52,9 @@ class _MyPetVetAppState extends State<MyPetVetApp> {
         ),
         ChangeNotifierProvider(
           create: (_) => VetNotesProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => PrescriptionProvider(api: _apiService),
         ),
       ],
       child: const _AppShell(),
