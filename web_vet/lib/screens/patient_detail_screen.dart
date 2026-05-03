@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../providers/appointment_provider.dart';
 import '../providers/medical_provider.dart';
 import '../providers/media_provider.dart';
 import '../providers/notes_provider.dart';
@@ -27,7 +28,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 6, vsync: this);
+    _tabs = TabController(length: 7, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MedicalProvider>().loadForPet(widget.petId);
       context.read<VetMediaProvider>().loadForPet(widget.petId);
@@ -353,6 +354,11 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
     final mediaProvider = context.watch<VetMediaProvider>();
     final notesProvider = context.watch<VetNotesProvider>();
     final patientsProvider = context.watch<PatientsProvider>();
+    final apptProvider = context.watch<VetAppointmentProvider>();
+    final petAppointments = apptProvider.appointments
+        .where((a) => a.petId == widget.petId)
+        .toList()
+      ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
     final petData = patientsProvider.patients
         .where((p) => p['id'] == widget.petId)
         .firstOrNull;
@@ -393,6 +399,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
             Tab(text: 'Bildarchiv'),
             Tab(text: 'Notizen'),
             Tab(text: 'Compliance'),
+            Tab(text: 'Termine'),
           ],
         ),
       ),
@@ -415,6 +422,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
                 _MediaTab(provider: mediaProvider, petId: widget.petId),
                 _NotesTab(provider: notesProvider),
                 _ComplianceTab(medical: medical, petId: widget.petId),
+                _AppointmentsTab(appointments: petAppointments),
               ],
             ),
     );
@@ -1461,5 +1469,97 @@ class _ComplianceCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ── Termine Tab ──
+class _AppointmentsTab extends StatelessWidget {
+  final List<VetAppointment> appointments;
+  const _AppointmentsTab({required this.appointments});
+
+  @override
+  Widget build(BuildContext context) {
+    if (appointments.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_available_rounded,
+                size: 48, color: VetTheme.onSurfaceVariant),
+            SizedBox(height: 12),
+            Text('Keine Termine',
+                style: TextStyle(color: VetTheme.onSurfaceVariant)),
+          ],
+        ),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.all(VetTheme.spacingMd),
+      itemCount: appointments.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (_, i) {
+        final a = appointments[i];
+        final statusColor = _apptColor(a.status);
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: VetTheme.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(10),
+            border: Border(left: BorderSide(color: statusColor, width: 4)),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 80,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(a.timeLabel,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 15)),
+                    Text(a.dateLabel,
+                        style: const TextStyle(
+                            color: VetTheme.onSurfaceVariant, fontSize: 11)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(a.title,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(a.statusLabel,
+                    style: TextStyle(
+                        color: statusColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Color _apptColor(AppointmentStatus s) {
+    switch (s) {
+      case AppointmentStatus.requested:
+        return Colors.orange;
+      case AppointmentStatus.confirmed:
+        return VetTheme.secondary;
+      case AppointmentStatus.completed:
+        return VetTheme.primary;
+      case AppointmentStatus.cancelled:
+        return VetTheme.error;
+      case AppointmentStatus.noShow:
+        return Colors.grey;
+    }
   }
 }

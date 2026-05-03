@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:mypet_shared/shared.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
@@ -14,13 +16,29 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  List<Map<String, dynamic>> _expiringVaccinations = [];
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CustomersProvider>().load();
       context.read<ProviderAppointmentProvider>().load();
+      _loadExpiringVaccinations();
     });
+  }
+
+  Future<void> _loadExpiringVaccinations() async {
+    try {
+      final api = context.read<ApiService>();
+      final data = await api.get('/vaccinations/expiring?days=30');
+      if (mounted) {
+        setState(() {
+          _expiringVaccinations =
+              (data['vaccinations'] as List? ?? []).cast<Map<String, dynamic>>();
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -113,7 +131,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+
+            if (_expiringVaccinations.isNotEmpty) ...[
+              _ExpiringVaccinationsPanel(
+                  vaccinations: _expiringVaccinations),
+              const SizedBox(height: 24),
+            ],
 
             // Upcoming appointments
             Text(
@@ -286,6 +310,107 @@ class _SummaryCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+class _ExpiringVaccinationsPanel extends StatelessWidget {
+  final List<Map<String, dynamic>> vaccinations;
+
+  const _ExpiringVaccinationsPanel({required this.vaccinations});
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = DateFormat('dd.MM.yyyy');
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.vaccines_rounded, color: Colors.amber, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Ablaufende Impfungen (nächste 30 Tage)',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...vaccinations.map((v) {
+            final validUntil = v['valid_until'] as String?;
+            DateTime? date;
+            if (validUntil != null) date = DateTime.tryParse(validUntil);
+            final daysLeft = date != null
+                ? date.difference(DateTime.now()).inDays
+                : null;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: InkWell(
+                onTap: () => context.go('/customers/${v['pet_id']}'),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        v['pet_name'] as String? ?? '—',
+                        style:
+                            const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          v['vaccine_name'] as String? ?? '—',
+                          style: const TextStyle(
+                              color: ProviderTheme.onSurfaceVariant,
+                              fontSize: 13),
+                        ),
+                      ),
+                      if (date != null) ...[  
+                        Text(
+                          fmt.format(date),
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: daysLeft != null && daysLeft <= 7
+                                  ? ProviderTheme.error
+                                  : Colors.amber.shade700,
+                              fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '($daysLeft T)',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: daysLeft != null && daysLeft <= 7
+                                  ? ProviderTheme.error
+                                  : Colors.amber.shade700),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

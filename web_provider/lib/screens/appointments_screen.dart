@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/appointment_provider.dart';
@@ -121,6 +122,11 @@ class _ProviderAppointmentsScreenState
                                 () => context
                                     .read<ProviderAppointmentProvider>()
                                     .complete(a.id)),
+                            _ActionBtn('Nicht erschienen', Colors.grey,
+                                Icons.person_off_outlined,
+                                () => context
+                                    .read<ProviderAppointmentProvider>()
+                                    .markNoShow(a.id)),
                             _ActionBtn('Absagen', ProviderTheme.error,
                                 Icons.cancel_outlined,
                                 () => _cancel(context, a)),
@@ -268,10 +274,15 @@ class _AppointmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _color(appointment.status);
-    return Container(
+    return Material(
+      color: ProviderTheme.surfaceContainerLowest,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => context.go('/customers/${appointment.petId}'),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ProviderTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
         border: Border(left: BorderSide(color: color, width: 4)),
         boxShadow: [
@@ -352,6 +363,8 @@ class _AppointmentCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+        ),
       ),
     );
   }

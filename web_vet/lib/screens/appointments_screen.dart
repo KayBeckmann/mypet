@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/appointment_provider.dart';
@@ -319,10 +320,15 @@ class _AppointmentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = _statusColor(appointment.status);
 
-    return Container(
+    return Material(
+      color: VetTheme.surfaceContainerLowest,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => context.go('/patients/${appointment.petId}'),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: VetTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
         border: Border(
           left: BorderSide(color: statusColor, width: 4),
@@ -440,6 +446,8 @@ class _AppointmentCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+        ),
       ),
     );
   }
