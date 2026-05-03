@@ -115,6 +115,39 @@ class FamilyProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> renameFamily(String familyId, String newName) async {
+    try {
+      await _api.put('/families/$familyId', body: {'name': newName});
+      await loadFamilies();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _error = 'Umbenennen fehlgeschlagen';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteFamily(String familyId) async {
+    try {
+      await _api.delete('/families/$familyId');
+      _families.removeWhere((f) => f.id == familyId);
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _error = 'Löschen fehlgeschlagen';
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();

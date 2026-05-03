@@ -5,6 +5,7 @@ import 'package:mypet_shared/shared.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
+import '../models/pet.dart';
 import '../providers/pet_provider.dart';
 import '../providers/appointment_provider.dart';
 import '../providers/reminder_provider.dart';
@@ -65,6 +66,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final medicationProvider = context.watch<MedicationProvider>();
     final familyInvitations = context.watch<FamilyInvitationProvider>();
     final userName = auth.user?.name ?? 'Tierfreund';
+
+    // Upcoming birthdays (next 14 days)
+    final now = DateTime.now();
+    DateTime nextBirthday(DateTime bd) {
+      var n = DateTime(now.year, bd.month, bd.day);
+      if (n.isBefore(now)) n = DateTime(now.year + 1, bd.month, bd.day);
+      return n;
+    }
+    final upcomingBirthdays = petProvider.pets.where((p) {
+      if (p.birthDate == null) return false;
+      return nextBirthday(p.birthDate!).difference(now).inDays <= 14;
+    }).toList()
+      ..sort((a, b) =>
+          nextBirthday(a.birthDate!).compareTo(nextBirthday(b.birthDate!)));
     final activeMeds = petProvider.pets
         .expand((p) => medicationProvider.forPet(p.id))
         .where((m) => m.isActive && !m.isExpired)
@@ -141,6 +156,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         },
                         onReject: () => familyInvitations.reject(inv.id),
                       )),
+                ],
+
+                // Geburtstage
+                if (upcomingBirthdays.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _BirthdayPanel(pets: upcomingBirthdays),
                 ],
 
                 const SizedBox(height: 24),
@@ -728,6 +749,79 @@ class _ExpiringVaccinationsPanel extends StatelessWidget {
                               : Colors.amber.shade700,
                           fontWeight: FontWeight.w600),
                     ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _BirthdayPanel extends StatelessWidget {
+  final List<Pet> pets;
+  const _BirthdayPanel({required this.pets});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.pink.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusLg),
+        border: Border.all(color: Colors.pink.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.cake_rounded, color: Colors.pink, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Bevorstehende Geburtstage',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Colors.pink.shade700,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...pets.map((p) {
+            final bd = p.birthDate!;
+            var next = DateTime(now.year, bd.month, bd.day);
+            if (next.isBefore(now)) next = DateTime(now.year + 1, bd.month, bd.day);
+            final daysLeft = next.difference(now).inDays;
+            final years = next.year - bd.year;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  Text(p.speciesIcon, style: const TextStyle(fontSize: 16)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${p.name} wird $years',
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  Text(
+                    daysLeft == 0
+                        ? 'Heute! 🎂'
+                        : daysLeft == 1
+                            ? 'Morgen'
+                            : 'in $daysLeft Tagen',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: daysLeft <= 1
+                          ? Colors.pink.shade700
+                          : Colors.pink.shade400,
+                    ),
+                  ),
                 ],
               ),
             );

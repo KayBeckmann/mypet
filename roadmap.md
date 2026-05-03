@@ -928,6 +928,147 @@ services:
 
 ---
 
+---
+
+## Phase 38: System-Einladungen, CanvasKit-Fix & Familien-Admin ✅ *(2026-05-03)*
+
+### M38.1 - Interne Familieneinladungen (kein E-Mail) ✅
+- [x] Migration 026: Tabelle `family_invitations` (invitee_id, invited_by, status enum, message)
+- [x] `POST /families/:id/members` erstellt jetzt interne Einladung statt direktem Beitritt
+- [x] `GET /families/invitations`, `POST /families/invitations/:id/accept`, `.../reject`
+- [x] `FamilyInvitationProvider` in web_owner (load, accept, reject, pendingCount)
+- [x] `_InvitationBanner` auf FamiliesScreen + Dashboard
+- [x] Badge auf Sidebar-Eintrag `/families` bei ausstehenden Einladungen
+- [x] `main.dart`: FamilyInvitationProvider registriert, lädt nach Login
+
+### M38.2 - CanvasKit-Fix (kein CDN-Abruf mehr) ✅
+- [x] Alle Dockerfiles: `flutter build web --release --dart-define=FLUTTER_WEB_CANVASKIT_URL=canvaskit/`
+- [x] CanvasKit wird aus dem lokalen Build-Output geladen (kein gstatic.com)
+
+### M38.3 - Familien-Admin: Umbenennen & Löschen ✅
+- [x] `FamilyProvider.renameFamily()` + `deleteFamily()` hinzugefügt
+- [x] `_FamilyCard`: Bearbeiten-Button (Stift) öffnet Umbenennen-Dialog
+- [x] `_FamilyCard`: Löschen-Button (Papierkorb, nur für Admin) mit Bestätigungsdialog
+- [x] Admin-Erkennung via `family.createdBy == authProvider.user?.id`
+
+---
+
+## Phase 39: Benachrichtigungszentrale (web_owner) ✅ *(2026-05-03)*
+
+### M39.1 - Notifications-Screen ✅
+- [x] `notifications_screen.dart`: Aggregiert aus FamilyInvitationProvider, ReminderProvider, AppointmentProvider
+- [x] Typen: Familieneinladung, überfällige/heute fällige Erinnerungen, ausstehende Terminanfragen
+- [x] Familieneinladungen mit Accept/Reject direkt im Screen
+- [x] Sortierung: Kritische zuerst (überfällig/Einladungen), dann nach Datum
+- [x] Leerer Zustand mit "Alles erledigt!"-Meldung
+
+### M39.2 - Sidebar-Integration ✅
+- [x] Neuer Eintrag "Benachrichtigungen" (Bell-Icon) in der Konto-Sektion
+- [x] Badge-Zähler: Summe aus Familieneinladungen + überfälligen + heute fälligen Erinnerungen + Terminanfragen
+- [x] Route `/notifications` in go_router registriert
+
+---
+
+## Phase 40: Rezepte-Verwaltung (web_vet + web_owner) ✅ *(2026-05-03)*
+
+### M40.1 - Backend: Rezepte-Tabelle + Endpunkte ✅
+- [x] Migration 027: Tabelle `prescriptions` (drug_name, dosage, frequency, duration_days, instructions, valid_until, refills_remaining)
+- [x] `PrescriptionController`: `GET/POST /pets/:id/prescriptions`, `DELETE /pets/:id/prescriptions/:prescId`
+- [x] Nur Tierärzte können Rezepte ausstellen, Löschen nur durch Aussteller
+- [x] In petsCascade eingehängt
+
+### M40.2 - web_vet: Rezepte-Tab in PatientDetailScreen ✅
+- [x] `PrescriptionProvider` (load, create, delete)
+- [x] 10. Tab „Rezepte" in `patient_detail_screen.dart` (TabBar scrollable gemacht)
+- [x] Ausstellungs-Dialog: Medikament, Dosierung, Häufigkeit, Dauer, Anweisungen, Gültig bis, Wiederholungen
+- [x] Abgelaufene Rezepte werden durchgestrichen + Badge „Abgelaufen"
+- [x] In `main.dart` registriert
+
+### M40.3 - web_owner: Rezepte-Karte im Tier-Profil ✅
+- [x] `OwnerPrescriptionProvider` (read-only view)
+- [x] `_PrescriptionsCard` im AnimalDetailScreen (zwischen Medikamente und Gewicht)
+- [x] Zeigt ausstellenden Arzt, Dosierung, Datum
+- [x] In `main.dart` registriert
+
+---
+
+## Phase 41: QR-Code & Tier-Identifikation (web_owner) ✅ *(2026-05-03)*
+
+### M41.1 - Pet QR-Code ✅
+- [x] "QR-Code"-Button im AnimalDetailScreen-Header (neben Bearbeiten/Teilen)
+- [x] Dialog zeigt QR-Code mit Name, Tierart/Rasse, Chip-Nummer
+- [x] "Kopieren"-Button kopiert Tier-Info in die Zwischenablage
+- [x] Nutzung von `qr_flutter` (bereits als Dependency vorhanden)
+- [x] `flutter/services.dart` für Clipboard importiert
+
+---
+
+## Phase 42: Service-Honorar Tracking (web_provider + Backend) ✅ *(2026-05-03)*
+
+### M42.1 - Backend: Honorar-Felder für Termine ✅
+- [x] Migration 028: `service_fee_cents`, `service_fee_currency`, `service_fee_note` zu `appointments`
+- [x] `PUT /appointments/:id/fee` — nur Dienstleister des Termins kann Honorar setzen
+- [x] `_sanitize` in AppointmentController gibt Honorar-Felder zurück
+
+### M42.2 - web_provider: Honorar setzen & anzeigen ✅
+- [x] `ProviderAppointment` Model: Felder `serviceFeeCents`, `serviceFeeNote`, Getter `serviceFeeFormatted`
+- [x] `ProviderAppointmentProvider.setFee()` — PUT /appointments/:id/fee
+- [x] Vergangene Termine: „Honorar setzen / bearbeiten" Button
+- [x] Dialog: Betrag (€) + optionale Notiz
+- [x] Appointment-Karte zeigt Honorar mit Euro-Icon wenn gesetzt
+- [x] Dashboard: Neues Summary-Kachel „Umsatz diesen Monat" (Summe aller Honorare im aktuellen Monat)
+
+---
+
+## Phase 43: Geburtstags-Benachrichtigungen (web_owner) ✅ *(2026-05-03)*
+
+### M43.1 - Dashboard: Geburtstags-Panel ✅
+- [x] `_BirthdayPanel`: zeigt Tiere mit Geburtstag in nächsten 14 Tagen
+- [x] Anzeige: Tierart-Emoji, Name, „wird X Jahre", Tage bis Geburtstag
+- [x] Lokale Berechnung auf Basis von `pet.birthDate` (kein API-Call)
+
+### M43.2 - Notification Center: Geburtstag-Typ ✅
+- [x] Neuer `_NotifType.birthday` in `notifications_screen.dart`
+- [x] Kuchen-Icon (pink) für Geburtstags-Benachrichtigungen
+- [x] Sidebar-Badge zählt auch bevorstehende Geburtstage
+
+---
+
+## Phase 44: Pet-Notizen für Besitzer (web_owner) ✅ *(2026-05-03)*
+
+### M44.1 - Notizen-Feature im Tier-Profil ✅
+- [x] `OwnerNotesProvider` (CRUD: load, create, update, delete)
+- [x] `_NotesCard` in `animal_detail_screen.dart` (unter Terminen)
+- [x] Dialog: Titel + Inhaltsfeld, Bearbeiten-Dialog mit Vorbelegen
+- [x] Direkt-Löschen per Papierkorb-Icon
+- [x] `+`-Button im Card-Header für schnelles Hinzufügen
+- [x] In `main.dart` registriert
+
+---
+
+## Phase 45: Android App — Tierbesitzer (android_owner) ✅ *(2026-05-03)*
+
+### M45.1 - Flutter Android Projekt & Infrastruktur ✅
+- [x] `android_owner/` — neues Flutter-Projekt, kein `dart:html`
+- [x] `pubspec.yaml`: `shared_preferences`, `image_picker`, `qr_flutter`, `mypet_shared`
+- [x] `AndroidManifest.xml`: INTERNET, CAMERA, READ_EXTERNAL_STORAGE Permissions
+- [x] `android_owner/Dockerfile` — Multi-Stage Build: Flutter-Image → Alpine mit APK
+- [x] `docker-compose.yml`: Service `android-owner` (profile: android)
+- [x] `CLAUDE.md` aktualisiert mit Android-Build-Anleitung
+
+### M45.2 - App-Screens ✅
+- [x] `LoginScreen` — Login + Registrierung, Token-Speicherung via `shared_preferences`
+- [x] `MobileAuthProvider` — JWT-Login mit persistentem Token
+- [x] `MainShell` — Bottom Navigation Bar (5 Tabs mit Badges)
+- [x] `DashboardScreen` — Begrüßung, Stats-Chips, überfällige Erinnerungen, nächste Termine
+- [x] `PetsScreen` + `PetDetailScreen` — Tierliste + Detail (3 Tabs: Impfungen, Medikamente, Akte)
+- [x] `RemindersScreen` — Offene Erinnerungen, Hinzufügen-Dialog, Erledigt-Funktion
+- [x] `AppointmentsScreen` — Bevorstehend/Vergangen, Statusanzeige
+- [x] `ProfileScreen` — Benutzerdaten, Abmelden
+- [x] API-URL: `http://10.0.2.2:8080` (Android-Emulator → Host-Machine)
+
+---
+
 ## Legende
 
 - [ ] Offen

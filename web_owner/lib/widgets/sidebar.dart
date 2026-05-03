@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../models/appointment.dart';
 import '../providers/appointment_provider.dart';
 import '../providers/family_invitation_provider.dart';
+import '../providers/pet_provider.dart';
 import '../providers/reminder_provider.dart';
 
 class SidebarItem {
@@ -58,10 +59,27 @@ class Sidebar extends StatelessWidget {
     final pendingAppts = appointmentProvider.appointments
         .where((a) => a.status == AppointmentStatus.requested)
         .length;
+    final now = DateTime.now();
+    final tomorrow = now.add(const Duration(hours: 24));
+    final dueSoon = reminderProvider.reminders
+        .where((r) =>
+            r.status == 'pending' && !r.isPast && r.remindAt.isBefore(tomorrow))
+        .length;
+    final pets = context.watch<PetProvider>().pets;
+    final upcomingBirthdays = pets.where((p) {
+      if (p.birthDate == null) return false;
+      final bd = p.birthDate!;
+      var next = DateTime(now.year, bd.month, bd.day);
+      if (next.isBefore(now)) next = DateTime(now.year + 1, bd.month, bd.day);
+      return next.difference(now).inDays <= 14;
+    }).length;
+    final totalNotifications =
+        familyInvitations + overdue + dueSoon + pendingAppts + upcomingBirthdays;
     return {
       if (overdue > 0) '/reminders': overdue,
       if (pendingAppts > 0) '/appointments': pendingAppts,
       if (familyInvitations > 0) '/families': familyInvitations,
+      if (totalNotifications > 0) '/notifications': totalNotifications,
     };
   }
 
@@ -87,6 +105,7 @@ class Sidebar extends StatelessWidget {
       SidebarItem(label: 'Marktplatz', icon: Icons.storefront_rounded, route: '/marketplace'),
     ]),
     _SidebarSection(title: 'Konto', items: [
+      SidebarItem(label: 'Benachrichtigungen', icon: Icons.notifications_outlined, route: '/notifications'),
       SidebarItem(label: 'Einstellungen', icon: Icons.settings_outlined, route: '/settings'),
     ]),
   ];

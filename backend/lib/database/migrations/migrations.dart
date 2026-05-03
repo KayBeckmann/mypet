@@ -28,6 +28,8 @@ const List<Migration> migrations = [
   _migration024AddEncryptionColumns,
   _migration025CreateFamilyInviteCodes,
   _migration026CreateFamilyInvitations,
+  _migration027CreatePrescriptions,
+  _migration028AddServiceFee,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -882,6 +884,59 @@ const _migration025CreateFamilyInviteCodes = Migration(
   ''',
   down: '''
     DROP TABLE IF EXISTS family_invite_codes;
+  ''',
+);
+
+/// Migration 028: Service-Honorar zu Terminen
+const _migration028AddServiceFee = Migration(
+  version: 28,
+  name: 'add_service_fee_to_appointments',
+  up: '''
+    ALTER TABLE appointments ADD COLUMN IF NOT EXISTS service_fee_cents INTEGER;
+    ALTER TABLE appointments ADD COLUMN IF NOT EXISTS service_fee_currency VARCHAR(3) NOT NULL DEFAULT 'EUR';
+    ALTER TABLE appointments ADD COLUMN IF NOT EXISTS service_fee_note TEXT;
+  ''',
+  down: '''
+    ALTER TABLE appointments DROP COLUMN IF EXISTS service_fee_cents;
+    ALTER TABLE appointments DROP COLUMN IF EXISTS service_fee_currency;
+    ALTER TABLE appointments DROP COLUMN IF EXISTS service_fee_note;
+  ''',
+);
+
+/// Migration 027: Rezepte
+const _migration027CreatePrescriptions = Migration(
+  version: 27,
+  name: 'create_prescriptions',
+  up: '''
+    CREATE TABLE prescriptions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      issued_by UUID NOT NULL REFERENCES users(id),
+      organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
+      drug_name VARCHAR(255) NOT NULL,
+      dosage VARCHAR(255),
+      frequency VARCHAR(255),
+      duration_days INTEGER,
+      instructions TEXT,
+      issued_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      valid_until TIMESTAMP,
+      refills_remaining INTEGER NOT NULL DEFAULT 0,
+      notes TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_prescriptions_pet ON prescriptions(pet_id);
+    CREATE INDEX idx_prescriptions_issued_by ON prescriptions(issued_by);
+    CREATE INDEX idx_prescriptions_issued_at ON prescriptions(issued_at DESC);
+
+    CREATE TRIGGER update_prescriptions_updated_at
+      BEFORE UPDATE ON prescriptions
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  ''',
+  down: '''
+    DROP TRIGGER IF EXISTS update_prescriptions_updated_at ON prescriptions;
+    DROP TABLE IF EXISTS prescriptions;
   ''',
 );
 

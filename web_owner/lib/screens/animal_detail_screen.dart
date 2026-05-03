@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
@@ -17,6 +19,8 @@ import '../providers/medication_provider.dart';
 import '../providers/permission_provider.dart';
 import '../providers/reminder_provider.dart';
 import '../providers/weight_provider.dart';
+import '../providers/prescription_provider.dart';
+import '../providers/owner_notes_provider.dart';
 import '../services/file_picker_service.dart';
 
 class AnimalDetailScreen extends StatefulWidget {
@@ -165,6 +169,12 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
                               _showShareWithVetDialog(context, pet),
                           icon: const Icon(Icons.share_rounded, size: 18),
                           label: const Text('Teilen mit TA'),
+                        ),
+                        const SizedBox(width: 12),
+                        OutlinedButton.icon(
+                          onPressed: () => _showQrDialog(context, pet),
+                          icon: const Icon(Icons.qr_code_rounded, size: 18),
+                          label: const Text('QR-Code'),
                         ),
                       ],
                     ),
@@ -326,12 +336,20 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
           _MedicationsCard(petId: widget.petId),
           const SizedBox(height: 20),
 
+          // Prescriptions from vet
+          _PrescriptionsCard(petId: widget.petId),
+          const SizedBox(height: 20),
+
           // Weight trend (full width)
           _WeightCard(petId: widget.petId),
           const SizedBox(height: 20),
 
           // Upcoming appointments for this pet
           _AppointmentsCard(petId: widget.petId),
+          const SizedBox(height: 20),
+
+          // Owner notes
+          _NotesCard(petId: widget.petId),
           const SizedBox(height: 32),
 
           // Transfer & Delete buttons
@@ -455,6 +473,85 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
     if (mounted) {
       setState(() => _isUploadingPhoto = false);
     }
+  }
+
+  // ── QR-Code ──────────────────────────────────────────────────────────────
+
+  void _showQrDialog(BuildContext context, Pet pet) {
+    final lines = [
+      pet.name,
+      '${pet.speciesLabel}${pet.breed.isNotEmpty ? ' · ${pet.breed}' : ''}',
+      if (pet.microchipId != null && pet.microchipId!.isNotEmpty)
+        'Chip: ${pet.microchipId}',
+    ];
+    final qrData = lines.join('\n');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('QR-Code: ${pet.name}'),
+        content: SizedBox(
+          width: 320,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: QrImageView(
+                  data: qrData,
+                  version: QrVersions.auto,
+                  size: 200,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: LivingLedgerTheme.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: LivingLedgerTheme.outlineVariant),
+                ),
+                child: Column(
+                  children: lines.map((l) => Text(l,
+                    style: const TextStyle(fontSize: 13),
+                    textAlign: TextAlign.center,
+                  )).toList(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Zeige diesen Code am Tierarzt oder drucke ihn\nfür den Impfpass aus.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: LivingLedgerTheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: qrData));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Info kopiert')),
+              );
+            },
+            child: const Text('Kopieren'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Schließen'),
+          ),
+        ],
+      ),
+    );
   }
 
   // ── Teilen mit TA ──────────────────────────────────────────────────────────
@@ -1910,6 +2007,333 @@ class _SparklinePainter extends CustomPainter {
   @override
   bool shouldRepaint(_SparklinePainter old) =>
       old.values != values || old.color != color;
+}
+
+// ── Notes Card ───────────────────────────────────────────────────────────────
+
+class _NotesCard extends StatefulWidget {
+  final String petId;
+  const _NotesCard({required this.petId});
+
+  @override
+  State<_NotesCard> createState() => _NotesCardState();
+}
+
+class _NotesCardState extends State<_NotesCard> {
+  bool _loaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loaded) {
+      _loaded = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<OwnerNotesProvider>().loadForPet(widget.petId);
+      });
+    }
+  }
+
+  Future<void> _showAddDialog() async {
+    final titleCtrl = TextEditingController();
+    final contentCtrl = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Notiz hinzufügen'),
+        content: SizedBox(
+          width: 480,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleCtrl,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Titel *',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: contentCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Inhalt',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 4,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Abbrechen'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (titleCtrl.text.trim().isNotEmpty) Navigator.pop(ctx, true);
+            },
+            child: const Text('Speichern'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await context.read<OwnerNotesProvider>().create(
+            widget.petId,
+            title: titleCtrl.text.trim(),
+            content: contentCtrl.text.trim().isNotEmpty
+                ? contentCtrl.text.trim()
+                : null,
+          );
+    }
+  }
+
+  Future<void> _showEditDialog(PetNote note) async {
+    final titleCtrl = TextEditingController(text: note.title);
+    final contentCtrl = TextEditingController(text: note.content ?? '');
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Notiz bearbeiten'),
+        content: SizedBox(
+          width: 480,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleCtrl,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Titel *',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: contentCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Inhalt',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 4,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Abbrechen'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (titleCtrl.text.trim().isNotEmpty) Navigator.pop(ctx, true);
+            },
+            child: const Text('Speichern'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await context.read<OwnerNotesProvider>().update(
+            widget.petId,
+            note.id,
+            title: titleCtrl.text.trim(),
+            content: contentCtrl.text.trim().isNotEmpty
+                ? contentCtrl.text.trim()
+                : null,
+          );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<OwnerNotesProvider>();
+    final notes = provider.forPet(widget.petId);
+    final df = DateFormat('dd.MM.yyyy');
+
+    return _DetailCard(
+      title: 'NOTIZEN',
+      action: IconButton(
+        icon: const Icon(Icons.add_rounded, size: 18),
+        onPressed: _showAddDialog,
+        tooltip: 'Notiz hinzufügen',
+        color: LivingLedgerTheme.primary,
+      ),
+      children: [
+        if (provider.isLoading(widget.petId))
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else if (notes.isEmpty)
+          const _EmptyState(
+            icon: Icons.sticky_note_2_outlined,
+            label: 'Noch keine Notizen',
+          )
+        else
+          ...notes.map((note) {
+                    return ListTile(
+                      dense: true,
+                      leading: const Icon(Icons.sticky_note_2_outlined,
+                          size: 18, color: LivingLedgerTheme.primary),
+                      title: Text(note.title,
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: note.content != null && note.content!.isNotEmpty
+                          ? Text(
+                              note.content!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: LivingLedgerTheme.onSurfaceVariant),
+                            )
+                          : Text(
+                              df.format(note.updatedAt),
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: LivingLedgerTheme.onSurfaceVariant),
+                            ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 16),
+                            tooltip: 'Bearbeiten',
+                            onPressed: () => _showEditDialog(note),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 16),
+                            color: LivingLedgerTheme.error,
+                            tooltip: 'Löschen',
+                            onPressed: () async {
+                              final ok = await context
+                                  .read<OwnerNotesProvider>()
+                                  .delete(widget.petId, note.id);
+                              if (!ok && mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Löschen fehlgeschlagen')),
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+      ],
+    );
+  }
+}
+
+// ── Prescriptions Card ───────────────────────────────────────────────────────
+
+class _PrescriptionsCard extends StatefulWidget {
+  final String petId;
+  const _PrescriptionsCard({required this.petId});
+
+  @override
+  State<_PrescriptionsCard> createState() => _PrescriptionsCardState();
+}
+
+class _PrescriptionsCardState extends State<_PrescriptionsCard> {
+  bool _loaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loaded) {
+      _loaded = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<OwnerPrescriptionProvider>().loadForPet(widget.petId);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<OwnerPrescriptionProvider>();
+    final prescriptions = provider.forPet(widget.petId);
+    final df = DateFormat('dd.MM.yyyy');
+
+    return _DetailCard(
+      title: 'REZEPTE',
+      children: [
+        if (provider.isLoading(widget.petId))
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else if (prescriptions.isEmpty)
+          const _EmptyState(
+            icon: Icons.receipt_long_outlined,
+            label: 'Keine Rezepte vorhanden',
+          )
+        else
+          ...prescriptions.take(5).map((p) {
+            final expired = p.isExpired;
+                    return ListTile(
+                      dense: true,
+                      leading: Icon(
+                        Icons.receipt_long_rounded,
+                        size: 18,
+                        color: expired
+                            ? LivingLedgerTheme.onSurfaceVariant
+                            : LivingLedgerTheme.primary,
+                      ),
+                      title: Text(
+                        p.drugName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: expired
+                              ? LivingLedgerTheme.onSurfaceVariant
+                              : null,
+                          decoration:
+                              expired ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
+                      subtitle: Text(
+                        [
+                          if (p.dosage != null) p.dosage!,
+                          if (p.frequency != null) p.frequency!,
+                          if (p.issuedByName != null) 'Dr. ${p.issuedByName}',
+                          df.format(p.issuedAt),
+                        ].join(' · '),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: LivingLedgerTheme.onSurfaceVariant,
+                        ),
+                      ),
+                      trailing: expired
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: LivingLedgerTheme.error
+                                    .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'Abgelaufen',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: LivingLedgerTheme.error,
+                                ),
+                              ),
+                            )
+                          : null,
+                    );
+                  }),
+      ],
+    );
+  }
 }
 
 // ── Empty State ───────────────────────────────────────────────────────────────

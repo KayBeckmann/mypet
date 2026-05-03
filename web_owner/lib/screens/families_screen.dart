@@ -4,6 +4,7 @@ import 'package:mypet_shared/shared.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../config/theme.dart';
+import '../providers/auth_provider.dart';
 import '../providers/family_invitation_provider.dart';
 import '../providers/family_provider.dart';
 
@@ -478,6 +479,86 @@ class _FamilyCardState extends State<_FamilyCard> {
     );
   }
 
+  Future<void> _renameFamily() async {
+    final controller = TextEditingController(text: widget.family.name);
+    final formKey = GlobalKey<FormState>();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Familie umbenennen'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Neuer Name'),
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Name erforderlich' : null,
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Abbrechen')),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) Navigator.pop(ctx, true);
+            },
+            child: const Text('Speichern'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final ok = await context
+          .read<FamilyProvider>()
+          .renameFamily(widget.family.id, controller.text.trim());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(ok ? 'Familie umbenannt' : 'Umbenennen fehlgeschlagen')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteFamily() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Familie löschen'),
+        content: Text(
+            'Möchtest du „${widget.family.name}" wirklich löschen? '
+            'Alle Mitglieder verlieren den gemeinsamen Zugriff.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Abbrechen')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: LivingLedgerTheme.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Löschen'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final ok =
+          await context.read<FamilyProvider>().deleteFamily(widget.family.id);
+      if (mounted && !ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Löschen fehlgeschlagen')),
+        );
+      }
+    }
+  }
+
   Future<void> _removeMember(Map<String, dynamic> member) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -512,6 +593,8 @@ class _FamilyCardState extends State<_FamilyCard> {
   @override
   Widget build(BuildContext context) {
     final family = widget.family;
+    final currentUserId = context.watch<AuthProvider>().user?.id;
+    final isAdmin = family.createdBy == currentUserId;
 
     return Container(
       decoration: BoxDecoration(
@@ -556,6 +639,19 @@ class _FamilyCardState extends State<_FamilyCard> {
                   tooltip: 'Mitglied per E-Mail einladen',
                   onPressed: _inviteMember,
                 ),
+                if (isAdmin) ...[
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    tooltip: 'Familie umbenennen',
+                    onPressed: _renameFamily,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: 'Familie löschen',
+                    color: LivingLedgerTheme.error,
+                    onPressed: _deleteFamily,
+                  ),
+                ],
               ],
             ),
           ),

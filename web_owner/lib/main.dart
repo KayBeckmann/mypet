@@ -15,6 +15,8 @@ import 'providers/reminder_provider.dart';
 import 'providers/health_provider.dart';
 import 'providers/medication_provider.dart';
 import 'providers/family_invitation_provider.dart';
+import 'providers/prescription_provider.dart';
+import 'providers/owner_notes_provider.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -75,6 +77,12 @@ class _MyPetOwnerAppState extends State<MyPetOwnerApp> {
         ),
         ChangeNotifierProvider(
           create: (_) => FamilyInvitationProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => OwnerPrescriptionProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => OwnerNotesProvider(api: _apiService),
         ),
       ],
       child: const _AppWithAuth(),
