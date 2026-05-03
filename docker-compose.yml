@@ -52,8 +52,8 @@ services:
   # Flutter Web - Tierbesitzer
   web-owner:
     build:
-      context: ./web_owner
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: web_owner/Dockerfile
     container_name: mypet-web-owner
     restart: unless-stopped
     depends_on:

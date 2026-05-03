@@ -1,27 +1,25 @@
 # Flutter Web - Tierbesitzer App
+# Build-Kontext: Repo-Root (enthält shared/ und web_owner/)
 FROM ghcr.io/cirruslabs/flutter:stable AS build
 
 WORKDIR /app
 
-# Dependencies installieren
-COPY pubspec.yaml pubspec.lock* ./
+# Shared-Paket + Manifest zuerst kopieren, damit pub get die Abhängigkeiten findet
+COPY shared/ /app/shared/
+COPY web_owner/pubspec.yaml web_owner/pubspec.lock* /app/web_owner/
+WORKDIR /app/web_owner
 RUN flutter pub get
 
-# Source Code kopieren
-COPY . .
+# Restlichen Quellcode kopieren
+COPY web_owner/ /app/web_owner/
 
-# Flutter Web Build
 RUN flutter build web --release
 
 # Production Image mit Nginx
 FROM nginx:alpine
 
-# Nginx Konfiguration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Build Output kopieren
-COPY --from=build /app/build/web /usr/share/nginx/html
+COPY web_owner/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/web_owner/build/web /usr/share/nginx/html
 
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]
