@@ -2,18 +2,20 @@
 # Build-Kontext: Repo-Root (enthält shared/ und web_vet/)
 FROM ghcr.io/cirruslabs/flutter:stable AS build
 
+ARG API_BASE_URL=http://localhost:8080
+
 WORKDIR /app
 
-# Shared-Paket + Manifest zuerst kopieren, damit pub get die Abhängigkeiten findet
 COPY shared/ /app/shared/
 COPY web_vet/pubspec.yaml web_vet/pubspec.lock* /app/web_vet/
 WORKDIR /app/web_vet
 RUN flutter pub get
 
-# Restlichen Quellcode kopieren
 COPY web_vet/ /app/web_vet/
 
-RUN flutter build web --release --web-renderer html
+RUN flutter build web --release \
+    --dart-define=API_BASE_URL=${API_BASE_URL} \
+    --dart-define=FLUTTER_WEB_CANVASKIT_URL=canvaskit/
 
 # Production Image mit Nginx
 FROM nginx:alpine

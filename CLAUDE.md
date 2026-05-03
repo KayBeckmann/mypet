@@ -43,11 +43,41 @@ flutter test                                # Tests
 ### Service-URLs (Development)
 | Service | URL |
 |---------|-----|
-| Besitzer-App | http://localhost:3001 |
-| Tierarzt-App | http://localhost:3002 |
-| Dienstleister-App | http://localhost:3003 |
-| Admin-App | http://localhost:3004 |
+| Besitzer-App (Web) | http://localhost:3001 |
+| Tierarzt-App (Web) | http://localhost:3002 |
+| Dienstleister-App (Web) | http://localhost:3003 |
+| Admin-App (Web) | http://localhost:3004 |
 | Backend API | http://localhost:8080 |
+
+### Konfigurationsregel: NIEMALS hardcoden — immer .env
+
+**Pflicht:** Alle konfigurierbaren Werte kommen aus `.env` / `.env.example`. Dies gilt für:
+- Ports (BACKEND_PORT, OWNER_PORT, VET_PORT, PROVIDER_PORT, ADMIN_PORT)
+- URLs (ANDROID_API_URL, etc.)
+- Credentials (Passwörter, Secrets, API-Keys)
+- Feature-Flags oder externe Service-Adressen
+
+**Vorgehen:**
+1. Neuen Config-Wert in `.env.example` eintragen (mit Kommentar und sinnvollem Default)
+2. Selben Wert in `.env` ergänzen (mit echtem Wert für Dev-Umgebung)
+3. In `docker-compose.yml` über `environment:` oder `build.args:` referenzieren: `${VAR:-default}`
+4. Im Code nur über Umgebungsvariablen (`String.fromEnvironment`, `Platform.environment`, etc.) — niemals direkt als String-Literal
+
+**Falsch:** `API_BASE_URL = "http://localhost:8080"` im Code
+**Richtig:** `const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:8080')`
+
+### Android APK bauen
+```bash
+# APK mit Docker bauen (nutzt Android SDK im Flutter-Image):
+docker-compose build android-owner
+docker-compose run --rm android-owner
+
+# APK aus dem Volume extrahieren:
+docker run --rm -v mypet_android-apk:/data alpine cp /data/mypet-owner.apk /tmp/
+# oder direkt beim Build:
+docker build -t mypet-android -f android_owner/Dockerfile . && \
+  docker run --rm mypet-android cat /app/mypet-owner.apk > mypet-owner.apk
+```
 
 ---
 
@@ -62,9 +92,12 @@ mypet/
 ├── web_vet/          Flutter Web — Tierärzte
 ├── web_provider/     Flutter Web — Dienstleister
 ├── web_admin/        Flutter Web — Superadmin
-├── shared/           Gemeinsame Models (derzeit wenig genutzt, Frontend-Apps haben eigene Models)
+├── android_owner/    Flutter Android — Tierbesitzer App (APK)
+├── shared/           Gemeinsame Models/Services (ApiService, User — kein dart:html, läuft auf Web+Android)
 └── scripts/          Dev-Hilfsskripte
 ```
+
+**Wichtig:** `web_owner` und andere Web-Apps nutzen `dart:html` (web-only). Das `android_owner`-Projekt vermeidet `dart:html` und nutzt stattdessen `shared_preferences` und `image_picker`.
 
 ### Backend (Dart/Shelf)
 
