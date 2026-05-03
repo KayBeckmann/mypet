@@ -53,7 +53,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final reminderProvider = context.watch<ReminderProvider>();
     final medicationProvider = context.watch<MedicationProvider>();
     final userName = auth.user?.name ?? 'Tierfreund';
-    final activeMeds = medicationProvider.medications
+    final activeMeds = petProvider.pets
+        .expand((p) => medicationProvider.forPet(p.id))
         .where((m) => m.isActive && !m.isExpired)
         .toList();
 
