@@ -89,18 +89,18 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               )
             else
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                child: Builder(builder: (context) {
+                  final pending = provider.upcoming
+                      .where((a) => a.status == AppointmentStatus.requested)
+                      .toList();
+                  final confirmedAppts = provider.upcoming
+                      .where((a) => a.status == AppointmentStatus.confirmed)
+                      .toList();
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       // Ausstehend
-                      final pending = provider.upcoming
-                          .where((a) => a.status == AppointmentStatus.requested)
-                          .toList();
-                      final confirmed = provider.upcoming
-                          .where((a) => a.status == AppointmentStatus.confirmed)
-                          .toList();
-
                       if (pending.isNotEmpty) ...[
                         _SectionHeader(
                             title: 'Ausstehend', count: pending.length),
@@ -116,11 +116,11 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                       ],
 
                       // Bestätigt
-                      if (confirmed.isNotEmpty) ...[
+                      if (confirmedAppts.isNotEmpty) ...[
                         _SectionHeader(
-                            title: 'Bestätigt', count: confirmed.length),
+                            title: 'Bestätigt', count: confirmedAppts.length),
                         const SizedBox(height: 12),
-                        ...confirmed.map((a) => Padding(
+                        ...confirmedAppts.map((a) => Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: _AppointmentTile(
                                 appointment: a,
@@ -165,8 +165,9 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                         ],
                       ],
                     ],
-                  ),
-                ),
+                    ),
+                  );
+                }),
               ),
           ],
         ),
