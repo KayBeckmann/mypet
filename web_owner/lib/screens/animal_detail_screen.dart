@@ -356,6 +356,10 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
 
           // Owner notes
           _NotesCard(petId: widget.petId),
+          const SizedBox(height: 20),
+
+          // Transfer History
+          _TransferHistoryCard(petId: widget.petId),
           const SizedBox(height: 32),
 
           // Transfer & Delete buttons
@@ -2852,6 +2856,86 @@ class _InfoSection extends StatelessWidget {
           ...rows.map((r) => Text(r, style: const TextStyle(fontSize: 12))),
         ],
       ),
+    );
+  }
+}
+
+// ── Transfer History Card ─────────────────────────────────────────────────────
+
+class _TransferHistoryCard extends StatefulWidget {
+  final String petId;
+  const _TransferHistoryCard({required this.petId});
+
+  @override
+  State<_TransferHistoryCard> createState() => _TransferHistoryCardState();
+}
+
+class _TransferHistoryCardState extends State<_TransferHistoryCard> {
+  bool _loaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loaded) {
+      _loaded = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<TransferProvider>().loadForPet(widget.petId);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<TransferProvider>();
+    final transfers = provider.transfersForPet(widget.petId);
+    if (transfers.isEmpty) return const SizedBox.shrink();
+
+    final df = DateFormat('dd.MM.yyyy');
+
+    return _DetailCard(
+      title: 'BESITZERHISTORIE',
+      children: [
+        ...transfers.take(5).map((t) {
+          final statusColor = switch (t.status) {
+            'accepted' => LivingLedgerTheme.success,
+            'rejected' => LivingLedgerTheme.error,
+            'cancelled' => LivingLedgerTheme.onSurfaceVariant,
+            _ => Colors.orange,
+          };
+          final statusLabel = switch (t.status) {
+            'accepted' => 'Abgeschlossen',
+            'rejected' => 'Abgelehnt',
+            'cancelled' => 'Storniert',
+            _ => 'Ausstehend',
+          };
+          return ListTile(
+            dense: true,
+            leading: Icon(Icons.swap_horiz_rounded, size: 18, color: statusColor),
+            title: Text(
+              t.toEmail,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              [
+                if (t.fromOwnerName != null) 'Von: ${t.fromOwnerName}',
+                df.format(t.createdAt),
+              ].join(' · '),
+              style: TextStyle(fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant),
+            ),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                statusLabel,
+                style: TextStyle(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600),
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 }

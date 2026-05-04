@@ -109,44 +109,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // Summary cards
             Builder(builder: (context) {
               final now = DateTime.now();
+              final today = DateTime(now.year, now.month, now.day);
+
               final thisMonth = appointmentProvider.past
                   .where((a) =>
                       a.status == ProviderAppointmentStatus.completed &&
                       a.scheduledAt.year == now.year &&
                       a.scheduledAt.month == now.month)
                   .toList();
+
+              final todayAppts = appointmentProvider.appointments
+                  .where((a) {
+                    final d = DateTime(a.scheduledAt.year, a.scheduledAt.month, a.scheduledAt.day);
+                    return d == today;
+                  })
+                  .length;
+
               final revenueCents = thisMonth
                   .where((a) => a.serviceFeeCents != null)
                   .fold(0, (sum, a) => sum + a.serviceFeeCents!);
               final revenueFormatted = revenueCents > 0
                   ? '${(revenueCents / 100).toStringAsFixed(2).replaceAll('.', ',')} €'
                   : '–';
-              return Row(
+              return Wrap(
+                spacing: 16,
+                runSpacing: 16,
                 children: [
+                  _SummaryCard(
+                    icon: Icons.today_rounded,
+                    label: 'Heute',
+                    value: '$todayAppts',
+                    color: Colors.blue,
+                  ),
                   _SummaryCard(
                     icon: Icons.pending_actions_rounded,
                     label: 'Offene Anfragen',
                     value: '${appointmentProvider.pending.length}',
                     color: Colors.orange,
                   ),
-                  const SizedBox(width: 16),
                   _SummaryCard(
                     icon: Icons.calendar_month_rounded,
-                    label: 'Bestätigte Termine',
+                    label: 'Bestätigt',
                     value: '${appointmentProvider.confirmed.length}',
                     color: ProviderTheme.secondary,
                   ),
-                  const SizedBox(width: 16),
+                  _SummaryCard(
+                    icon: Icons.check_circle_outline_rounded,
+                    label: 'Abgeschl. (Monat)',
+                    value: '${thisMonth.length}',
+                    color: Colors.teal,
+                  ),
                   _SummaryCard(
                     icon: Icons.pets_rounded,
-                    label: 'Kunden (Tiere)',
+                    label: 'Kunden',
                     value: '${customersProvider.pets.length}',
                     color: ProviderTheme.primary,
                   ),
-                  const SizedBox(width: 16),
                   _SummaryCard(
                     icon: Icons.euro_rounded,
-                    label: 'Umsatz diesen Monat',
+                    label: 'Umsatz (Monat)',
                     value: revenueFormatted,
                     color: Colors.green.shade700,
                   ),

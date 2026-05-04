@@ -1228,6 +1228,27 @@ services:
 
 ---
 
+## Phase 57: Provider-Dashboard erweiterte Statistiken ✅ *(2026-05-04)*
+
+### M57.1 - Zusätzliche Stat-Kacheln ✅
+- [x] "Heute"-Kachel: Anzahl der Termine heute (blau)
+- [x] "Abgeschlossen (Monat)"-Kachel: completed appointments im laufenden Monat (teal)
+- [x] Stats-Grid auf `Wrap` umgestellt (responsive Layout)
+- [x] "Bestätigt" statt "Bestätigte Termine" (kompaktere Beschriftung)
+
+---
+
+## Phase 58: Transfer-Historie im Tier-Profil (web_owner) ✅ *(2026-05-04)*
+
+### M58.1 - Besitzerhistorie-Karte ✅
+- [x] `_TransferHistoryCard`: zeigt vergangene Übergaben via `TransferProvider.loadForPet()`
+- [x] Status-Badge (ausstehend/abgeschlossen/abgelehnt/storniert) mit Farbe
+- [x] Empfänger-E-Mail, Absender-Name, Datum
+- [x] Karte erscheint nur wenn Transfers vorhanden
+- [x] Platziert zwischen Notizen-Karte und Transfer-Buttons
+
+---
+
 ## Notizen
 
 *Anpassungen und Änderungen an der Roadmap hier dokumentieren.*
