@@ -7,6 +7,7 @@ import '../config/theme.dart';
 import '../providers/appointment_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/notes_provider.dart';
+import '../providers/allergy_provider.dart';
 
 /// Detailansicht eines Kunden-Tieres für den Dienstleister.
 /// Zeigt Gesundheitsinfos (read-only) sowie eigene Notizen und Leistungen.
@@ -42,10 +43,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 7, vsync: this);
+    _tabs = TabController(length: 8, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _load();
       context.read<ProviderNotesProvider>().loadForPet(widget.petId);
+      context.read<ProviderAllergyProvider>().loadForPet(widget.petId);
     });
   }
 
@@ -113,6 +115,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
           indicatorColor: ProviderTheme.primary,
           tabs: const [
             Tab(text: 'Übersicht'),
+            Tab(text: 'Allergien'),
             Tab(text: 'Akte'),
             Tab(text: 'Meine Notizen'),
             Tab(text: 'Meine Leistungen'),
@@ -149,6 +152,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                       medications: _medications,
                       fmt: _fmt,
                     ),
+                    _ProviderAllergiesTab(petId: widget.petId),
                     _RecordsTab(records: _records, fmt: _fmt),
                     _NotesTab(petId: widget.petId),
                     _ServicesTab(petId: widget.petId, fmt: _fmt),
@@ -1300,6 +1304,70 @@ class _ProviderFeedingTab extends StatelessWidget {
               ],
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+// ── Allergies Tab (read-only für Dienstleister) ───────────────────────────────
+
+class _ProviderAllergiesTab extends StatelessWidget {
+  final String petId;
+  const _ProviderAllergiesTab({required this.petId});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<ProviderAllergyProvider>();
+    final allergies = provider.forPet(petId);
+
+    if (provider.isLoading(petId)) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (allergies.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.warning_amber_outlined, size: 48, color: Colors.grey),
+            SizedBox(height: 12),
+            Text('Keine Allergien dokumentiert',
+                style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: allergies.length,
+      separatorBuilder: (_, __) => const Divider(),
+      itemBuilder: (context, i) {
+        final a = allergies[i];
+        return ListTile(
+          leading: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: a.severityColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              a.severityLabel,
+              style: TextStyle(
+                fontSize: 11,
+                color: a.severityColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          title: Text(a.allergen,
+              style: const TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: Text([
+            if (a.category != null) a.category!,
+            if (a.reaction != null) a.reaction!,
+            if (a.diagnosedAt != null) 'Diagnose: ${a.diagnosedAt}',
+          ].join(' · ')),
         );
       },
     );

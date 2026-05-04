@@ -8,6 +8,7 @@ import 'providers/organization_provider.dart';
 import 'providers/customers_provider.dart';
 import 'providers/appointment_provider.dart';
 import 'providers/notes_provider.dart';
+import 'providers/allergy_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +44,9 @@ class _MyPetProviderAppState extends State<MyPetProviderApp> {
         ),
         ChangeNotifierProvider(
           create: (_) => ProviderNotesProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProviderAllergyProvider(api: _apiService),
         ),
       ],
       child: const _AppShell(),

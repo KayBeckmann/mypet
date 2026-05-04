@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
@@ -279,6 +280,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onPressed: () => _showChangePasswordDialog(context, auth),
                   child: const Text('Ändern'),
                 ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.contact_phone_outlined),
+                title: const Text('Notfallkontakte'),
+                subtitle: const Text('Personen für den Notfall verwalten'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.go('/emergency-contacts'),
               ),
             ],
           ),

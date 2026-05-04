@@ -30,6 +30,8 @@ const List<Migration> migrations = [
   _migration026CreateFamilyInvitations,
   _migration027CreatePrescriptions,
   _migration028AddServiceFee,
+  _migration029CreateAllergies,
+  _migration030CreateEmergencyContacts,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -900,6 +902,71 @@ const _migration028AddServiceFee = Migration(
     ALTER TABLE appointments DROP COLUMN IF EXISTS service_fee_cents;
     ALTER TABLE appointments DROP COLUMN IF EXISTS service_fee_currency;
     ALTER TABLE appointments DROP COLUMN IF EXISTS service_fee_note;
+  ''',
+);
+
+/// Migration 030: Notfallkontakte
+const _migration030CreateEmergencyContacts = Migration(
+  version: 30,
+  name: 'create_emergency_contacts',
+  up: '''
+    CREATE TABLE emergency_contacts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name VARCHAR(255) NOT NULL,
+      relationship VARCHAR(100),
+      phone VARCHAR(50) NOT NULL,
+      email VARCHAR(255),
+      notes TEXT,
+      is_primary BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_emergency_contacts_owner ON emergency_contacts(owner_id);
+
+    CREATE TRIGGER update_emergency_contacts_updated_at
+      BEFORE UPDATE ON emergency_contacts
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  ''',
+  down: '''
+    DROP TRIGGER IF EXISTS update_emergency_contacts_updated_at ON emergency_contacts;
+    DROP TABLE IF EXISTS emergency_contacts;
+  ''',
+);
+
+/// Migration 029: Allergien & Unverträglichkeiten
+const _migration029CreateAllergies = Migration(
+  version: 29,
+  name: 'create_pet_allergies',
+  up: '''
+    CREATE TYPE allergy_severity AS ENUM ('mild', 'moderate', 'severe');
+
+    CREATE TABLE pet_allergies (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      recorded_by UUID NOT NULL REFERENCES users(id),
+      allergen VARCHAR(255) NOT NULL,
+      category VARCHAR(100),
+      severity allergy_severity NOT NULL DEFAULT 'moderate',
+      reaction TEXT,
+      notes TEXT,
+      diagnosed_at DATE,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_pet_allergies_pet ON pet_allergies(pet_id);
+    CREATE INDEX idx_pet_allergies_severity ON pet_allergies(severity);
+
+    CREATE TRIGGER update_pet_allergies_updated_at
+      BEFORE UPDATE ON pet_allergies
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  ''',
+  down: '''
+    DROP TRIGGER IF EXISTS update_pet_allergies_updated_at ON pet_allergies;
+    DROP TABLE IF EXISTS pet_allergies;
+    DROP TYPE IF EXISTS allergy_severity;
   ''',
 );
 

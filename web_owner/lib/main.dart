@@ -17,6 +17,8 @@ import 'providers/medication_provider.dart';
 import 'providers/family_invitation_provider.dart';
 import 'providers/prescription_provider.dart';
 import 'providers/owner_notes_provider.dart';
+import 'providers/allergy_provider.dart';
+import 'providers/emergency_contact_provider.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -84,6 +86,12 @@ class _MyPetOwnerAppState extends State<MyPetOwnerApp> {
         ChangeNotifierProvider(
           create: (_) => OwnerNotesProvider(api: _apiService),
         ),
+        ChangeNotifierProvider(
+          create: (_) => AllergyProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => EmergencyContactProvider(api: _apiService),
+        ),
       ],
       child: const _AppWithAuth(),
     );
@@ -116,6 +124,7 @@ class _AppWithAuthState extends State<_AppWithAuth> {
         appointmentProvider.load();
         context.read<ReminderProvider>().load();
         context.read<FamilyInvitationProvider>().load();
+        context.read<EmergencyContactProvider>().load();
       }
     }
     if (!authProvider.isAuthenticated && _petsLoaded) {

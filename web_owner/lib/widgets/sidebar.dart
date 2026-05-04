@@ -106,6 +106,7 @@ class Sidebar extends StatelessWidget {
     ]),
     _SidebarSection(title: 'Konto', items: [
       SidebarItem(label: 'Benachrichtigungen', icon: Icons.notifications_outlined, route: '/notifications'),
+      SidebarItem(label: 'Notfallkontakte', icon: Icons.contact_phone_outlined, route: '/emergency-contacts'),
       SidebarItem(label: 'Einstellungen', icon: Icons.settings_outlined, route: '/settings'),
     ]),
   ];

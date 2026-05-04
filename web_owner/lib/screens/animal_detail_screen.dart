@@ -21,6 +21,7 @@ import '../providers/reminder_provider.dart';
 import '../providers/weight_provider.dart';
 import '../providers/prescription_provider.dart';
 import '../providers/owner_notes_provider.dart';
+import '../providers/allergy_provider.dart';
 import '../services/file_picker_service.dart';
 
 class AnimalDetailScreen extends StatefulWidget {
@@ -334,6 +335,10 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
 
           // Medications (full width)
           _MedicationsCard(petId: widget.petId),
+          const SizedBox(height: 20),
+
+          // Allergies & Intolerances
+          _AllergiesCard(petId: widget.petId),
           const SizedBox(height: 20),
 
           // Prescriptions from vet
@@ -2331,6 +2336,234 @@ class _PrescriptionsCardState extends State<_PrescriptionsCard> {
                           : null,
                     );
                   }),
+      ],
+    );
+  }
+}
+
+// ── Allergies Card ────────────────────────────────────────────────────────────
+
+class _AllergiesCard extends StatefulWidget {
+  final String petId;
+  const _AllergiesCard({required this.petId});
+
+  @override
+  State<_AllergiesCard> createState() => _AllergiesCardState();
+}
+
+class _AllergiesCardState extends State<_AllergiesCard> {
+  bool _loaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loaded) {
+      _loaded = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<AllergyProvider>().loadForPet(widget.petId);
+      });
+    }
+  }
+
+  Future<void> _showAddDialog([PetAllergy? existing]) async {
+    final allergenCtrl = TextEditingController(text: existing?.allergen);
+    final categoryCtrl = TextEditingController(text: existing?.category);
+    final reactionCtrl = TextEditingController(text: existing?.reaction);
+    final notesCtrl = TextEditingController(text: existing?.notes);
+    final diagCtrl = TextEditingController(text: existing?.diagnosedAt?.substring(0, 10));
+    String severity = existing?.severity ?? 'moderate';
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSt) => AlertDialog(
+          title: Text(existing == null ? 'Allergie eintragen' : 'Allergie bearbeiten'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: allergenCtrl,
+                  decoration: const InputDecoration(labelText: 'Allergen / Auslöser *'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: categoryCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Kategorie',
+                    hintText: 'z.B. Futter, Umwelt, Medikament',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: severity,
+                  decoration: const InputDecoration(labelText: 'Schweregrad'),
+                  items: const [
+                    DropdownMenuItem(value: 'mild', child: Text('Leicht')),
+                    DropdownMenuItem(value: 'moderate', child: Text('Mittel')),
+                    DropdownMenuItem(value: 'severe', child: Text('Stark')),
+                  ],
+                  onChanged: (v) => setSt(() => severity = v ?? severity),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: reactionCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Reaktion',
+                    hintText: 'z.B. Juckreiz, Erbrechen, Atemnot',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: diagCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Datum der Diagnose',
+                    hintText: 'YYYY-MM-DD',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: notesCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(labelText: 'Notizen'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Abbrechen')),
+            FilledButton(
+              onPressed: () async {
+                final allergen = allergenCtrl.text.trim();
+                if (allergen.isEmpty) return;
+                final body = {
+                  'allergen': allergen,
+                  if (categoryCtrl.text.trim().isNotEmpty) 'category': categoryCtrl.text.trim(),
+                  'severity': severity,
+                  if (reactionCtrl.text.trim().isNotEmpty) 'reaction': reactionCtrl.text.trim(),
+                  if (notesCtrl.text.trim().isNotEmpty) 'notes': notesCtrl.text.trim(),
+                  if (diagCtrl.text.trim().isNotEmpty) 'diagnosed_at': diagCtrl.text.trim(),
+                };
+                bool ok;
+                if (existing == null) {
+                  ok = await context.read<AllergyProvider>().addAllergy(widget.petId, body);
+                } else {
+                  ok = await context.read<AllergyProvider>().updateAllergy(widget.petId, existing.id, body);
+                }
+                if (ctx.mounted) Navigator.pop(ctx);
+                if (!ok && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Fehler beim Speichern')));
+                }
+              },
+              child: const Text('Speichern'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _delete(PetAllergy allergy) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Allergie löschen'),
+        content: Text('„${allergy.allergen}" wirklich löschen?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Abbrechen')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: LivingLedgerTheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Löschen'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await context.read<AllergyProvider>().deleteAllergy(widget.petId, allergy.id);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<AllergyProvider>();
+    final allergies = provider.forPet(widget.petId);
+
+    return _DetailCard(
+      title: 'ALLERGIEN & UNVERTRÄGLICHKEITEN',
+      action: IconButton(
+        icon: const Icon(Icons.add, size: 18),
+        onPressed: () => _showAddDialog(),
+        tooltip: 'Allergie eintragen',
+      ),
+      children: [
+        if (provider.isLoading(widget.petId))
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else if (allergies.isEmpty)
+          const _EmptyState(
+            icon: Icons.warning_amber_outlined,
+            label: 'Keine Allergien eingetragen',
+          )
+        else
+          ...allergies.map((a) => ListTile(
+                dense: true,
+                leading: Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(top: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: a.severityColor,
+                  ),
+                ),
+                title: Text(
+                  a.allergen,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  [
+                    if (a.category != null) a.category!,
+                    a.severityLabel,
+                    if (a.reaction != null) a.reaction!,
+                  ].join(' · '),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: LivingLedgerTheme.onSurfaceVariant,
+                  ),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: a.severityColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        a.severityLabel,
+                        style: TextStyle(fontSize: 10, color: a.severityColor, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 16),
+                      onPressed: () => _showAddDialog(a),
+                      tooltip: 'Bearbeiten',
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete_outline, size: 16, color: LivingLedgerTheme.error),
+                      onPressed: () => _delete(a),
+                      tooltip: 'Löschen',
+                    ),
+                  ],
+                ),
+              )),
       ],
     );
   }

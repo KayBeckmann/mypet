@@ -31,6 +31,8 @@ import 'package:mypet_backend/controllers/transfer_controller.dart';
 import 'package:mypet_backend/controllers/weight_controller.dart';
 import 'package:mypet_backend/controllers/reminder_controller.dart';
 import 'package:mypet_backend/controllers/prescription_controller.dart';
+import 'package:mypet_backend/controllers/allergy_controller.dart';
+import 'package:mypet_backend/controllers/emergency_contact_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
@@ -143,6 +145,12 @@ Future<void> main(List<String> args) async {
   // Rezepte Controller
   final prescriptionController = PrescriptionController(db);
 
+  // Allergie Controller
+  final allergyController = AllergyController(db);
+
+  // Notfallkontakt Controller
+  final emergencyContactController = EmergencyContactController(db);
+
   app.mount(
     '/account',
     const Pipeline()
@@ -162,6 +170,7 @@ Future<void> main(List<String> args) async {
       .add(transferController.router.call)
       .add(weightController.router.call)
       .add(prescriptionController.router.call)
+      .add(allergyController.router.call)
       .handler;
   app.mount(
     '/pets',
@@ -213,6 +222,13 @@ Future<void> main(List<String> args) async {
     const Pipeline()
         .addMiddleware(authMiddleware())
         .addHandler(reminderController.router.call),
+  );
+
+  app.mount(
+    '/emergency-contacts',
+    const Pipeline()
+        .addMiddleware(authMiddleware())
+        .addHandler(emergencyContactController.router.call),
   );
 
   app.mount(

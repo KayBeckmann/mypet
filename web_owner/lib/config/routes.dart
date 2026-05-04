@@ -21,6 +21,7 @@ import '../screens/weight_screen.dart';
 import '../screens/reminders_screen.dart';
 import '../screens/medications_screen.dart';
 import '../screens/notifications_screen.dart';
+import '../screens/emergency_contacts_screen.dart';
 import '../widgets/app_shell.dart';
 
 GoRouter createRouter(AuthProvider authProvider) {
@@ -132,6 +133,10 @@ GoRouter createRouter(AuthProvider authProvider) {
           GoRoute(
             path: '/notifications',
             builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: '/emergency-contacts',
+            builder: (context, state) => const EmergencyContactsScreen(),
           ),
         ],
       ),

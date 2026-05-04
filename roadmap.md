@@ -1077,6 +1077,66 @@ services:
 
 ---
 
+---
+
+## Phase 46: Allergie-Management ✅ *(2026-05-04)*
+
+### M46.1 - Backend: Allergien-Tabelle + Endpunkte ✅
+- [x] Migration 029: Tabelle `pet_allergies` (allergen, category, severity enum, reaction, diagnosed_at)
+- [x] `AllergyController`: `GET/POST/PUT/DELETE /pets/:id/allergies`
+- [x] Zugriffskontrolle via `petHasAccess()`, Schreibschutz für Fremdzugriff
+- [x] In petsCascade eingehängt
+
+### M46.2 - web_owner: Allergie-Karte im Tierprofil ✅
+- [x] `AllergyProvider` (loadForPet, addAllergy, updateAllergy, deleteAllergy)
+- [x] `_AllergiesCard` in `animal_detail_screen.dart` (zwischen Rezepte-Karte und Medikamente)
+- [x] Add/Edit-Dialog mit Allergen, Kategorie, Schweregrad, Reaktion, Diagnosedatum
+- [x] Farbige Severity-Badges (grün/orange/rot)
+- [x] In `main.dart` registriert
+
+### M46.3 - web_vet: Allergien-Tab im Patientendetail ✅
+- [x] `VetAllergyProvider` (loadForPet, add, delete)
+- [x] 5. Tab „Allergien" in `patient_detail_screen.dart` (nach Rezepte, vor Bildarchiv)
+- [x] Tierarzt kann Allergien eintragen und löschen
+- [x] In `main.dart` registriert
+
+### M46.4 - web_provider: Allergien-Tab (read-only) ✅
+- [x] `ProviderAllergyProvider` (loadForPet, read-only)
+- [x] 2. Tab „Allergien" in `customer_detail_screen.dart`
+- [x] Dienstleister sieht Allergien, kann aber keine anlegen (Sicherheit)
+- [x] In `main.dart` registriert
+
+---
+
+## Phase 47: Notfallkontakte (web_owner) ✅ *(2026-05-04)*
+
+### M47.1 - Backend: Notfallkontakte-Tabelle + Endpunkte ✅
+- [x] Migration 030: Tabelle `emergency_contacts` (name, relationship, phone, email, is_primary)
+- [x] `EmergencyContactController`: `GET/POST/PUT/DELETE /emergency-contacts`
+- [x] Primärkontakt-Logik: beim Setzen von `is_primary = true` werden andere zurückgesetzt
+- [x] In `server.dart` als `/emergency-contacts` gemountet
+
+### M47.2 - web_owner: Notfallkontakte-Screen ✅
+- [x] `EmergencyContactProvider` (load, add, update, delete)
+- [x] `EmergencyContactsScreen` — Listenansicht mit Add/Edit/Delete
+- [x] Primärkontakt-Badge, Telefon/E-Mail-Anzeige
+- [x] Route `/emergency-contacts` in go_router registriert
+- [x] Sidebar-Eintrag unter „Konto"
+- [x] Link aus Einstellungen-Screen
+- [x] Laden nach Login
+- [x] In `main.dart` registriert
+
+---
+
+## Phase 48: DSGVO Datenexport (erweiterter Export) ✅ *(2026-05-04)*
+
+### M48.1 - Backend: Umfassender Datenexport ✅
+- [x] `GET /account/export` erweitert: Impfungen, Medikamente, Allergien, Termine, Erinnerungen, Notfallkontakte
+- [x] Content-Disposition Header für direkten Browser-Download
+- [x] `format_version: "1.0"` für zukünftige Kompatibilität
+
+---
+
 ## Notizen
 
 *Anpassungen und Änderungen an der Roadmap hier dokumentieren.*

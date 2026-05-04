@@ -245,39 +245,57 @@ class AccountController {
     try {
       final userId = request.context['userId'] as String;
 
-      // Benutzerdaten
       final user = await _db.queryOne(
-        'SELECT id, email, name, role, is_active, email_verified, created_at FROM users WHERE id = @id::uuid',
+        'SELECT id, email, name, role, is_active, created_at FROM users WHERE id = @id::uuid',
         parameters: {'id': userId},
       );
       if (user == null) return _error(404, 'Benutzer nicht gefunden');
 
-      // Tiere
       final pets = await _db.queryAll(
-        'SELECT id, name, species, breed, date_of_birth, microchip_id, created_at FROM pets WHERE owner_id = @id::uuid',
+        'SELECT id, name, species::text AS species, breed, date_of_birth, microchip_id, created_at FROM pets WHERE owner_id = @id::uuid',
         parameters: {'id': userId},
       );
 
-      // Termine
+      final petIds = pets.map((p) => "'${p['id']}'").join(',');
+
+      List<Map<String, dynamic>> vaccinations = [];
+      List<Map<String, dynamic>> medications = [];
+      List<Map<String, dynamic>> allergies = [];
+      List<Map<String, dynamic>> reminders = [];
+
+      if (petIds.isNotEmpty) {
+        vaccinations = await _db.queryAll(
+          'SELECT pet_id, vaccine_name, batch_number, administered_at, valid_until FROM vaccinations WHERE pet_id::text = ANY(ARRAY[$petIds]::text[]) ORDER BY administered_at DESC',
+          parameters: {},
+        );
+        medications = await _db.queryAll(
+          'SELECT pet_id, medication_name, dosage, frequency, start_date, end_date, status::text AS status FROM medications WHERE pet_id::text = ANY(ARRAY[$petIds]::text[]) ORDER BY start_date DESC',
+          parameters: {},
+        );
+        allergies = await _db.queryAll(
+          'SELECT pet_id, allergen, category, severity::text AS severity, reaction, diagnosed_at FROM pet_allergies WHERE pet_id::text = ANY(ARRAY[$petIds]::text[]) ORDER BY allergen ASC',
+          parameters: {},
+        );
+      }
+
+      reminders = await _db.queryAll(
+        'SELECT id, pet_id, title, due_date, reminder_type::text AS reminder_type, is_done, created_at FROM reminders WHERE user_id = @id::uuid ORDER BY due_date ASC',
+        parameters: {'id': userId},
+      );
+
       final appointments = await _db.queryAll(
-        'SELECT id, title, scheduled_at, status, notes, created_at FROM appointments WHERE owner_id = @id::uuid ORDER BY scheduled_at DESC',
+        'SELECT id, pet_id, title, scheduled_at, status::text AS status, notes, created_at FROM appointments WHERE owner_id = @id::uuid ORDER BY scheduled_at DESC',
         parameters: {'id': userId},
       );
 
-      // Zugriffsberechtigungen
-      final permissions = await _db.queryAll(
-        'SELECT id, pet_id, grantee_id, access_level, valid_from, valid_until, created_at FROM access_permissions WHERE grantor_id = @id::uuid OR grantee_id = @id::uuid',
-        parameters: {'id': userId},
-      );
-
-      // Transfers
-      final transfers = await _db.queryAll(
-        'SELECT id, pet_id, to_email, status, created_at FROM ownership_transfers WHERE from_owner_id = @id::uuid',
+      final emergencyContacts = await _db.queryAll(
+        'SELECT name, relationship, phone, email, is_primary FROM emergency_contacts WHERE owner_id = @id::uuid ORDER BY is_primary DESC',
         parameters: {'id': userId},
       );
 
       final exportData = {
         'export_date': DateTime.now().toIso8601String(),
+        'format_version': '1.0',
         'user': {
           'id': user['id'].toString(),
           'email': user['email'],
@@ -286,41 +304,64 @@ class AccountController {
           'created_at': (user['created_at'] as DateTime).toIso8601String(),
         },
         'pets': pets.map((p) => {
-          'id': p['id'].toString(),
-          'name': p['name'],
-          'species': p['species'],
-          'breed': p['breed'],
-          'date_of_birth': p['date_of_birth']?.toString(),
-          'microchip_id': p['microchip_id'],
-          'created_at': (p['created_at'] as DateTime).toIso8601String(),
-        }).toList(),
+              'id': p['id'].toString(),
+              'name': p['name'],
+              'species': p['species'],
+              'breed': p['breed'],
+              'date_of_birth': p['date_of_birth']?.toString(),
+              'microchip_id': p['microchip_id'],
+            }).toList(),
+        'vaccinations': vaccinations.map((v) => {
+              'pet_id': v['pet_id'].toString(),
+              'vaccine_name': v['vaccine_name'],
+              'batch_number': v['batch_number'],
+              'administered_at': v['administered_at']?.toString(),
+              'valid_until': v['valid_until']?.toString(),
+            }).toList(),
+        'medications': medications.map((m) => {
+              'pet_id': m['pet_id'].toString(),
+              'medication_name': m['medication_name'],
+              'dosage': m['dosage'],
+              'frequency': m['frequency'],
+              'start_date': m['start_date']?.toString(),
+              'end_date': m['end_date']?.toString(),
+              'status': m['status'],
+            }).toList(),
+        'allergies': allergies.map((a) => {
+              'pet_id': a['pet_id'].toString(),
+              'allergen': a['allergen'],
+              'category': a['category'],
+              'severity': a['severity'],
+              'reaction': a['reaction'],
+              'diagnosed_at': a['diagnosed_at']?.toString(),
+            }).toList(),
         'appointments': appointments.map((a) => {
-          'id': a['id'].toString(),
-          'title': a['title'],
-          'scheduled_at': (a['scheduled_at'] as DateTime).toIso8601String(),
-          'status': a['status'].toString(),
-          'notes': a['notes'],
-        }).toList(),
-        'access_permissions': permissions.map((p) => {
-          'id': p['id'].toString(),
-          'pet_id': p['pet_id'].toString(),
-          'access_level': p['access_level'].toString(),
-          'valid_from': p['valid_from']?.toString(),
-          'valid_until': p['valid_until']?.toString(),
-        }).toList(),
-        'ownership_transfers': transfers.map((t) => {
-          'id': t['id'].toString(),
-          'pet_id': t['pet_id'].toString(),
-          'to_email': t['to_email'],
-          'status': t['status'].toString(),
-          'created_at': (t['created_at'] as DateTime).toIso8601String(),
-        }).toList(),
+              'pet_id': a['pet_id']?.toString(),
+              'title': a['title'],
+              'scheduled_at': (a['scheduled_at'] as DateTime).toIso8601String(),
+              'status': a['status'],
+              'notes': a['notes'],
+            }).toList(),
+        'reminders': reminders.map((r) => {
+              'pet_id': r['pet_id']?.toString(),
+              'title': r['title'],
+              'due_date': r['due_date']?.toString(),
+              'type': r['reminder_type'],
+              'is_done': r['is_done'],
+            }).toList(),
+        'emergency_contacts': emergencyContacts.map((c) => {
+              'name': c['name'],
+              'relationship': c['relationship'],
+              'phone': c['phone'],
+              'email': c['email'],
+              'is_primary': c['is_primary'],
+            }).toList(),
       };
 
       return Response.ok(
         jsonEncode(exportData),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
           'Content-Disposition':
               'attachment; filename="mypet-export-${DateTime.now().millisecondsSinceEpoch}.json"',
         },

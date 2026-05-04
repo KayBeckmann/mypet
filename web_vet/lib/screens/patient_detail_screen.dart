@@ -13,6 +13,7 @@ import '../providers/media_provider.dart';
 import '../providers/notes_provider.dart';
 import '../providers/patients_provider.dart';
 import '../providers/prescription_provider.dart';
+import '../providers/allergy_provider.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final String petId;
@@ -32,12 +33,13 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 10, vsync: this);
+    _tabs = TabController(length: 11, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MedicalProvider>().loadForPet(widget.petId);
       context.read<VetMediaProvider>().loadForPet(widget.petId);
       context.read<VetNotesProvider>().loadForPet(widget.petId);
       context.read<PrescriptionProvider>().loadForPet(widget.petId);
+      context.read<VetAllergyProvider>().loadForPet(widget.petId);
       _loadWeight();
       _loadFeeding();
     });
@@ -432,6 +434,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
             Tab(text: 'Impfungen'),
             Tab(text: 'Medikamente'),
             Tab(text: 'Rezepte'),
+            Tab(text: 'Allergien'),
             Tab(text: 'Bildarchiv'),
             Tab(text: 'Notizen'),
             Tab(text: 'Compliance'),
@@ -459,6 +462,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
                     onAdd: _addMedication),
                 _PrescriptionsTab(
                     provider: prescProvider, petId: widget.petId),
+                _AllergiesTab(petId: widget.petId),
                 _MediaTab(provider: mediaProvider, petId: widget.petId),
                 _NotesTab(provider: notesProvider),
                 _ComplianceTab(medical: medical, petId: widget.petId),
@@ -2228,6 +2232,188 @@ class _PrescriptionsTabState extends State<_PrescriptionsTab> {
                       onPressed: () => _confirmDelete(p),
                     ),
                     isThreeLine: true,
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ── Allergies Tab ─────────────────────────────────────────────────────────────
+
+class _AllergiesTab extends StatelessWidget {
+  final String petId;
+  const _AllergiesTab({required this.petId});
+
+  Future<void> _showAddDialog(BuildContext context) async {
+    final allergenCtrl = TextEditingController();
+    final categoryCtrl = TextEditingController();
+    final reactionCtrl = TextEditingController();
+    final diagCtrl = TextEditingController();
+    String severity = 'moderate';
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSt) => AlertDialog(
+          title: const Text('Allergie dokumentieren'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: allergenCtrl,
+                  decoration: const InputDecoration(labelText: 'Allergen *'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: categoryCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Kategorie',
+                    hintText: 'Futter, Umwelt, Medikament ...',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: severity,
+                  decoration: const InputDecoration(labelText: 'Schweregrad'),
+                  items: const [
+                    DropdownMenuItem(value: 'mild', child: Text('Leicht')),
+                    DropdownMenuItem(value: 'moderate', child: Text('Mittel')),
+                    DropdownMenuItem(value: 'severe', child: Text('Stark')),
+                  ],
+                  onChanged: (v) => setSt(() => severity = v ?? severity),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: reactionCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Reaktion',
+                    hintText: 'z.B. Juckreiz, Erbrechen, Atemnot',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: diagCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Diagnosedatum (YYYY-MM-DD)',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Abbrechen')),
+            FilledButton(
+              onPressed: () async {
+                final allergen = allergenCtrl.text.trim();
+                if (allergen.isEmpty) return;
+                final ok = await context.read<VetAllergyProvider>().add(
+                      petId: petId,
+                      allergen: allergen,
+                      category: categoryCtrl.text.trim().isEmpty ? null : categoryCtrl.text.trim(),
+                      severity: severity,
+                      reaction: reactionCtrl.text.trim().isEmpty ? null : reactionCtrl.text.trim(),
+                      diagnosedAt: diagCtrl.text.trim().isEmpty ? null : diagCtrl.text.trim(),
+                    );
+                if (ctx.mounted) Navigator.pop(ctx);
+                if (!ok && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Fehler beim Speichern')));
+                }
+              },
+              child: const Text('Speichern'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<VetAllergyProvider>();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Allergien & Unverträglichkeiten',
+                  style: Theme.of(context).textTheme.titleMedium),
+              FilledButton.icon(
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Eintragen'),
+                onPressed: () => _showAddDialog(context),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (provider.isLoading)
+          const Expanded(child: Center(child: CircularProgressIndicator()))
+        else if (provider.allergies.isEmpty)
+          const Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.warning_amber_outlined, size: 48, color: Colors.grey),
+                  SizedBox(height: 12),
+                  Text('Keine Allergien dokumentiert',
+                      style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: provider.allergies.length,
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (context, i) {
+                final a = provider.allergies[i];
+                return ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: a.severityColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      a.severityLabel,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: a.severityColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  title: Text(a.allergen,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text([
+                    if (a.category != null) a.category!,
+                    if (a.reaction != null) a.reaction!,
+                    if (a.diagnosedAt != null) 'Diagnose: ${a.diagnosedAt}',
+                    if (a.recordedByName != null) 'Eingetragen von ${a.recordedByName}',
+                  ].join(' · ')),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: () async {
+                      final ok = await provider.delete(a.id);
+                      if (!ok && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Fehler beim Löschen')));
+                      }
+                    },
                   ),
                 );
               },
