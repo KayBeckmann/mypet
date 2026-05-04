@@ -1249,6 +1249,26 @@ services:
 
 ---
 
+## Phase 59: Backend - Termin-Überschneidungs-Check ✅ *(2026-05-04)*
+
+### M59.1 - Overlap-Validierung bei Terminerstellung ✅
+- [x] POST /appointments: Prüft ob Provider/Org bereits einen Termin ±30 Min. hat
+- [x] Nur für vet und provider Rollen aktiv (Owner-Buchungen werden nicht blockiert)
+- [x] Gibt HTTP 409 Conflict zurück: „Es gibt bereits einen Termin in diesem Zeitfenster (±30 Min.)"
+
+---
+
+## Phase 60: Medikamenten-Restmenge-Anzeige (web_owner) ✅ *(2026-05-04)*
+
+### M60.1 - Verbleibende Dosen & Tage ✅
+- [x] `Medication.daysRemaining` — verbleibende Tage bis `endDate`
+- [x] `Medication.dosesPerDay` — Dosen pro Tag je nach Frequenz
+- [x] `Medication.estimatedDosesLeft` — geschätzte Restdosen
+- [x] `MedicationsScreen`: `_MetaChip` "X Tage · ~Y Dosen" in Medikamenten-Karte
+- [x] Chip erscheint nur wenn `endDate` gesetzt und noch verbleibende Tage > 0
+
+---
+
 ## Notizen
 
 *Anpassungen und Änderungen an der Roadmap hier dokumentieren.*

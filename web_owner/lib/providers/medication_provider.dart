@@ -57,6 +57,38 @@ class Medication {
       !isExpired &&
       endDate!.isBefore(DateTime.now().add(const Duration(days: 3)));
 
+  int? get daysRemaining {
+    if (endDate == null) return null;
+    final diff = endDate!.difference(DateTime.now()).inDays;
+    return diff < 0 ? 0 : diff;
+  }
+
+  double get dosesPerDay {
+    switch (frequency) {
+      case 'twice_daily':
+        return 2;
+      case 'three_times_daily':
+        return 3;
+      case 'weekly':
+        return 1 / 7;
+      case 'biweekly':
+        return 1 / 14;
+      case 'monthly':
+        return 1 / 30;
+      case 'once':
+      case 'as_needed':
+        return 0;
+      default:
+        return 1;
+    }
+  }
+
+  int? get estimatedDosesLeft {
+    final dr = daysRemaining;
+    if (dr == null) return null;
+    return (dr * dosesPerDay).ceil();
+  }
+
   String get frequencyLabel {
     switch (frequency) {
       case 'once':

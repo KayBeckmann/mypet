@@ -351,12 +351,20 @@ class _MedicationCard extends StatelessWidget {
                           icon: Icons.play_arrow_rounded,
                           label: 'Ab ${fmt.format(m.startDate!)}',
                         ),
-                      if (m.endDate != null)
+                      if (m.endDate != null) ...[
                         _MetaChip(
                           icon: Icons.event_rounded,
                           label: 'Bis ${fmt.format(m.endDate!)}',
                           warning: m.endsSoon,
                         ),
+                        if (m.daysRemaining != null && m.daysRemaining! > 0)
+                          _MetaChip(
+                            icon: Icons.hourglass_bottom_rounded,
+                            label: '${m.daysRemaining} Tage'
+                                '${m.estimatedDosesLeft != null && m.estimatedDosesLeft! > 0 ? ' · ~${m.estimatedDosesLeft} Dosen' : ''}',
+                            warning: m.endsSoon,
+                          ),
+                      ],
                     ],
                   ),
                   if (m.endsSoon && m.endDate != null) ...[

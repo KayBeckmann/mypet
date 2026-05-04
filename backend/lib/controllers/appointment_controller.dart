@@ -122,6 +122,33 @@ class AppointmentController {
         return _error(400, 'Termin kann nicht in der Vergangenheit liegen');
       }
 
+      // Überschneidungs-Check (für denselben Provider / Organisation)
+      final userRole = request.context['userRole'] as String;
+      if (userRole == 'vet' || userRole == 'provider') {
+        final orgIdCheck = request.context['activeOrganizationId'] as String?;
+        final providerIdCheck = body['provider_id'] as String? ?? userId;
+        final overlapCheck = await _db.queryOne(
+          '''
+          SELECT id FROM appointments
+          WHERE status IN ('requested', 'confirmed')
+            AND (
+              provider_id = @pid::uuid
+              ${orgIdCheck != null ? 'OR organization_id = @oid::uuid' : ''}
+            )
+            AND ABS(EXTRACT(EPOCH FROM (scheduled_at - @sat::timestamp))) < 1800
+          LIMIT 1
+          ''',
+          parameters: {
+            'pid': providerIdCheck,
+            if (orgIdCheck != null) 'oid': orgIdCheck,
+            'sat': scheduledAt,
+          },
+        );
+        if (overlapCheck != null) {
+          return _error(409, 'Es gibt bereits einen Termin in diesem Zeitfenster (±30 Min.)');
+        }
+      }
+
       // Tier-Eigentümer ermitteln
       final pet = await _db.queryOne(
         'SELECT owner_id FROM pets WHERE id = @id::uuid',
