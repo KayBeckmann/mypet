@@ -1207,6 +1207,27 @@ services:
 
 ---
 
+## Phase 55: Erweiterter Notfall-QR-Dialog (web_owner) ✅ *(2026-05-04)*
+
+### M55.1 - Umfassender Notfall-Info-Dialog ✅
+- [x] QR-Code enthält jetzt: Name, Tierart/Rasse, Chip, schwere Allergien, aktive Medikamente, Primär-Notfallkontakt
+- [x] Dialog-UI: strukturierte `_InfoSection`-Karten mit farbiger Hervorhebung
+- [x] Allergie-Sektion (rot) und Notfallkontakt-Sektion (blau)
+- [x] Import von EmergencyContactProvider + AllergyProvider
+- [x] `_InfoSection`-Widget am Ende der Datei
+
+---
+
+## Phase 56: Vet-Patienten nach letztem Termin sortieren ✅ *(2026-05-04)*
+
+### M56.1 - Sortierkriterium "Letzter Termin" ✅
+- [x] `_sortBy = 'recent'` in PatientsScreen
+- [x] `_lastAppt(petId)` — sucht letzten vergangenen Termin aus VetAppointmentProvider
+- [x] Patienten ohne Termin erscheinen zuletzt
+- [x] Sortier-Chip "Letzter Termin" neben den bestehenden Chips
+
+---
+
 ## Notizen
 
 *Anpassungen und Änderungen an der Roadmap hier dokumentieren.*

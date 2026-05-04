@@ -22,6 +22,7 @@ import '../providers/weight_provider.dart';
 import '../providers/prescription_provider.dart';
 import '../providers/owner_notes_provider.dart';
 import '../providers/allergy_provider.dart';
+import '../providers/emergency_contact_provider.dart';
 import '../services/file_picker_service.dart';
 
 class AnimalDetailScreen extends StatefulWidget {
@@ -480,64 +481,99 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
     }
   }
 
-  // ── QR-Code ──────────────────────────────────────────────────────────────
+  // ── QR-Code & Notfall-Info ───────────────────────────────────────────────
 
   void _showQrDialog(BuildContext context, Pet pet) {
+    final allergies = context.read<AllergyProvider>().forPet(pet.id);
+    final meds = context.read<MedicationProvider>().activeForPet(pet.id);
+    final contacts = context.read<EmergencyContactProvider>().contacts;
+    final primaryContact = contacts.where((c) => c.isPrimary).firstOrNull
+        ?? (contacts.isNotEmpty ? contacts.first : null);
+
     final lines = [
-      pet.name,
+      '🐾 ${pet.name}',
       '${pet.speciesLabel}${pet.breed.isNotEmpty ? ' · ${pet.breed}' : ''}',
       if (pet.microchipId != null && pet.microchipId!.isNotEmpty)
         'Chip: ${pet.microchipId}',
+      if (allergies.any((a) => a.severity == 'severe'))
+        '⚠️ ALLERGIE: ${allergies.where((a) => a.severity == 'severe').map((a) => a.allergen).join(', ')}',
+      if (meds.isNotEmpty)
+        'Medikamente: ${meds.take(3).map((m) => m.medicationName).join(', ')}',
+      if (primaryContact != null)
+        'Notfall: ${primaryContact.name} ${primaryContact.phone}',
     ];
     final qrData = lines.join('\n');
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('QR-Code: ${pet.name}'),
+        title: Row(
+          children: [
+            const Icon(Icons.emergency_rounded, color: Colors.red, size: 20),
+            const SizedBox(width: 8),
+            Text('Notfall-Info: ${pet.name}'),
+          ],
+        ),
         content: SizedBox(
-          width: 320,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+          width: 380,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: QrImageView(
+                    data: qrData,
+                    version: QrVersions.auto,
+                    size: 200,
+                    backgroundColor: Colors.white,
+                  ),
                 ),
-                child: QrImageView(
-                  data: qrData,
-                  version: QrVersions.auto,
-                  size: 200,
-                  backgroundColor: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: LivingLedgerTheme.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: LivingLedgerTheme.outlineVariant),
-                ),
-                child: Column(
-                  children: lines.map((l) => Text(l,
-                    style: const TextStyle(fontSize: 13),
-                    textAlign: TextAlign.center,
-                  )).toList(),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Zeige diesen Code am Tierarzt oder drucke ihn\nfür den Impfpass aus.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: LivingLedgerTheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+                const SizedBox(height: 16),
+                // Tier-Info
+                _InfoSection(title: 'Tier', rows: [
+                  '${pet.speciesLabel}${pet.breed.isNotEmpty ? ' · ${pet.breed}' : ''}',
+                  if (pet.microchipId != null && pet.microchipId!.isNotEmpty)
+                    'Chip-Nr.: ${pet.microchipId}',
+                ]),
+                if (allergies.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _InfoSection(
+                    title: '⚠️ Allergien',
+                    color: Colors.red.shade50,
+                    borderColor: Colors.red.shade200,
+                    rows: allergies.take(5).map((a) =>
+                      '${a.allergen} (${a.severityLabel})'
+                      '${a.reaction != null ? ': ${a.reaction}' : ''}').toList(),
+                  ),
+                ],
+                if (meds.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _InfoSection(
+                    title: 'Aktive Medikamente',
+                    rows: meds.take(5).map((m) =>
+                      '${m.name}${m.dosage != null ? ' — ${m.dosage}' : ''}').toList(),
+                  ),
+                ],
+                if (primaryContact != null) ...[
+                  const SizedBox(height: 8),
+                  _InfoSection(
+                    title: 'Notfallkontakt',
+                    color: Colors.blue.shade50,
+                    borderColor: Colors.blue.shade200,
+                    rows: [
+                      primaryContact.name,
+                      if (primaryContact.relationship != null) primaryContact.relationship!,
+                      primaryContact.phone,
+                    ],
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
         actions: [
@@ -2774,6 +2810,48 @@ class _AppointmentsCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Info Section Widget (for QR/Emergency Dialog) ────────────────────────────
+
+class _InfoSection extends StatelessWidget {
+  final String title;
+  final List<String> rows;
+  final Color? color;
+  final Color? borderColor;
+
+  const _InfoSection({
+    required this.title,
+    required this.rows,
+    this.color,
+    this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color ?? LivingLedgerTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: borderColor ?? LivingLedgerTheme.outlineVariant,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          ...rows.map((r) => Text(r, style: const TextStyle(fontSize: 12))),
+        ],
+      ),
     );
   }
 }

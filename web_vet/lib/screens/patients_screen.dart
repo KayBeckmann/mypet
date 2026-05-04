@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/patients_provider.dart';
+import '../providers/appointment_provider.dart';
 
 class PatientsScreen extends StatefulWidget {
   const PatientsScreen({super.key});
@@ -14,7 +15,7 @@ class PatientsScreen extends StatefulWidget {
 class _PatientsScreenState extends State<PatientsScreen> {
   final _searchController = TextEditingController();
   String _search = '';
-  String _sortBy = 'name'; // 'name' | 'species' | 'owner'
+  String _sortBy = 'name'; // 'name' | 'species' | 'owner' | 'recent'
 
   @override
   void initState() {
@@ -33,6 +34,16 @@ class _PatientsScreenState extends State<PatientsScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PatientsProvider>();
+    final apptProvider = context.watch<VetAppointmentProvider>();
+
+    DateTime? _lastAppt(String petId) {
+      final past = apptProvider.appointments
+          .where((a) => a.petId == petId && a.scheduledAt.isBefore(DateTime.now()))
+          .toList()
+        ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+      return past.isNotEmpty ? past.first.scheduledAt : null;
+    }
+
     final filtered = ((_search.isEmpty
             ? provider.patients
             : provider.patients
@@ -55,6 +66,13 @@ class _PatientsScreenState extends State<PatientsScreen> {
               case 'owner':
                 return (a['owner_name'] as String? ?? '')
                     .compareTo(b['owner_name'] as String? ?? '');
+              case 'recent':
+                final aDate = _lastAppt(a['id']?.toString() ?? '');
+                final bDate = _lastAppt(b['id']?.toString() ?? '');
+                if (aDate == null && bDate == null) return 0;
+                if (aDate == null) return 1;
+                if (bDate == null) return -1;
+                return bDate.compareTo(aDate);
               default:
                 return (a['name'] as String? ?? '')
                     .compareTo(b['name'] as String? ?? '');
@@ -109,6 +127,11 @@ class _PatientsScreenState extends State<PatientsScreen> {
                   label: 'Besitzer',
                   selected: _sortBy == 'owner',
                   onTap: () => setState(() => _sortBy = 'owner')),
+              const SizedBox(width: 8),
+              _SortChip(
+                  label: 'Letzter Termin',
+                  selected: _sortBy == 'recent',
+                  onTap: () => setState(() => _sortBy = 'recent')),
               const Spacer(),
               Text('${filtered.length} Patienten',
                   style:
