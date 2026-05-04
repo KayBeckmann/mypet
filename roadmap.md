@@ -1269,6 +1269,19 @@ services:
 
 ---
 
+## Phase 61 & 62: Vet-Kalender-Ansicht & Provider Appointments ✅ *(2026-05-04)*
+
+### M62.1 - Kalender-Tab im Vet-Appointments-Screen ✅
+- [x] 4. Tab „Kalender" in `VetAppointmentsScreen` (TabController: 3 → 4)
+- [x] `_CalendarView`: 7-Tage-Wochenansicht (Mo-So)
+- [x] Navigation: Zurück/Weiter (±7 Tage) + "Heute"-Button
+- [x] Termine als farbige Kacheln je nach Status (orange/grün/grau/rot)
+- [x] Klick auf Termin navigiert zur Patienten-Detailansicht
+- [x] Heutige Spalte wird hellblau hinterlegt
+- [x] `_mondayOf()` berechnet Wochenanfang (ISO Monday)
+
+---
+
 ## Notizen
 
 *Anpassungen und Änderungen an der Roadmap hier dokumentieren.*

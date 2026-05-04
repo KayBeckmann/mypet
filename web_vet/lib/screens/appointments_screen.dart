@@ -21,7 +21,7 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<VetAppointmentProvider>().load();
     });
@@ -109,6 +109,7 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
                 Tab(text: 'Anfragen'),
                 Tab(text: 'Bestätigt'),
                 Tab(text: 'Vergangen'),
+                Tab(text: 'Kalender'),
               ],
             ),
             const SizedBox(height: 8),
@@ -170,6 +171,7 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
                           appointments: provider.past,
                           emptyText: 'Keine vergangenen Termine',
                         ),
+                        _CalendarView(appointments: provider.appointments),
                       ],
                     ),
             ),
@@ -693,6 +695,181 @@ class _ActionButton extends StatelessWidget {
         textStyle:
             const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
       ),
+    );
+  }
+}
+
+// ── Calendar View ─────────────────────────────────────────────────────────────
+
+class _CalendarView extends StatefulWidget {
+  final List<VetAppointment> appointments;
+  const _CalendarView({required this.appointments});
+
+  @override
+  State<_CalendarView> createState() => _CalendarViewState();
+}
+
+class _CalendarViewState extends State<_CalendarView> {
+  DateTime _weekStart = _mondayOf(DateTime.now());
+
+  static DateTime _mondayOf(DateTime d) {
+    final diff = d.weekday - 1;
+    return DateTime(d.year, d.month, d.day - diff);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final weekDays = List.generate(7, (i) => _weekStart.add(Duration(days: i)));
+    final fmt = DateFormat('E', 'de_DE');
+    final dayFmt = DateFormat('d.M');
+    final timeFmt = DateFormat('HH:mm');
+    final now = DateTime.now();
+
+    return Column(
+      children: [
+        // Navigation row
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left_rounded),
+                onPressed: () => setState(
+                    () => _weekStart = _weekStart.subtract(const Duration(days: 7))),
+              ),
+              Text(
+                '${dayFmt.format(_weekStart)} – ${dayFmt.format(_weekStart.add(const Duration(days: 6)))}',
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => setState(() => _weekStart = _mondayOf(DateTime.now())),
+                    child: const Text('Heute'),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right_rounded),
+                    onPressed: () => setState(
+                        () => _weekStart = _weekStart.add(const Duration(days: 7))),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        // Day headers
+        Row(
+          children: weekDays.map((d) {
+            final isToday = d.year == now.year && d.month == now.month && d.day == now.day;
+            return Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                color: isToday ? VetTheme.primary.withValues(alpha: 0.08) : null,
+                child: Column(
+                  children: [
+                    Text(
+                      fmt.format(d),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isToday ? VetTheme.primary : VetTheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      d.day.toString(),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: isToday ? VetTheme.primary : VetTheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const Divider(height: 1),
+        // Appointments per day
+        Expanded(
+          child: SingleChildScrollView(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: weekDays.map((day) {
+                final dayAppts = widget.appointments.where((a) {
+                  final sd = a.scheduledAt;
+                  return sd.year == day.year && sd.month == day.month && sd.day == day.day;
+                }).toList()
+                  ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+
+                final isToday = day.year == now.year && day.month == now.month && day.day == now.day;
+
+                return Expanded(
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 200),
+                    decoration: BoxDecoration(
+                      color: isToday ? VetTheme.primary.withValues(alpha: 0.04) : null,
+                      border: const Border(
+                        right: BorderSide(color: Color(0xFFE0E0E0), width: 1),
+                      ),
+                    ),
+                    child: Column(
+                      children: dayAppts.map((a) {
+                        final color = switch (a.status) {
+                          AppointmentStatus.confirmed => VetTheme.secondary,
+                          AppointmentStatus.requested => Colors.orange,
+                          AppointmentStatus.completed => Colors.grey,
+                          _ => Colors.red,
+                        };
+                        return GestureDetector(
+                          onTap: () => context.go('/patients/${a.petId}'),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: color.withValues(alpha: 0.4)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  timeFmt.format(a.scheduledAt),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: color,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  a.petName ?? a.title,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  a.title,
+                                  style: const TextStyle(fontSize: 10),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
