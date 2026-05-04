@@ -16,6 +16,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  String _passwordValue = '';
 
   @override
   void dispose() {
@@ -76,9 +77,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _passwordController,
                     decoration: const InputDecoration(labelText: 'Passwort'),
                     obscureText: true,
+                    onChanged: (v) => setState(() => _passwordValue = v),
                     validator: (v) =>
                         (v == null || v.length < 6) ? 'Mindestens 6 Zeichen' : null,
                   ),
+                  _PasswordStrengthBar(password: _passwordValue),
                   if (auth.error != null) ...[
                     const SizedBox(height: ProviderTheme.spacingMd),
                     Text(
@@ -108,6 +111,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PasswordStrengthBar extends StatelessWidget {
+  final String password;
+  const _PasswordStrengthBar({required this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    if (password.isEmpty) return const SizedBox.shrink();
+    int score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (RegExp(r'[A-Z]').hasMatch(password)) score++;
+    if (RegExp(r'[0-9]').hasMatch(password)) score++;
+    if (RegExp(r'[!@#\$%^&*]').hasMatch(password)) score++;
+
+    final (label, color, bars) = score <= 1
+        ? ('Schwach', const Color(0xFFD32F2F), 1)
+        : score == 2
+            ? ('Mittel', const Color(0xFFF57C00), 2)
+            : score == 3
+                ? ('Gut', const Color(0xFF388E3C), 3)
+                : ('Stark', const Color(0xFF1B5E20), 4);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: List.generate(4, (i) => Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(right: 4),
+                height: 4,
+                decoration: BoxDecoration(
+                  color: i < bars ? color : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            )),
+          ),
+          const SizedBox(height: 4),
+          Text('Stärke: $label',
+              style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }

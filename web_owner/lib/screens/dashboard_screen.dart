@@ -173,6 +173,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 24),
                 ],
 
+                // Pet Stats Summary
+                if (petProvider.pets.isNotEmpty) ...[
+                  _PetStatsSummary(pets: petProvider.pets),
+                  const SizedBox(height: 24),
+                ],
+
                 // Pet Section Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -826,6 +832,110 @@ class _BirthdayPanel extends StatelessWidget {
               ),
             );
           }),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Pet Stats Summary ─────────────────────────────────────────────────────────
+
+class _PetStatsSummary extends StatelessWidget {
+  final List<Pet> pets;
+  const _PetStatsSummary({required this.pets});
+
+  @override
+  Widget build(BuildContext context) {
+    final speciesCounts = <String, int>{};
+    for (final pet in pets) {
+      speciesCounts[pet.speciesLabel] = (speciesCounts[pet.speciesLabel] ?? 0) + 1;
+    }
+
+    final ages = pets.where((p) => p.ageYears != null).map((p) => p.ageYears!).toList();
+    final avgAge = ages.isEmpty ? null : ages.reduce((a, b) => a + b) / ages.length;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: LivingLedgerTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusXl),
+        boxShadow: LivingLedgerTheme.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ÜBERSICHT',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  letterSpacing: 1.5,
+                  color: LivingLedgerTheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _StatChip(
+                icon: Icons.pets_rounded,
+                value: '${pets.length}',
+                label: pets.length == 1 ? 'Tier' : 'Tiere',
+              ),
+              if (avgAge != null)
+                _StatChip(
+                  icon: Icons.cake_outlined,
+                  value: '⌀ ${avgAge.toStringAsFixed(1)} J',
+                  label: 'Alter',
+                ),
+              ...speciesCounts.entries.take(4).map((e) => _StatChip(
+                    icon: Icons.category_outlined,
+                    value: '${e.value}×',
+                    label: e.key,
+                  )),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  const _StatChip({required this.icon, required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: LivingLedgerTheme.primary.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: LivingLedgerTheme.primary),
+          const SizedBox(width: 6),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: LivingLedgerTheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

@@ -1168,6 +1168,26 @@ services:
 
 ---
 
+## Phase 51: Passwort-Stärke-Indikator ✅ *(2026-05-04)*
+
+### M51.1 - Passwort-Stärke-Widget ✅
+- [x] `PasswordStrengthIndicator`-Widget in web_owner (4-stufige Farbbalken-Anzeige)
+- [x] Bewertung nach Länge (≥8, ≥12), Großbuchstaben, Zahlen, Sonderzeichen
+- [x] Stufen: Schwach / Mittel / Gut / Stark (rot/orange/grün/dunkelgrün)
+- [x] In `RegisterScreen` (web_owner) eingebaut
+- [x] Inline `_PasswordStrengthBar` in web_vet + web_provider Register-Screens
+
+---
+
+## Phase 52: Tier-Statistiken im Dashboard ✅ *(2026-05-04)*
+
+### M52.1 - Dashboard Übersichts-Panel ✅
+- [x] `_PetStatsSummary`: zeigt Anzahl Tiere, Durchschnittsalter, Artverteilung
+- [x] `_StatChip`: Icon + Wert + Label im kompakten Chip-Format
+- [x] Erscheint nur wenn mindestens 1 Tier vorhanden
+
+---
+
 ## Notizen
 
 *Anpassungen und Änderungen an der Roadmap hier dokumentieren.*

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/password_strength_indicator.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,6 +19,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
+  String _passwordValue = '';
 
   @override
   void dispose() {
@@ -137,6 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
+                    onChanged: (v) => setState(() => _passwordValue = v),
                     decoration: InputDecoration(
                       hintText: 'Mindestens 8 Zeichen',
                       suffixIcon: IconButton(
@@ -161,6 +164,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return null;
                     },
                   ),
+                  PasswordStrengthIndicator(password: _passwordValue),
                   const SizedBox(height: 20),
 
                   // Confirm Password
