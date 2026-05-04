@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../models/pet.dart';
 import '../providers/pet_provider.dart';
 import '../providers/weight_provider.dart';
 
@@ -30,6 +31,10 @@ class _WeightScreenState extends State<WeightScreen> {
     final petProvider = context.watch<PetProvider>();
     final wp = context.watch<WeightProvider>();
     final pets = petProvider.pets;
+
+    final selectedPet = wp.selectedPetId != null
+        ? pets.where((p) => p.id == wp.selectedPetId).firstOrNull
+        : null;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(40, 24, 40, 40),
@@ -101,30 +106,44 @@ class _WeightScreenState extends State<WeightScreen> {
             )
           else ...[
             // Stats row
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
               children: [
                 _StatCard(
                     label: 'Aktuell',
                     value:
                         '${wp.latestWeight?.toStringAsFixed(1) ?? '—'} kg',
                     color: LivingLedgerTheme.primary),
-                const SizedBox(width: 12),
                 _StatCard(
                     label: 'Min',
                     value:
                         '${wp.minWeight?.toStringAsFixed(1) ?? '—'} kg',
                     color: LivingLedgerTheme.secondary),
-                const SizedBox(width: 12),
                 _StatCard(
                     label: 'Max',
                     value:
                         '${wp.maxWeight?.toStringAsFixed(1) ?? '—'} kg',
                     color: LivingLedgerTheme.tertiary),
-                const SizedBox(width: 12),
                 _StatCard(
                     label: 'Einträge',
                     value: '${wp.entries.length}',
                     color: Colors.grey),
+                if (selectedPet?.weightGoalKg != null)
+                  _StatCard(
+                    label: 'Ziel',
+                    value: '${selectedPet!.weightGoalKg!.toStringAsFixed(1)} kg',
+                    color: Colors.teal,
+                  ),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.flag_outlined, size: 16),
+                  label: Text(selectedPet?.weightGoalKg == null
+                      ? 'Ziel setzen'
+                      : 'Ziel anpassen'),
+                  onPressed: selectedPet == null
+                      ? null
+                      : () => _showGoalDialog(context, wp, selectedPet),
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -207,6 +226,62 @@ class _WeightScreenState extends State<WeightScreen> {
 
   String _fmtDate(DateTime dt) =>
       '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
+
+  Future<void> _showGoalDialog(BuildContext context, WeightProvider wp, Pet pet) async {
+    final goalCtrl = TextEditingController(
+      text: pet.weightGoalKg?.toStringAsFixed(1) ?? '',
+    );
+    final noteCtrl = TextEditingController(text: pet.weightGoalNote ?? '');
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Gewichtsziel'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: goalCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Zielgewicht (kg)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: noteCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Notiz (optional)',
+                border: OutlineInputBorder(),
+                hintText: 'z.B. Tierarzt-Empfehlung',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          if (pet.weightGoalKg != null)
+            TextButton(
+              onPressed: () async {
+                await wp.setGoal(goalKg: null, goalNote: null);
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: const Text('Ziel entfernen'),
+            ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Abbrechen')),
+          FilledButton(
+            onPressed: () async {
+              final goal = double.tryParse(goalCtrl.text.trim());
+              if (goal == null) return;
+              await wp.setGoal(goalKg: goal, goalNote: noteCtrl.text.trim());
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Speichern'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _showAddDialog(BuildContext context, WeightProvider wp) async {
     final weightCtrl = TextEditingController();

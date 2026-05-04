@@ -1188,6 +1188,25 @@ services:
 
 ---
 
+## Phase 53: Suche im Erinnerungs-Screen ✅ *(2026-05-04)*
+
+### M53.1 - Textsuchfeld in RemindersScreen ✅
+- [x] Suchfeld mit Clear-Button über den Filter-Chips
+- [x] Filtert nach Titel und Notiz-Text
+- [x] Leertext-Meldung zeigt Suchbegriff: „Keine Ergebnisse für „{query}""
+
+---
+
+## Phase 54: Gewichtsziel-Integration im Gewichts-Screen ✅ *(2026-05-04)*
+
+### M54.1 - Gewichtsziel im WeightScreen ✅
+- [x] "Ziel setzen / anpassen"-Button in der Stats-Zeile
+- [x] Ziel-StatCard wenn Ziel gesetzt (teal)
+- [x] `_showGoalDialog()` direkt im WeightScreen (setzt Ziel via WeightProvider.setGoal)
+- [x] "Ziel entfernen"-Option wenn Ziel schon gesetzt
+
+---
+
 ## Notizen
 
 *Anpassungen und Änderungen an der Roadmap hier dokumentieren.*

@@ -13,7 +13,9 @@ class RemindersScreen extends StatefulWidget {
 }
 
 class _RemindersScreenState extends State<RemindersScreen> {
-  String? _typeFilter; // null = alle
+  String? _typeFilter;
+  String _search = '';
+  final _searchCtrl = TextEditingController();
 
   @override
   void initState() {
@@ -24,13 +26,25 @@ class _RemindersScreenState extends State<RemindersScreen> {
   }
 
   @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final provider = context.watch<ReminderProvider>();
-    final filtered = _typeFilter == null
+    var filtered = _typeFilter == null
         ? provider.reminders
-        : provider.reminders
-            .where((r) => r.reminderType == _typeFilter)
-            .toList();
+        : provider.reminders.where((r) => r.reminderType == _typeFilter).toList();
+    if (_search.trim().isNotEmpty) {
+      final q = _search.trim().toLowerCase();
+      filtered = filtered
+          .where((r) =>
+              r.title.toLowerCase().contains(q) ||
+              (r.notes?.toLowerCase().contains(q) ?? false))
+          .toList();
+    }
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -72,6 +86,28 @@ class _RemindersScreenState extends State<RemindersScreen> {
             ],
           ),
           const SizedBox(height: 12),
+
+          // Search field
+          TextField(
+            controller: _searchCtrl,
+            onChanged: (v) => setState(() => _search = v),
+            decoration: InputDecoration(
+              hintText: 'Erinnerungen suchen...',
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              suffixIcon: _search.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () {
+                        _searchCtrl.clear();
+                        setState(() => _search = '');
+                      },
+                    )
+                  : null,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+            ),
+          ),
+          const SizedBox(height: 8),
 
           // Type filter chips
           if (provider.reminders.isNotEmpty)
@@ -143,7 +179,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
               child: filtered.isEmpty
                   ? Center(
                       child: Text(
-                        'Keine Erinnerungen für diesen Filter',
+                        _search.isNotEmpty
+                            ? 'Keine Ergebnisse für „$_search"'
+                            : 'Keine Erinnerungen für diesen Filter',
                         style: TextStyle(
                             color: LivingLedgerTheme.onSurfaceVariant),
                       ),
