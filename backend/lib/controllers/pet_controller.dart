@@ -43,7 +43,8 @@ class PetController {
       final pets = await _db.queryAll(
         '''
         SELECT DISTINCT p.id, p.owner_id, p.name, p.species, p.breed,
-               p.birth_date, p.weight_kg, p.microchip_id, p.image_url,
+               p.birth_date, p.weight_kg, p.weight_goal_kg, p.weight_goal_note,
+               p.microchip_id, p.image_url,
                p.notes, p.is_active, p.created_at, p.updated_at,
                u.name AS owner_name, u.email AS owner_email
         FROM pets p
@@ -96,7 +97,8 @@ class PetController {
       final pet = await _db.queryOne(
         '''
         SELECT DISTINCT p.id, p.owner_id, p.name, p.species, p.breed,
-               p.birth_date, p.weight_kg, p.microchip_id, p.image_url,
+               p.birth_date, p.weight_kg, p.weight_goal_kg, p.weight_goal_note,
+               p.microchip_id, p.image_url,
                p.notes, p.is_active, p.created_at, p.updated_at
         FROM pets p
         WHERE p.id = @id::uuid
@@ -168,7 +170,8 @@ class PetController {
           @notes
         )
         RETURNING id, owner_id, name, species, breed, birth_date,
-                  weight_kg, microchip_id, image_url, notes, is_active,
+                  weight_kg, weight_goal_kg, weight_goal_note,
+                  microchip_id, image_url, notes, is_active,
                   created_at, updated_at
         ''',
         parameters: {
@@ -260,7 +263,8 @@ class PetController {
         SET ${updates.join(', ')}
         WHERE id = @id::uuid AND owner_id = @owner_id::uuid
         RETURNING id, owner_id, name, species, breed, birth_date,
-                  weight_kg, microchip_id, image_url, notes, is_active,
+                  weight_kg, weight_goal_kg, weight_goal_note,
+                  microchip_id, image_url, notes, is_active,
                   created_at, updated_at
         ''',
         parameters: params,
@@ -487,7 +491,8 @@ class PetController {
         UPDATE pets SET image_url = NULL
         WHERE id = @id::uuid AND owner_id = @owner_id::uuid
         RETURNING id, owner_id, name, species, breed, birth_date,
-                  weight_kg, microchip_id, image_url, notes, is_active,
+                  weight_kg, weight_goal_kg, weight_goal_note,
+                  microchip_id, image_url, notes, is_active,
                   created_at, updated_at
         ''',
         parameters: {'id': id, 'owner_id': userId},
@@ -564,6 +569,10 @@ class PetController {
       'weight_kg': pet['weight_kg'] is num
           ? (pet['weight_kg'] as num).toDouble()
           : null,
+      'weight_goal_kg': pet['weight_goal_kg'] is num
+          ? (pet['weight_goal_kg'] as num).toDouble()
+          : null,
+      'weight_goal_note': pet['weight_goal_note'],
       'microchip_id': pet['microchip_id'],
       'image_url': pet['image_url'],
       'notes': pet['notes'],

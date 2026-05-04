@@ -112,4 +112,23 @@ class WeightProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> setGoal({
+    required double? goalKg,
+    String? goalNote,
+  }) async {
+    if (_selectedPetId == null) return false;
+    try {
+      await _api.put('/pets/$_selectedPetId/weight/goal', body: {
+        if (goalKg != null) 'weight_goal_kg': goalKg,
+        if (goalNote != null && goalNote.isNotEmpty) 'weight_goal_note': goalNote,
+      });
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }

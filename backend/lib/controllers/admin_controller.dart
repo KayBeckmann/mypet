@@ -21,6 +21,7 @@ class AdminController {
     router.put('/users/<id>/reset-password', _resetPassword);
     router.delete('/users/<id>', _deactivateUser);
     router.get('/organizations', _listOrganizations);
+    router.get('/audit-log', _getAuditLog);
 
     return router;
   }
@@ -399,6 +400,75 @@ class AdminController {
       );
     } catch (e) {
       print('❌ Admin listOrganizations Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// GET /admin/audit-log — Plattform-weites Aktivitätsprotokoll
+  Future<Response> _getAuditLog(Request request) async {
+    try {
+      final params = request.requestedUri.queryParameters;
+      final limit = int.tryParse(params['limit'] ?? '') ?? 100;
+      final offset = int.tryParse(params['offset'] ?? '') ?? 0;
+      final userId = params['user_id'];
+      final action = params['action'];
+
+      final conditions = <String>[];
+      final dbParams = <String, dynamic>{'limit': limit, 'offset': offset};
+
+      if (userId != null && userId.isNotEmpty) {
+        conditions.add('al.user_id = @filter_user_id::uuid');
+        dbParams['filter_user_id'] = userId;
+      }
+      if (action != null && action.isNotEmpty) {
+        conditions.add('al.action ILIKE @action');
+        dbParams['action'] = '%$action%';
+      }
+
+      final where = conditions.isEmpty ? '' : 'WHERE ${conditions.join(' AND ')}';
+
+      final rows = await _db.queryAll(
+        '''
+        SELECT al.id, al.user_id, al.action, al.resource_type, al.resource_id,
+               al.details, al.ip_address, al.created_at,
+               u.name AS user_name, u.email AS user_email
+        FROM audit_log al
+        LEFT JOIN users u ON al.user_id = u.id
+        $where
+        ORDER BY al.created_at DESC
+        LIMIT @limit OFFSET @offset
+        ''',
+        parameters: dbParams,
+      );
+
+      final countRow = await _db.queryOne(
+        'SELECT COUNT(*) AS c FROM audit_log al $where',
+        parameters: dbParams,
+      );
+      final total = int.tryParse(countRow?['c']?.toString() ?? '0') ?? 0;
+
+      return Response.ok(
+        jsonEncode({
+          'audit_log': rows.map((r) => {
+                'id': r['id'].toString(),
+                'user_id': r['user_id']?.toString(),
+                'user_name': r['user_name'],
+                'user_email': r['user_email'],
+                'action': r['action'],
+                'resource_type': r['resource_type'],
+                'resource_id': r['resource_id']?.toString(),
+                'details': r['details'],
+                'ip_address': r['ip_address'],
+                'created_at': (r['created_at'] as DateTime).toIso8601String(),
+              }).toList(),
+          'total': total,
+          'limit': limit,
+          'offset': offset,
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Admin getAuditLog Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }

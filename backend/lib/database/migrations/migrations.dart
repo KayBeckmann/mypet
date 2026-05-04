@@ -32,6 +32,7 @@ const List<Migration> migrations = [
   _migration028AddServiceFee,
   _migration029CreateAllergies,
   _migration030CreateEmergencyContacts,
+  _migration031AddWeightGoal,
 ];
 
 /// Migration 001: Benutzer-Tabelle erstellen
@@ -932,6 +933,20 @@ const _migration030CreateEmergencyContacts = Migration(
   down: '''
     DROP TRIGGER IF EXISTS update_emergency_contacts_updated_at ON emergency_contacts;
     DROP TABLE IF EXISTS emergency_contacts;
+  ''',
+);
+
+/// Migration 031: Gewichtsziel für Tiere
+const _migration031AddWeightGoal = Migration(
+  version: 31,
+  name: 'add_weight_goal_to_pets',
+  up: '''
+    ALTER TABLE pets ADD COLUMN IF NOT EXISTS weight_goal_kg DECIMAL(6,2);
+    ALTER TABLE pets ADD COLUMN IF NOT EXISTS weight_goal_note TEXT;
+  ''',
+  down: '''
+    ALTER TABLE pets DROP COLUMN IF EXISTS weight_goal_kg;
+    ALTER TABLE pets DROP COLUMN IF EXISTS weight_goal_note;
   ''',
 );
 

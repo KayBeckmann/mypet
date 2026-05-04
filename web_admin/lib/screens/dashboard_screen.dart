@@ -121,6 +121,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       label: 'Organisationen',
                       onTap: () => context.go('/organizations'),
                     ),
+                    _QuickAction(
+                      icon: Icons.history_rounded,
+                      label: 'Aktivitätsprotokoll',
+                      onTap: () => context.go('/audit-log'),
+                    ),
                   ],
                 ),
               ],

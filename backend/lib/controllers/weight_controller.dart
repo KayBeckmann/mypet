@@ -16,6 +16,7 @@ class WeightController {
     router.get('/<petId>/weight', _listWeight);
     router.post('/<petId>/weight', _addWeight);
     router.delete('/<petId>/weight/<entryId>', _deleteWeight);
+    router.put('/<petId>/weight/goal', _setWeightGoal);
     return router;
   }
 
@@ -137,6 +138,47 @@ class WeightController {
       );
     } catch (e) {
       print('❌ deleteWeight Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// PUT /pets/:petId/weight/goal — Gewichtsziel setzen
+  Future<Response> _setWeightGoal(Request request, String petId) async {
+    try {
+      final userId = request.context['userId'] as String;
+      final userRole = request.context['userRole'] as String;
+      final orgId = request.context['activeOrganizationId'] as String?;
+
+      if (!await petHasAccess(_db, petId, userId, userRole,
+          requireWrite: true, orgId: orgId)) {
+        return _error(403, 'Keine Schreibberechtigung für dieses Tier');
+      }
+
+      final body =
+          jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+      final goalRaw = body['weight_goal_kg'];
+      final goalKg = goalRaw != null ? double.tryParse(goalRaw.toString()) : null;
+      final goalNote = body['weight_goal_note'] as String?;
+
+      await _db.query(
+        'UPDATE pets SET weight_goal_kg = @goal, weight_goal_note = @note WHERE id = @id::uuid',
+        parameters: {
+          'goal': goalKg,
+          'note': goalNote?.trim(),
+          'id': petId,
+        },
+      );
+
+      return Response.ok(
+        jsonEncode({
+          'message': 'Gewichtsziel aktualisiert',
+          'weight_goal_kg': goalKg,
+          'weight_goal_note': goalNote,
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ setWeightGoal Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }

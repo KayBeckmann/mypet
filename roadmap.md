@@ -1137,6 +1137,37 @@ services:
 
 ---
 
+## Phase 49: Gewichtsziel-Tracking ✅ *(2026-05-04)*
+
+### M49.1 - Backend: Gewichtsziel-Felder ✅
+- [x] Migration 031: `weight_goal_kg` + `weight_goal_note` zu `pets`
+- [x] `PUT /pets/:id/weight/goal` in `WeightController`
+- [x] `_sanitizePet` gibt `weight_goal_kg` + `weight_goal_note` zurück
+- [x] Alle SELECT-/RETURNING-Queries um die neuen Felder erweitert
+
+### M49.2 - web_owner: Ziel-Anzeige & Setzen ✅
+- [x] `Pet`-Model: `weightGoalKg` + `weightGoalNote`
+- [x] `WeightProvider.setGoal()` — PUT /pets/:id/weight/goal
+- [x] `_WeightCard`: Flag-Button öffnet Ziel-Dialog (Wert + Notiz)
+- [x] `_WeightGoalBadge` — zeigt Differenz zum Ziel, bei Erreichen grüner Erfolgstext
+
+---
+
+## Phase 50: Admin-Aktivitätsprotokoll ✅ *(2026-05-04)*
+
+### M50.1 - Backend: Admin Audit-Log Endpoint ✅
+- [x] `GET /admin/audit-log` mit Filter (action, user_id) und Paginierung (limit/offset)
+- [x] JOIN mit users für Name + E-Mail des Akteurs
+- [x] Gesamt-Count für Seitenwechsel
+
+### M50.2 - web_admin: AuditLogScreen ✅
+- [x] Filterbar (nach Aktion), Paginierung (50 Einträge/Seite)
+- [x] Aktionstyp-Icons (Login/Create/Delete/Update/Transfer)
+- [x] Ressourcentyp-Badge, IP-Adresse, Benutzer-Info
+- [x] Quicklink-Kachel im Admin-Dashboard
+
+---
+
 ## Notizen
 
 *Anpassungen und Änderungen an der Roadmap hier dokumentieren.*

@@ -11,6 +11,8 @@ class Pet {
   final PetSpecies species;
   final DateTime? birthDate;
   final double? weightKg;
+  final double? weightGoalKg;
+  final String? weightGoalNote;
   final String? imageUrl;
   final HealthStatus healthStatus;
   final FeedingStatus feedingStatus;
@@ -27,6 +29,8 @@ class Pet {
     required this.species,
     this.birthDate,
     this.weightKg,
+    this.weightGoalKg,
+    this.weightGoalNote,
     this.imageUrl,
     this.healthStatus = HealthStatus.optimal,
     this.feedingStatus = FeedingStatus.done,
@@ -49,6 +53,10 @@ class Pet {
       weightKg: json['weight_kg'] != null
           ? (json['weight_kg'] as num).toDouble()
           : null,
+      weightGoalKg: json['weight_goal_kg'] != null
+          ? (json['weight_goal_kg'] as num).toDouble()
+          : null,
+      weightGoalNote: json['weight_goal_note'] as String?,
       imageUrl: json['image_url'] as String?,
       microchipId: json['microchip_id'] as String?,
       notes: json['notes'] as String?,

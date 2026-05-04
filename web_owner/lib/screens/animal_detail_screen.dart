@@ -1717,14 +1717,77 @@ class _WeightCard extends StatelessWidget {
   final String petId;
   const _WeightCard({required this.petId});
 
+  Future<void> _showGoalDialog(BuildContext context, WeightProvider provider, Pet pet) async {
+    final goalCtrl = TextEditingController(
+      text: pet.weightGoalKg?.toStringAsFixed(1) ?? '',
+    );
+    final noteCtrl = TextEditingController(text: pet.weightGoalNote ?? '');
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Gewichtsziel setzen'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: goalCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Zielgewicht (kg)',
+                hintText: 'z.B. 25.0',
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: noteCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Notiz',
+                hintText: 'z.B. Tierarzt-Empfehlung',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await provider.setGoal(goalKg: null, goalNote: null);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Ziel entfernen'),
+          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Abbrechen')),
+          FilledButton(
+            onPressed: () async {
+              final goal = double.tryParse(goalCtrl.text.trim());
+              await provider.setGoal(
+                goalKg: goal,
+                goalNote: noteCtrl.text.trim(),
+              );
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Speichern'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<WeightProvider>();
+    final petProvider = context.watch<PetProvider>();
     final loading = provider.loading;
     final entries = provider.selectedPetId == petId ? provider.entries : <WeightEntry>[];
+    final pet = petProvider.pets.where((p) => p.id == petId).firstOrNull;
 
     return _DetailCard(
       title: 'GEWICHTSVERLAUF',
+      action: IconButton(
+        icon: const Icon(Icons.flag_outlined, size: 18),
+        tooltip: 'Gewichtsziel setzen',
+        onPressed: pet != null ? () => _showGoalDialog(context, provider, pet) : null,
+      ),
       children: [
         if (loading)
           const Padding(
@@ -1762,6 +1825,11 @@ class _WeightCard extends StatelessWidget {
                       _TrendBadge(
                         current: entries.last.weightKg,
                         previous: entries[entries.length - 2].weightKg,
+                      ),
+                    if (pet?.weightGoalKg != null)
+                      _WeightGoalBadge(
+                        current: entries.last.weightKg,
+                        goal: pet!.weightGoalKg!,
                       ),
                   ],
                 ),
@@ -1860,6 +1928,43 @@ class _TrendBadge extends StatelessWidget {
               .textTheme
               .bodySmall
               ?.copyWith(color: color, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+}
+
+class _WeightGoalBadge extends StatelessWidget {
+  final double current;
+  final double goal;
+  const _WeightGoalBadge({required this.current, required this.goal});
+
+  @override
+  Widget build(BuildContext context) {
+    final diff = current - goal;
+    final reached = diff.abs() < 0.2;
+    final aboveGoal = diff > 0;
+    final color = reached
+        ? LivingLedgerTheme.success
+        : aboveGoal
+            ? LivingLedgerTheme.tertiary
+            : LivingLedgerTheme.primary;
+    final label = reached
+        ? 'Ziel erreicht!'
+        : '${aboveGoal ? '' : ''}${diff.toStringAsFixed(1)} kg zum Ziel (${goal.toStringAsFixed(1)} kg)';
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.flag_rounded, size: 13, color: color),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
