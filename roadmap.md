@@ -1282,6 +1282,16 @@ services:
 
 ---
 
+## Phase 63: Fütterungs-Compliance-Anzeige (web_owner) ✅ *(2026-05-04)*
+
+### M63.1 - Compliance-Balken im Fütterungs-Protokoll ✅
+- [x] `_ComplianceBar`: zeigt % der gefütterten Mahlzeiten der letzten 7 Tage
+- [x] Farbcodierung: ≥90% grün, ≥70% orange, <70% rot
+- [x] Linearer Fortschrittsbalken + Text (X/Y Mahlzeiten)
+- [x] Erscheint über dem Protokoll wenn mindestens ein Eintrag vorhanden
+
+---
+
 ## Notizen
 
 *Anpassungen und Änderungen an der Roadmap hier dokumentieren.*

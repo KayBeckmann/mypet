@@ -693,6 +693,12 @@ class _FeedingLogPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cutoff = DateTime.now().subtract(const Duration(days: 7));
+    final recent = log.where((e) => e.fedAt.isAfter(cutoff)).toList();
+    final given = recent.where((e) => !e.skipped).length;
+    final total = recent.length;
+    final rate = total == 0 ? null : (given / total * 100).round();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -706,6 +712,10 @@ class _FeedingLogPanel extends StatelessWidget {
             'Protokoll',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
+          if (rate != null) ...[
+            const SizedBox(height: 12),
+            _ComplianceBar(rate: rate, given: given, total: total),
+          ],
           const SizedBox(height: 16),
           if (log.isEmpty)
             Center(
@@ -722,6 +732,54 @@ class _FeedingLogPanel extends StatelessWidget {
             ...log.take(20).map((e) => _LogEntry(entry: e)),
         ],
       ),
+    );
+  }
+}
+
+class _ComplianceBar extends StatelessWidget {
+  final int rate;
+  final int given;
+  final int total;
+  const _ComplianceBar({required this.rate, required this.given, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = rate >= 90
+        ? LivingLedgerTheme.success
+        : rate >= 70
+            ? const Color(0xFFF57C00)
+            : LivingLedgerTheme.error;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Letzte 7 Tage: ',
+              style: TextStyle(fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant),
+            ),
+            Text(
+              '$rate%',
+              style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w700),
+            ),
+            Text(
+              ' ($given/$total)',
+              style: TextStyle(fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: rate / 100,
+            backgroundColor: LivingLedgerTheme.outlineVariant,
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 6,
+          ),
+        ),
+      ],
     );
   }
 }
