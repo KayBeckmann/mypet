@@ -182,6 +182,132 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 24),
             ],
 
+            // Today's agenda
+            Builder(builder: (context) {
+              final now = DateTime.now();
+              final today = DateTime(now.year, now.month, now.day);
+              final todayList = appointmentProvider.appointments
+                  .where((a) {
+                    final d = DateTime(a.scheduledAt.year, a.scheduledAt.month, a.scheduledAt.day);
+                    return d == today;
+                  })
+                  .toList()
+                ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+
+              if (todayList.isEmpty) return const SizedBox.shrink();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tages-Agenda (${todayList.length})',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: ProviderTheme.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: ProviderTheme.outline.withValues(alpha: 0.2)),
+                    ),
+                    child: Column(
+                      children: todayList.asMap().entries.map((entry) {
+                        final i = entry.key;
+                        final a = entry.value;
+                        final isPast = a.scheduledAt.isBefore(now);
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isPast
+                                ? ProviderTheme.onSurfaceVariant.withValues(alpha: 0.04)
+                                : null,
+                            border: i > 0
+                                ? Border(
+                                    top: BorderSide(
+                                        color: ProviderTheme.outline
+                                            .withValues(alpha: 0.15)))
+                                : null,
+                          ),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 50,
+                                child: Text(
+                                  a.timeLabel,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: isPast
+                                        ? ProviderTheme.onSurfaceVariant
+                                        : null,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      a.title,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: isPast
+                                            ? ProviderTheme.onSurfaceVariant
+                                            : null,
+                                      ),
+                                    ),
+                                    if (a.petName != null || a.ownerName != null)
+                                      Text(
+                                        [
+                                          if (a.petName != null) a.petName,
+                                          if (a.ownerName != null)
+                                            '(${a.ownerName})',
+                                        ].join(' '),
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: ProviderTheme.onSurfaceVariant),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: a.status ==
+                                          ProviderAppointmentStatus.completed
+                                      ? ProviderTheme.primary.withValues(alpha: 0.1)
+                                      : Colors.orange.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  a.statusLabel,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: a.status ==
+                                            ProviderAppointmentStatus.completed
+                                        ? ProviderTheme.primary
+                                        : Colors.orange,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              );
+            }),
+
             // Upcoming appointments
             Text(
               'Nächste Termine',

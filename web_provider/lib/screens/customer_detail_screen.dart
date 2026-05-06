@@ -602,10 +602,14 @@ class _ServicesTabState extends State<_ServicesTab> {
     }
   }
 
-  Future<void> _addService(BuildContext context) async {
-    final titleCtrl = TextEditingController();
+  Future<void> _addServiceFromTemplate(BuildContext context, Map<String, dynamic> template) async {
+    await _addService(context, templateTitle: template['title'] as String?, templateType: template['record_type'] as String?);
+  }
+
+  Future<void> _addService(BuildContext context, {String? templateTitle, String? templateType}) async {
+    final titleCtrl = TextEditingController(text: templateTitle ?? '');
     final descCtrl = TextEditingController();
-    String type = 'treatment';
+    String type = templateType ?? 'treatment';
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -713,7 +717,7 @@ class _ServicesTabState extends State<_ServicesTab> {
               FilledButton.icon(
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Leistung'),
-                onPressed: () => _addService(context),
+                onPressed: () => _addService(context, templateTitle: null, templateType: null),
               ),
             ],
           ),
@@ -795,6 +799,15 @@ class _ServicesTabState extends State<_ServicesTab> {
                             style: const TextStyle(
                                 fontSize: 12,
                                 color: ProviderTheme.onSurfaceVariant)),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          icon: const Icon(Icons.copy_outlined, size: 16),
+                          tooltip: 'Als Vorlage',
+                          color: ProviderTheme.onSurfaceVariant,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => _addServiceFromTemplate(context, r),
+                        ),
                       ],
                     ),
                   );

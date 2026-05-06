@@ -12,6 +12,8 @@ class CustomersScreen extends StatefulWidget {
 }
 
 class _CustomersScreenState extends State<CustomersScreen> {
+  String _speciesFilter = '';
+
   @override
   void initState() {
     super.initState();
@@ -53,35 +55,68 @@ class _CustomersScreenState extends State<CustomersScreen> {
               ),
               onChanged: provider.setSearch,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
+
+            // Species filter chips
+            Builder(builder: (context) {
+              final species = provider.pets
+                  .map((p) => p['species'] as String? ?? '')
+                  .where((s) => s.isNotEmpty)
+                  .toSet()
+                  .toList()
+                ..sort();
+              if (species.isEmpty) return const SizedBox.shrink();
+              return Wrap(
+                spacing: 6,
+                children: [
+                  FilterChip(
+                    label: const Text('Alle'),
+                    selected: _speciesFilter.isEmpty,
+                    onSelected: (_) => setState(() => _speciesFilter = ''),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  ...species.map((s) => FilterChip(
+                        label: Text(s),
+                        selected: _speciesFilter == s,
+                        onSelected: (_) => setState(() => _speciesFilter = s),
+                        visualDensity: VisualDensity.compact,
+                      )),
+                ],
+              );
+            }),
+            const SizedBox(height: 12),
 
             if (provider.loading)
               const Expanded(
                   child: Center(child: CircularProgressIndicator()))
-            else if (provider.pets.isEmpty)
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.pets_rounded,
-                          size: 64,
-                          color: ProviderTheme.onSurfaceVariant
-                              .withValues(alpha: 0.3)),
-                      const SizedBox(height: 12),
-                      Text(
-                        provider.search.isEmpty
-                            ? 'Keine Tiere gefunden.'
-                            : 'Keine Treffer für "${provider.search}"',
-                        style:
-                            TextStyle(color: ProviderTheme.onSurfaceVariant),
-                      ),
-                    ],
+            else Builder(builder: (context) {
+              final filtered = provider.pets.where((p) {
+                if (_speciesFilter.isEmpty) return true;
+                return (p['species'] as String? ?? '') == _speciesFilter;
+              }).toList();
+
+              if (filtered.isEmpty)
+                return Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.pets_rounded,
+                            size: 64,
+                            color: ProviderTheme.onSurfaceVariant
+                                .withValues(alpha: 0.3)),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Keine Tiere gefunden.',
+                          style:
+                              TextStyle(color: ProviderTheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
-            else
-              Expanded(
+                );
+
+              return Expanded(
                 child: GridView.builder(
                   gridDelegate:
                       const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -90,13 +125,14 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
-                  itemCount: provider.pets.length,
+                  itemCount: filtered.length,
                   itemBuilder: (_, i) {
-                    final pet = provider.pets[i];
+                    final pet = filtered[i];
                     return _PetCard(pet: pet);
                   },
                 ),
-              ),
+              );
+            }),
           ],
         ),
       ),
