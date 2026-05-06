@@ -6,6 +6,9 @@ import 'providers/auth_provider.dart';
 import 'providers/pet_provider.dart';
 import 'providers/reminder_provider.dart';
 import 'providers/appointment_provider.dart';
+import 'providers/medication_provider.dart';
+import 'providers/weight_provider.dart';
+import 'providers/health_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 
@@ -33,6 +36,9 @@ class _MyPetAppState extends State<MyPetApp> {
         ChangeNotifierProvider(create: (_) => MobilePetProvider(api: _api)),
         ChangeNotifierProvider(create: (_) => MobileReminderProvider(api: _api)),
         ChangeNotifierProvider(create: (_) => MobileAppointmentProvider(api: _api)),
+        ChangeNotifierProvider(create: (_) => MobileMedicationProvider(api: _api)),
+        ChangeNotifierProvider(create: (_) => MobileWeightProvider(api: _api)),
+        ChangeNotifierProvider(create: (_) => MobileHealthProvider(api: _api)),
       ],
       child: MaterialApp(
         title: 'MyPet',
