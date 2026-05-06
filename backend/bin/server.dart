@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:shelf/shelf.dart';
@@ -33,6 +34,13 @@ import 'package:mypet_backend/controllers/reminder_controller.dart';
 import 'package:mypet_backend/controllers/prescription_controller.dart';
 import 'package:mypet_backend/controllers/allergy_controller.dart';
 import 'package:mypet_backend/controllers/emergency_contact_controller.dart';
+import 'package:mypet_backend/controllers/temperature_controller.dart';
+import 'package:mypet_backend/controllers/lab_result_controller.dart';
+import 'package:mypet_backend/controllers/health_passport_controller.dart';
+import 'package:mypet_backend/controllers/rating_controller.dart';
+import 'package:mypet_backend/middleware/rate_limit_middleware.dart';
+import 'package:mypet_backend/controllers/pet_stats_controller.dart';
+import 'package:mypet_backend/controllers/patient_assignment_controller.dart';
 import 'package:mypet_backend/services/upload_service.dart';
 import 'package:mypet_backend/middleware/static_files_middleware.dart';
 
@@ -103,9 +111,14 @@ Future<void> main(List<String> args) async {
   final healthController = HealthController(db);
   app.mount('/health', healthController.router.call);
 
-  // Auth Routes (öffentlich)
+  // Auth Routes (öffentlich, mit Rate-Limiting)
   final authController = AuthController(db);
-  app.mount('/auth', authController.router.call);
+  app.mount(
+    '/auth',
+    const Pipeline()
+        .addMiddleware(rateLimitMiddleware(maxAttempts: 10, windowSeconds: 60))
+        .addHandler(authController.router.call),
+  );
 
   // Geschützte Routes mit Auth-Middleware
   final accountController = AccountController(db);
@@ -151,6 +164,24 @@ Future<void> main(List<String> args) async {
   // Notfallkontakt Controller
   final emergencyContactController = EmergencyContactController(db);
 
+  // Temperatur Controller
+  final temperatureController = TemperatureController(db);
+
+  // Laborbefunde Controller
+  final labResultController = LabResultController(db);
+
+  // Gesundheitspass Controller
+  final healthPassportController = HealthPassportController(db);
+
+  // Tier-Statistiken Controller
+  final petStatsController = PetStatsController(db);
+
+  // Patientenzuweisung Controller
+  final patientAssignmentController = PatientAssignmentController(db);
+
+  // Bewertungen Controller
+  final ratingController = RatingController(db);
+
   app.mount(
     '/account',
     const Pipeline()
@@ -171,6 +202,11 @@ Future<void> main(List<String> args) async {
       .add(weightController.router.call)
       .add(prescriptionController.router.call)
       .add(allergyController.router.call)
+      .add(temperatureController.router.call)
+      .add(labResultController.router.call)
+      .add(healthPassportController.router.call)
+      .add(petStatsController.router.call)
+      .add(patientAssignmentController.router.call)
       .handler;
   app.mount(
     '/pets',
@@ -179,11 +215,15 @@ Future<void> main(List<String> args) async {
         .addHandler(petsCascade),
   );
 
+  final orgCascade = Cascade()
+      .add(organizationController.router.call)
+      .add(ratingController.router.call)
+      .handler;
   app.mount(
     '/organizations',
     const Pipeline()
         .addMiddleware(authMiddleware())
-        .addHandler(organizationController.router.call),
+        .addHandler(orgCascade),
   );
   app.mount(
     '/invitations',
@@ -267,7 +307,21 @@ Future<void> main(List<String> args) async {
   // Root Route
   app.get('/', (Request request) {
     return Response.ok(
-      '{"message": "MyPet API", "version": "0.2.0"}',
+      jsonEncode({
+        'message': 'MyPet API',
+        'version': '0.3.0',
+        'migrations': 38,
+        'endpoints': {
+          'auth': ['/auth/register', '/auth/login', '/auth/refresh', '/auth/logout'],
+          'account': ['/account', '/account/export', '/account/audit-log'],
+          'pets': ['/pets', '/pets/:id', '/pets/:id/weight', '/pets/:id/temperature', '/pets/:id/lab-results', '/pets/:id/health-passport', '/pets/:id/stats', '/pets/:id/assignment'],
+          'medical': ['/pets/:id/records', '/pets/:id/vaccinations', '/pets/:id/medications', '/pets/:id/allergies', '/pets/:id/prescriptions'],
+          'appointments': ['/appointments', '/appointments/:id/confirm', '/appointments/:id/complete', '/appointments/:id/notes', '/appointments/:id/fee'],
+          'organizations': ['/organizations', '/organizations/search', '/organizations/:id/ratings', '/organizations/:id/members'],
+          'families': ['/families', '/families/:id/members', '/families/invitations'],
+          'admin': ['/admin/users', '/admin/stats', '/admin/growth', '/admin/audit-log', '/admin/organizations'],
+        },
+      }),
       headers: {'Content-Type': 'application/json'},
     );
   });
