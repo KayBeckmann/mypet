@@ -170,6 +170,14 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
                         _AppointmentList(
                           appointments: provider.past,
                           emptyText: 'Keine vergangenen Termine',
+                          actions: (a) => [
+                            _ActionButton(
+                              label: a.treatmentNotes != null ? 'Notizen bearbeiten' : 'Behandlungsnotizen',
+                              color: VetTheme.primary,
+                              icon: Icons.medical_information_outlined,
+                              onPressed: () => _editNotes(context, a),
+                            ),
+                          ],
                         ),
                         _CalendarView(appointments: provider.appointments),
                       ],
@@ -237,6 +245,96 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
     }
   }
 
+  static const _diagSuggestions = [
+    'Otitis externa',
+    'Gastroenteritis',
+    'Dermatitis',
+    'Zahnstein / Parodontitis',
+    'Allergische Reaktion',
+    'Arthritis',
+    'Harnwegsinfektion',
+    'Wundversorgung',
+    'Impfreaktion',
+    'Routine-Untersuchung',
+  ];
+
+  Future<void> _editNotes(BuildContext context, VetAppointment a) async {
+    final diagCtrl = TextEditingController(text: a.diagnosis ?? '');
+    final notesCtrl = TextEditingController(text: a.treatmentNotes ?? '');
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+        title: Text('Behandlungsnotizen — ${a.title}'),
+        content: SizedBox(
+          width: 480,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Diagnosis suggestions
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: _diagSuggestions.map((s) => ActionChip(
+                  label: Text(s, style: const TextStyle(fontSize: 11)),
+                  onPressed: () => setDs(() {
+                    diagCtrl.text = s;
+                    diagCtrl.selection = TextSelection.fromPosition(
+                      TextPosition(offset: s.length));
+                  }),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  visualDensity: VisualDensity.compact,
+                )).toList(),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: diagCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Diagnose',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: notesCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Behandlungsnotizen',
+                  border: OutlineInputBorder(),
+                  hintText: 'Durchgeführte Maßnahmen, Beobachtungen...',
+                ),
+                maxLines: 4,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Abbrechen')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Speichern')),
+        ],
+      ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      final ok = await context.read<VetAppointmentProvider>().setNotes(
+        a.id,
+        treatmentNotes: notesCtrl.text.trim().isEmpty ? null : notesCtrl.text.trim(),
+        diagnosis: diagCtrl.text.trim().isEmpty ? null : diagCtrl.text.trim(),
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ok ? 'Notizen gespeichert' : 'Fehler')),
+        );
+      }
+    }
+  }
+
   Future<void> _createAppointment(BuildContext context) async {
     final patients = context.read<PatientsProvider>().patients;
     if (patients.isEmpty) {
@@ -255,6 +353,9 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
     TimeOfDay selectedTime = const TimeOfDay(hour: 10, minute: 0);
     final formKey = GlobalKey<FormState>();
     final dateFmt = DateFormat('dd.MM.yyyy');
+    bool isRecurring = false;
+    String recurrenceInterval = 'weekly';
+    int recurrenceCount = 4;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -346,6 +447,43 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
                           const InputDecoration(labelText: 'Beschreibung'),
                       maxLines: 2,
                     ),
+                    const SizedBox(height: 12),
+                    const Divider(),
+                    SwitchListTile(
+                      value: isRecurring,
+                      onChanged: (v) => setDs(() => isRecurring = v),
+                      title: const Text('Wiederholungstermin'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    if (isRecurring) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: recurrenceInterval,
+                              decoration: const InputDecoration(labelText: 'Intervall'),
+                              items: const [
+                                DropdownMenuItem(value: 'daily', child: Text('Täglich')),
+                                DropdownMenuItem(value: 'weekly', child: Text('Wöchentlich')),
+                                DropdownMenuItem(value: 'monthly', child: Text('Monatlich')),
+                                DropdownMenuItem(value: 'yearly', child: Text('Jährlich')),
+                              ],
+                              onChanged: (v) => setDs(() => recurrenceInterval = v ?? 'weekly'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          SizedBox(
+                            width: 80,
+                            child: TextFormField(
+                              initialValue: '$recurrenceCount',
+                              decoration: const InputDecoration(labelText: 'Anzahl'),
+                              keyboardType: TextInputType.number,
+                              onChanged: (v) => recurrenceCount = int.tryParse(v) ?? 4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -378,7 +516,7 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
       );
       final api = context.read<ApiService>();
       try {
-        await api.post('/appointments', body: {
+        final result = await api.post('/appointments', body: {
           'pet_id': selectedPetId,
           'title': titleCtrl.text.trim(),
           'scheduled_at': scheduledAt.toIso8601String(),
@@ -387,11 +525,19 @@ class _VetAppointmentsScreenState extends State<VetAppointmentsScreen>
             'location': locationCtrl.text.trim(),
           if (descCtrl.text.trim().isNotEmpty)
             'description': descCtrl.text.trim(),
+          if (isRecurring) ...{
+            'is_recurring': true,
+            'recurrence_interval': recurrenceInterval,
+            'recurrence_count': recurrenceCount.clamp(1, 12),
+          },
         });
+        final recurCount = result['recurring_count'] as int? ?? 0;
         if (context.mounted) {
           context.read<VetAppointmentProvider>().load();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Termin angelegt')),
+            SnackBar(content: Text(recurCount > 0
+                ? 'Termin + $recurCount Wiederholungen angelegt'
+                : 'Termin angelegt')),
           );
         }
       } catch (e) {
@@ -581,6 +727,34 @@ class _AppointmentCard extends StatelessWidget {
                           style: TextStyle(
                               color: VetTheme.onSurfaceVariant,
                               fontSize: 13),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    if (appointment.diagnosis != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Row(
+                          children: [
+                            Icon(Icons.local_hospital_outlined, size: 13, color: VetTheme.primary),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'Diagnose: ${appointment.diagnosis}',
+                                style: TextStyle(color: VetTheme.primary, fontSize: 12, fontWeight: FontWeight.w600),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (appointment.treatmentNotes != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          appointment.treatmentNotes!,
+                          style: TextStyle(color: VetTheme.onSurfaceVariant, fontSize: 12),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),

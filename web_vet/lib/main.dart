@@ -12,6 +12,7 @@ import 'providers/media_provider.dart';
 import 'providers/notes_provider.dart';
 import 'providers/prescription_provider.dart';
 import 'providers/allergy_provider.dart';
+import 'providers/lab_result_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +60,9 @@ class _MyPetVetAppState extends State<MyPetVetApp> {
         ),
         ChangeNotifierProvider(
           create: (_) => VetAllergyProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => VetLabResultProvider(api: _apiService),
         ),
       ],
       child: const _AppShell(),

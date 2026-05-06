@@ -21,6 +21,8 @@ class VetAppointment {
   final String? location;
   final String? notes;
   final String? cancelledReason;
+  final String? treatmentNotes;
+  final String? diagnosis;
 
   const VetAppointment({
     required this.id,
@@ -40,6 +42,8 @@ class VetAppointment {
     this.location,
     this.notes,
     this.cancelledReason,
+    this.treatmentNotes,
+    this.diagnosis,
   });
 
   factory VetAppointment.fromJson(Map<String, dynamic> j) {
@@ -61,6 +65,8 @@ class VetAppointment {
       location: j['location'] as String?,
       notes: j['notes'] as String?,
       cancelledReason: j['cancelled_reason'] as String?,
+      treatmentNotes: j['treatment_notes'] as String?,
+      diagnosis: j['diagnosis'] as String?,
     );
   }
 
@@ -164,6 +170,21 @@ class VetAppointmentProvider extends ChangeNotifier {
     } finally {
       _loading = false;
       notifyListeners();
+    }
+  }
+
+  Future<bool> setNotes(String id, {String? treatmentNotes, String? diagnosis}) async {
+    try {
+      final data = await _api.put('/appointments/$id/notes', body: {
+        if (treatmentNotes != null) 'treatment_notes': treatmentNotes,
+        if (diagnosis != null) 'diagnosis': diagnosis,
+      });
+      _replace(VetAppointment.fromJson(data['appointment'] as Map<String, dynamic>));
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
     }
   }
 

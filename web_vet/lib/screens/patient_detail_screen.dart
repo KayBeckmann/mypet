@@ -14,6 +14,7 @@ import '../providers/notes_provider.dart';
 import '../providers/patients_provider.dart';
 import '../providers/prescription_provider.dart';
 import '../providers/allergy_provider.dart';
+import '../providers/lab_result_provider.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final String petId;
@@ -29,19 +30,22 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   final _dateFormat = DateFormat('dd.MM.yyyy');
   List<Map<String, dynamic>> _weightEntries = [];
   List<Map<String, dynamic>> _feedingPlans = [];
+  Map<String, dynamic>? _assignment;
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 11, vsync: this);
+    _tabs = TabController(length: 12, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MedicalProvider>().loadForPet(widget.petId);
       context.read<VetMediaProvider>().loadForPet(widget.petId);
       context.read<VetNotesProvider>().loadForPet(widget.petId);
       context.read<PrescriptionProvider>().loadForPet(widget.petId);
       context.read<VetAllergyProvider>().loadForPet(widget.petId);
+      context.read<VetLabResultProvider>().loadForPet(widget.petId);
       _loadWeight();
       _loadFeeding();
+      _loadAssignment();
     });
   }
 
@@ -64,6 +68,14 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
     } catch (_) {}
   }
 
+  Future<void> _loadAssignment() async {
+    try {
+      final api = context.read<ApiService>();
+      final data = await api.get('/pets/${widget.petId}/assignment');
+      if (mounted) setState(() => _assignment = data['assignment'] as Map<String, dynamic>?);
+    } catch (_) {}
+  }
+
   Future<void> _loadFeeding() async {
     try {
       final api = context.read<ApiService>();
@@ -75,6 +87,144 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
         });
       }
     } catch (_) {}
+  }
+
+  // ── Patientenzuweisung ──
+  Future<void> _showAssignDialog(BuildContext context) async {
+    final auth = context.read<VetAuthProvider>();
+    final orgId = auth.activeOrganizationId;
+    if (orgId == null) return;
+
+    // Lade Teammitglieder
+    List<Map<String, dynamic>> members = [];
+    try {
+      final api = context.read<ApiService>();
+      final data = await api.get('/organizations/$orgId/members');
+      members = (data['members'] as List? ?? []).cast<Map<String, dynamic>>();
+    } catch (_) {}
+
+    if (!context.mounted) return;
+
+    String? selectedUserId = _assignment?['assigned_to'] as String?;
+    final noteCtrl = TextEditingController(text: _assignment?['note'] as String? ?? '');
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: const Text('Patient zuweisen'),
+          content: SizedBox(
+            width: 360,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: selectedUserId,
+                  decoration: const InputDecoration(
+                    labelText: 'Zuständig',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('— Keine Zuweisung —')),
+                    ...members.map((m) => DropdownMenuItem(
+                          value: m['user_id'] as String?,
+                          child: Text('${m['name'] ?? m['email'] ?? '?'} (${m['role'] ?? ''})'),
+                        )),
+                  ],
+                  onChanged: (v) => setDs(() => selectedUserId = v),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: noteCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Notiz (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Abbrechen')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Speichern')),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final api = context.read<ApiService>();
+        if (selectedUserId == null) {
+          await api.delete('/pets/${widget.petId}/assignment');
+          setState(() => _assignment = null);
+        } else {
+          final data = await api.put('/pets/${widget.petId}/assignment', body: {
+            'assigned_to': selectedUserId,
+            if (noteCtrl.text.trim().isNotEmpty) 'note': noteCtrl.text.trim(),
+          });
+          setState(() => _assignment = data['assignment'] as Map<String, dynamic>?);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+        }
+      }
+    }
+  }
+
+  // ── Dossier drucken ──
+  void _printDossier(BuildContext context, String petName, String? ownerName, VetMedicalProvider medical) {
+    final vaccs = medical.vaccinations;
+    final meds = medical.medications;
+    final records = medical.records;
+
+    String _fmtDate(dynamic d) {
+      if (d == null) return '—';
+      final dt = d is DateTime ? d : DateTime.tryParse(d.toString());
+      if (dt == null) return d.toString();
+      return '${dt.day}.${dt.month}.${dt.year}';
+    }
+
+    final vaccRows = vaccs.map((v) => '<tr><td>${v['vaccine_name'] ?? '—'}</td><td>${_fmtDate(v['vaccinated_at'])}</td><td>${_fmtDate(v['valid_until'])}</td></tr>').join('');
+    final medRows = meds.map((m) => '<tr><td>${m.name}</td><td>${m.dosage ?? '—'}</td><td>${m.frequencyLabel}</td><td>${m.isActive ? 'Aktiv' : 'Beendet'}</td></tr>').join('');
+    final recRows = records.take(10).map((r) => '<tr><td>${r['record_type'] ?? '—'}</td><td>${r['title'] ?? '—'}</td><td>${r['diagnosis'] ?? '—'}</td><td>${_fmtDate(r['created_at'])}</td></tr>').join('');
+
+    final html_ = '''<!DOCTYPE html>
+<html lang="de">
+<head><meta charset="UTF-8"><title>Dossier — $petName</title>
+<style>
+body{font-family:Arial,sans-serif;font-size:12px;margin:20px}
+h1{color:#386641;font-size:18px}h2{color:#386641;font-size:14px;border-bottom:1px solid #386641;padding-bottom:2px;margin-top:16px}
+table{width:100%;border-collapse:collapse;margin-top:6px;font-size:11px}
+th{background:#386641;color:white;padding:4px 6px;text-align:left}
+td{border-bottom:1px solid #eee;padding:3px 6px}
+.meta{font-size:11px;color:#666;margin-bottom:12px}
+@media print{body{margin:0}}
+</style></head>
+<body>
+<h1>🐾 Patientendossier — $petName</h1>
+<div class="meta">Besitzer: ${ownerName ?? '—'} · Erstellt: ${DateTime.now().day}.${DateTime.now().month}.${DateTime.now().year}</div>
+
+<h2>Impfungen (${vaccs.length})</h2>
+${vaccs.isEmpty ? '<p style="color:#999">Keine Impfungen</p>' : '<table><tr><th>Impfstoff</th><th>Datum</th><th>Gültig bis</th></tr>$vaccRows</table>'}
+
+<h2>Aktive Medikamente (${meds.where((m) => m.isActive).length})</h2>
+${meds.isEmpty ? '<p style="color:#999">Keine Medikamente</p>' : '<table><tr><th>Medikament</th><th>Dosierung</th><th>Häufigkeit</th><th>Status</th></tr>$medRows</table>'}
+
+<h2>Med. Akte (letzte ${records.take(10).length} Einträge)</h2>
+${records.isEmpty ? '<p style="color:#999">Keine Einträge</p>' : '<table><tr><th>Typ</th><th>Titel</th><th>Diagnose</th><th>Datum</th></tr>$recRows</table>'}
+
+<div style="font-size:10px;color:#999;margin-top:24px;text-align:right">MyPet Vet — ${DateTime.now().year}</div>
+</body></html>''';
+
+    final blob = html.Blob([html_], 'text/html');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final win = html.window.open(url, '_blank');
+    Future.delayed(const Duration(milliseconds: 500), () {
+      win?.print();
+      html.Url.revokeObjectUrl(url);
+    });
   }
 
   // ── Medizinischer Eintrag anlegen ──
@@ -372,7 +522,8 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
     );
 
     if (confirmed == true && mounted) {
-      await context.read<MedicalProvider>().createMedication(widget.petId, {
+      final provider = context.read<MedicalProvider>();
+      await provider.createMedication(widget.petId, {
         'name': nameCtrl.text.trim(),
         'dosage': dosageCtrl.text.trim(),
         'frequency': frequency,
@@ -380,6 +531,13 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
         if (endDate != null)
           'end_date': endDate!.toIso8601String().substring(0, 10),
       });
+      if (provider.medicationWarning != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(provider.medicationWarning!),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 5),
+        ));
+      }
     }
   }
 
@@ -423,6 +581,30 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/patients'),
         ),
+        actions: [
+          if (_assignment != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+              child: Chip(
+                label: Text(_assignment!['assigned_to_name'] as String? ?? '?',
+                    style: const TextStyle(fontSize: 11)),
+                avatar: const Icon(Icons.person_rounded, size: 14),
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                labelStyle: const TextStyle(color: Colors.white),
+                side: BorderSide.none,
+              ),
+            ),
+          IconButton(
+            icon: const Icon(Icons.assignment_ind_outlined),
+            tooltip: 'Zuweisen',
+            onPressed: () => _showAssignDialog(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.print_rounded),
+            tooltip: 'Dossier drucken',
+            onPressed: () => _printDossier(context, petName, ownerName, medical),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabs,
           indicatorColor: Colors.white,
@@ -441,6 +623,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
             Tab(text: 'Termine'),
             Tab(text: 'Gewicht'),
             Tab(text: 'Fütterung'),
+            Tab(text: 'Labor'),
           ],
         ),
       ),
@@ -473,6 +656,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
                     onRefresh: _loadWeight),
                 _FeedingTab(
                     plans: _feedingPlans, onRefresh: _loadFeeding),
+                _LabResultsTab(petId: widget.petId),
               ],
             ),
     );
@@ -628,6 +812,13 @@ class _VaccinationsTab extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              if (vaccinations.isNotEmpty)
+                OutlinedButton.icon(
+                  onPressed: () => _printVaccCert(context),
+                  icon: const Icon(Icons.print_rounded, size: 16),
+                  label: const Text('Zertifikat'),
+                ),
+              const SizedBox(width: 8),
               ElevatedButton.icon(
                 onPressed: onAdd,
                 icon: const Icon(Icons.vaccines, size: 18),
@@ -691,6 +882,41 @@ class _VaccinationsTab extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _printVaccCert(BuildContext context) {
+    final rows = vaccinations.map((v) => '''
+      <tr>
+        <td>${v['vaccine_name'] ?? '—'}</td>
+        <td>${v['manufacturer'] ?? '—'}</td>
+        <td>${v['batch_number'] ?? '—'}</td>
+        <td>${_fmtDate(v['vaccinated_at'], dateFormat)}</td>
+        <td>${_fmtDate(v['valid_until'], dateFormat)}</td>
+        <td>${v['vet_name'] ?? '—'}</td>
+      </tr>
+    ''').join('');
+
+    final html_ = '<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Impf-Zertifikat</title>'
+        '<style>body{font-family:Arial,sans-serif;font-size:12px;margin:24px}'
+        'h1{color:#386641;font-size:18px}h2{font-size:14px;color:#386641;margin-top:16px;border-bottom:1px solid #386641}'
+        'table{width:100%;border-collapse:collapse;margin-top:8px}'
+        'th{background:#386641;color:white;padding:4px 8px;text-align:left}'
+        'td{border-bottom:1px solid #eee;padding:4px 8px}</style></head><body>'
+        '<h1>Impfbuch / Zertifikat</h1>'
+        '<p style="font-size:11px;color:#666">Ausgestellt: ${DateTime.now().day}.${DateTime.now().month}.${DateTime.now().year}</p>'
+        '<h2>Impfungen (${vaccinations.length})</h2>'
+        '<table><tr><th>Impfstoff</th><th>Hersteller</th><th>Charge</th><th>Datum</th><th>Gültig bis</th><th>Tierarzt</th></tr>'
+        '$rows</table>'
+        '<div style="margin-top:40px;font-size:10px;color:#999">MyPet Living Ledger</div>'
+        '</body></html>';
+
+    final blob = html.Blob([html_], 'text/html');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final win = html.window.open(url, '_blank');
+    Future.delayed(const Duration(milliseconds: 500), () {
+      win?.print();
+      html.Url.revokeObjectUrl(url);
+    });
   }
 
   String _fmtDate(dynamic raw, DateFormat fmt) {
@@ -1757,6 +1983,343 @@ class _WeightTab extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+// ── Labor Tab ──
+class _LabResultsTab extends StatefulWidget {
+  final String petId;
+  const _LabResultsTab({required this.petId});
+
+  @override
+  State<_LabResultsTab> createState() => _LabResultsTabState();
+}
+
+class _LabResultsTabState extends State<_LabResultsTab> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<VetLabResultProvider>().loadForPet(widget.petId);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<VetLabResultProvider>();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(VetTheme.spacingMd),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () => _showAddDialog(context),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Befund eintragen'),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: provider.loading
+              ? const Center(child: CircularProgressIndicator())
+              : provider.results.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.biotech_outlined,
+                              size: 48, color: VetTheme.onSurfaceVariant),
+                          const SizedBox(height: 12),
+                          Text('Keine Laborbefunde vorhanden',
+                              style: TextStyle(
+                                  color: VetTheme.onSurfaceVariant)),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: VetTheme.spacingMd),
+                      itemCount: provider.results.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: 8),
+                      itemBuilder: (_, i) {
+                        final r = provider.results[i];
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: VetTheme.surfaceContainerLowest,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: r.isAbnormal
+                                  ? VetTheme.error.withValues(alpha: 0.5)
+                                  : VetTheme.outline.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                r.isAbnormal
+                                    ? Icons.warning_amber_rounded
+                                    : Icons.check_circle_outline_rounded,
+                                color: r.isAbnormal
+                                    ? VetTheme.error
+                                    : VetTheme.primary,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(r.testName,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w600)),
+                                        if (r.testCategory != null) ...[
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 6, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: VetTheme.secondary
+                                                  .withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(r.testCategory!,
+                                                style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: VetTheme.secondary)),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: r.resultValue,
+                                            style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w700,
+                                                color: r.isAbnormal
+                                                    ? VetTheme.error
+                                                    : VetTheme.onSurface),
+                                          ),
+                                          if (r.unit != null)
+                                            TextSpan(
+                                              text: ' ${r.unit}',
+                                              style: TextStyle(
+                                                  color: VetTheme
+                                                      .onSurfaceVariant),
+                                            ),
+                                          if (r.referenceRange != null)
+                                            TextSpan(
+                                              text:
+                                                  ' (Ref: ${r.referenceRange})',
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: VetTheme
+                                                      .onSurfaceVariant),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(r.dateLabel,
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: VetTheme.onSurfaceVariant)),
+                                    if (r.notes != null) ...[
+                                      const SizedBox(height: 2),
+                                      Text(r.notes!,
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color:
+                                                  VetTheme.onSurfaceVariant)),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline,
+                                    size: 18, color: Colors.red),
+                                onPressed: () async {
+                                  final ok = await provider.delete(
+                                      widget.petId, r.id);
+                                  if (!ok && context.mounted) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(const SnackBar(
+                                            content:
+                                                Text('Fehler beim Löschen')));
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showAddDialog(BuildContext context) async {
+    final nameCtrl = TextEditingController();
+    final categoryCtrl = TextEditingController();
+    final valueCtrl = TextEditingController();
+    final unitCtrl = TextEditingController();
+    final refCtrl = TextEditingController();
+    final notesCtrl = TextEditingController();
+    bool isAbnormal = false;
+    DateTime selectedDate = DateTime.now();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: const Text('Laborbefund eintragen'),
+          content: SizedBox(
+            width: 480,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameCtrl,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Test / Untersuchung *',
+                      border: OutlineInputBorder(),
+                      hintText: 'z.B. Blutbild, Kreatinin',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: categoryCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Kategorie',
+                      border: OutlineInputBorder(),
+                      hintText: 'z.B. Hämatologie, Nierenwerte',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          controller: valueCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Ergebnis *',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: unitCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Einheit',
+                            border: OutlineInputBorder(),
+                            hintText: 'mg/dl',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: refCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Referenzbereich',
+                      border: OutlineInputBorder(),
+                      hintText: 'z.B. 0.5–1.2',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    value: isAbnormal,
+                    onChanged: (v) => setDs(() => isAbnormal = v ?? false),
+                    title: const Text('Auffälliger Wert'),
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  const SizedBox(height: 4),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.calendar_today, size: 16),
+                    label: Text(
+                        '${selectedDate.day}.${selectedDate.month}.${selectedDate.year}'),
+                    onPressed: () async {
+                      final d = await showDatePicker(
+                        context: ctx,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                      );
+                      if (d != null) setDs(() => selectedDate = d);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: notesCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Notizen',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 2,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Abbrechen')),
+            FilledButton(
+              onPressed: () {
+                if (nameCtrl.text.trim().isEmpty ||
+                    valueCtrl.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+                      content: Text('Test und Ergebnis erforderlich')));
+                  return;
+                }
+                Navigator.pop(ctx, true);
+              },
+              child: const Text('Eintragen'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await context.read<VetLabResultProvider>().create(
+            petId: widget.petId,
+            testName: nameCtrl.text.trim(),
+            testCategory: categoryCtrl.text.trim().isEmpty
+                ? null
+                : categoryCtrl.text.trim(),
+            resultValue: valueCtrl.text.trim(),
+            unit: unitCtrl.text.trim().isEmpty ? null : unitCtrl.text.trim(),
+            referenceRange:
+                refCtrl.text.trim().isEmpty ? null : refCtrl.text.trim(),
+            isAbnormal: isAbnormal,
+            notes:
+                notesCtrl.text.trim().isEmpty ? null : notesCtrl.text.trim(),
+            testedAt: selectedDate,
+          );
+    }
   }
 }
 

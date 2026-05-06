@@ -89,10 +89,15 @@ class MedicalProvider extends ChangeNotifier {
     }
   }
 
+  String? _medicationWarning;
+  String? get medicationWarning => _medicationWarning;
+
   Future<bool> createMedication(String petId, Map<String, dynamic> data) async {
+    _medicationWarning = null;
     try {
       final response = await _api.post('/pets/$petId/medications', body: data);
       _medications.insert(0, response['medication'] as Map<String, dynamic>);
+      _medicationWarning = response['warning'] as String?;
       notifyListeners();
       return true;
     } on ApiException catch (e) {

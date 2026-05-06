@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import 'package:mypet_shared/shared.dart';
 import '../providers/patients_provider.dart';
 import '../providers/appointment_provider.dart';
 
@@ -216,10 +217,79 @@ class _PatientCard extends StatelessWidget {
           if (breed.isNotEmpty) breed,
           if (ownerName != null) 'Besitzer: $ownerName',
         ].join(' · ')),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Tooltip(
+              message: 'Schnell-Notiz',
+              child: IconButton(
+                icon: const Icon(Icons.note_add_outlined, size: 18),
+                color: VetTheme.onSurfaceVariant,
+                onPressed: () => _quickNote(context, patient),
+              ),
+            ),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
         onTap: () => context.go('/patients/${patient['id']}'),
       ),
     );
+  }
+
+  Future<void> _quickNote(BuildContext context, Map<String, dynamic> patient) async {
+    final noteCtrl = TextEditingController();
+    final petId = patient['id'] as String;
+    final petName = patient['name'] as String? ?? 'Patient';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Notiz für $petName'),
+        content: SizedBox(
+          width: 400,
+          child: TextField(
+            controller: noteCtrl,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Notiz eingeben...',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 3,
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Abbrechen')),
+          FilledButton(
+            onPressed: () {
+              if (noteCtrl.text.trim().isEmpty) return;
+              Navigator.pop(ctx, true);
+            },
+            child: const Text('Speichern'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final api = context.read<ApiService>();
+        await api.post('/pets/$petId/notes', body: {
+          'content': noteCtrl.text.trim(),
+          'visibility': 'colleagues',
+        });
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Notiz gespeichert')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Fehler: $e')),
+          );
+        }
+      }
+    }
   }
 
   String _speciesIcon(String s) {

@@ -159,6 +159,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: VetTheme.spacingXl),
               _ExpiringVaccinationsPanel(vaccinations: _expiringVaccinations),
             ],
+
+            // Recently seen patients
+            Builder(builder: (context) {
+              final recentPets = <String, Map<String, dynamic>>{};
+              for (final a in apptProvider.past) {
+                if (a.petId.isNotEmpty && !recentPets.containsKey(a.petId)) {
+                  recentPets[a.petId] = {
+                    'id': a.petId,
+                    'name': a.petName ?? '—',
+                    'owner': a.ownerName ?? '—',
+                    'date': a.scheduledAt,
+                  };
+                }
+                if (recentPets.length >= 5) break;
+              }
+              if (recentPets.isEmpty) return const SizedBox.shrink();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: VetTheme.spacingXl),
+                  Text('Zuletzt gesehen',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: recentPets.values.map((p) {
+                      final d = p['date'] as DateTime;
+                      return ActionChip(
+                        avatar: const Icon(Icons.pets_rounded, size: 16),
+                        label: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(p['name'] as String,
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                            Text('${p['owner']} · ${d.day}.${d.month}.${d.year}',
+                                style: TextStyle(fontSize: 11, color: VetTheme.onSurfaceVariant)),
+                          ],
+                        ),
+                        onPressed: () => context.go('/patients/${p['id']}'),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              );
+            }),
           ],
         ),
       ),
