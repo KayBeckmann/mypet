@@ -33,7 +33,165 @@ const List<Migration> migrations = [
   _migration029CreateAllergies,
   _migration030CreateEmergencyContacts,
   _migration031AddWeightGoal,
+  _migration032AddTreatmentNotes,
+  _migration033CreateTemperatureHistory,
+  _migration034CreateLabResults,
+  _migration035CreateOrganizationRatings,
+  _migration036AddArchivedToPets,
+  _migration037CreatePatientAssignments,
+  _migration038AddRecurringToAppointments,
 ];
+
+/// Migration 038: Wiederholungs-Termine
+const _migration038AddRecurringToAppointments = Migration(
+  version: 38,
+  name: 'add_recurring_to_appointments',
+  up: '''
+    CREATE TYPE recurrence_interval AS ENUM ('daily', 'weekly', 'monthly', 'yearly');
+
+    ALTER TABLE appointments ADD COLUMN IF NOT EXISTS is_recurring BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE appointments ADD COLUMN IF NOT EXISTS recurrence_interval recurrence_interval;
+    ALTER TABLE appointments ADD COLUMN IF NOT EXISTS recurrence_count INTEGER;
+    ALTER TABLE appointments ADD COLUMN IF NOT EXISTS parent_appointment_id UUID REFERENCES appointments(id) ON DELETE SET NULL;
+  ''',
+  down: '''
+    ALTER TABLE appointments DROP COLUMN IF EXISTS parent_appointment_id;
+    ALTER TABLE appointments DROP COLUMN IF EXISTS recurrence_count;
+    ALTER TABLE appointments DROP COLUMN IF EXISTS recurrence_interval;
+    ALTER TABLE appointments DROP COLUMN IF EXISTS is_recurring;
+    DROP TYPE IF EXISTS recurrence_interval;
+  ''',
+);
+
+/// Migration 037: Patientenzuweisungen für Praxis-Teams
+const _migration037CreatePatientAssignments = Migration(
+  version: 37,
+  name: 'create_patient_assignments',
+  up: '''
+    CREATE TABLE patient_assignments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      assigned_to UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      assigned_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      note TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      UNIQUE (pet_id, organization_id)
+    );
+
+    CREATE INDEX idx_patient_assignments_org ON patient_assignments(organization_id);
+    CREATE INDEX idx_patient_assignments_assigned_to ON patient_assignments(assigned_to);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS patient_assignments;
+  ''',
+);
+
+/// Migration 036: Archivierung für Tiere (Soft-Delete)
+const _migration036AddArchivedToPets = Migration(
+  version: 36,
+  name: 'add_archived_to_pets',
+  up: '''
+    ALTER TABLE pets ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP;
+    ALTER TABLE pets ADD COLUMN IF NOT EXISTS archived_reason TEXT;
+    CREATE INDEX idx_pets_archived ON pets(archived_at) WHERE archived_at IS NOT NULL;
+  ''',
+  down: '''
+    DROP INDEX IF EXISTS idx_pets_archived;
+    ALTER TABLE pets DROP COLUMN IF EXISTS archived_at;
+    ALTER TABLE pets DROP COLUMN IF EXISTS archived_reason;
+  ''',
+);
+
+/// Migration 035: Bewertungen für Organisationen
+const _migration035CreateOrganizationRatings = Migration(
+  version: 35,
+  name: 'create_organization_ratings',
+  up: '''
+    CREATE TABLE organization_ratings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      appointment_id UUID REFERENCES appointments(id) ON DELETE SET NULL,
+      rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+      review TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      UNIQUE (organization_id, owner_id, appointment_id)
+    );
+
+    CREATE INDEX idx_org_ratings_org ON organization_ratings(organization_id);
+    CREATE INDEX idx_org_ratings_owner ON organization_ratings(owner_id);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS organization_ratings;
+  ''',
+);
+
+/// Migration 034: Laborbefunde
+const _migration034CreateLabResults = Migration(
+  version: 34,
+  name: 'create_lab_results',
+  up: '''
+    CREATE TABLE lab_results (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      recorded_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      test_name VARCHAR(255) NOT NULL,
+      test_category VARCHAR(100),
+      result_value TEXT NOT NULL,
+      unit VARCHAR(50),
+      reference_range VARCHAR(100),
+      is_abnormal BOOLEAN NOT NULL DEFAULT false,
+      notes TEXT,
+      tested_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_lab_results_pet ON lab_results(pet_id);
+    CREATE INDEX idx_lab_results_tested_at ON lab_results(tested_at);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS lab_results;
+  ''',
+);
+
+/// Migration 033: Körpertemperatur-Verlauf
+const _migration033CreateTemperatureHistory = Migration(
+  version: 33,
+  name: 'create_temperature_history',
+  up: '''
+    CREATE TABLE temperature_history (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+      recorded_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      temperature_celsius DECIMAL(4,1) NOT NULL,
+      measurement_method VARCHAR(50),
+      note TEXT,
+      recorded_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX idx_temperature_history_pet ON temperature_history(pet_id);
+    CREATE INDEX idx_temperature_history_recorded_at ON temperature_history(recorded_at);
+  ''',
+  down: '''
+    DROP TABLE IF EXISTS temperature_history;
+  ''',
+);
+
+/// Migration 032: Behandlungsnotizen für Termine
+const _migration032AddTreatmentNotes = Migration(
+  version: 32,
+  name: 'add_treatment_notes_to_appointments',
+  up: '''
+    ALTER TABLE appointments ADD COLUMN IF NOT EXISTS treatment_notes TEXT;
+    ALTER TABLE appointments ADD COLUMN IF NOT EXISTS diagnosis TEXT;
+  ''',
+  down: '''
+    ALTER TABLE appointments DROP COLUMN IF EXISTS treatment_notes;
+    ALTER TABLE appointments DROP COLUMN IF EXISTS diagnosis;
+  ''',
+);
 
 /// Migration 001: Benutzer-Tabelle erstellen
 const _migration001CreateUsers = Migration(
