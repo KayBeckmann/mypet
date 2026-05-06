@@ -138,7 +138,7 @@ Alle vier Apps haben identisches Muster:
 
 ### Datenbank
 
-24 Migrationen (in `migrations.dart`), alle als `const Migration(version, name, up, down)`. Kernentitäten:
+38 Migrationen (in `migrations.dart`), alle als `const Migration(version, name, up, down)`. Kernentitäten:
 
 | Tabelle | Zweck |
 |---------|-------|
@@ -150,6 +150,10 @@ Alle vier Apps haben identisches Muster:
 | `families` | Familiengruppen für Besitzer |
 | `pet_notes` | Verschlüsselt gespeichert (AES-256-CBC via `EncryptionService`) |
 | `media` | Datei-Metadaten, Binärdaten lokal im `UPLOAD_PATH` |
+| `temperature_history` | Körpertemperatur-Verlauf (Migration 033) |
+| `lab_results` | Laborbefunde vom Tierarzt (Migration 034) |
+| `organization_ratings` | 1–5 Sterne Bewertungen für Praxen (Migration 035) |
+| `patient_assignments` | Patientenzuweisung an Teammitglieder (Migration 037) |
 
 `updated_at`-Spalten werden automatisch via PostgreSQL-Trigger aktualisiert (in Migration 001 angelegt, für alle Tabellen wiederverwendet).
 

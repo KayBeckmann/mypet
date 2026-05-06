@@ -1292,6 +1292,440 @@ services:
 
 ---
 
+---
+
+## Phase 64: Behandlungsnotizen für Termine ✅ *(2026-05-06)*
+
+### M64.1 - Backend: Behandlungsnotizen ✅
+- [x] Migration 032: `treatment_notes` + `diagnosis` zu `appointments`
+- [x] `PUT /appointments/:id/notes` — nur Tierarzt/Dienstleister des Termins
+
+### M64.2 - web_vet: Notizen setzen ✅
+- [x] `VetAppointment`: `treatmentNotes` + `diagnosis` Felder
+- [x] `VetAppointmentProvider.setNotes()` — PUT /appointments/:id/notes
+- [x] Vergangene Termine: „Behandlungsnotizen"-Button + Dialog (Diagnose + Notizen)
+- [x] Terminkarte zeigt Diagnose (blau) + Notizen inline an
+
+### M64.3 - web_owner: Behandlungsbericht anzeigen ✅
+- [x] `Appointment`-Model: `treatmentNotes` + `diagnosis`
+- [x] Abgeschlossene Termine zeigen Behandlungsbericht-Panel (Diagnose + Notizen)
+
+---
+
+## Phase 65: Körpertemperatur-Tracking ✅ *(2026-05-06)*
+
+### M65.1 - Backend ✅
+- [x] Migration 033: Tabelle `temperature_history` (temperature_celsius, measurement_method, note)
+- [x] `TemperatureController`: GET/POST/DELETE /pets/:id/temperature
+- [x] Validierung 25–45 °C, in petsCascade eingehängt
+
+### M65.2 - web_owner ✅
+- [x] `TemperatureProvider` (loadForPet, add, delete)
+- [x] `TemperatureScreen` — Pet-Selector, Stats-Row, Liniendiagramm (CustomPainter, Normalbereich-Shading), Eintrags-Liste
+- [x] Farbcodierung: Normal (grün) / Erhöht (rot) / Niedrig (blau)
+- [x] Route `/temperature` + Sidebar-Eintrag
+- [x] `_TemperatureCard` im AnimalDetailScreen (letzter Messwert + Status)
+
+---
+
+## Phase 66: Laborbefunde für Tierärzte ✅ *(2026-05-06)*
+
+### M66.1 - Backend ✅
+- [x] Migration 034: Tabelle `lab_results` (test_name, test_category, result_value, unit, reference_range, is_abnormal, notes, tested_at)
+- [x] `LabResultController`: GET/POST/PUT/DELETE /pets/:id/lab-results
+- [x] Nur Tierärzte können Befunde eintragen, in petsCascade eingehängt
+
+### M66.2 - web_vet: Labor-Tab im PatientDetailScreen ✅
+- [x] `VetLabResultProvider` (loadForPet, create, delete)
+- [x] 12. Tab „Labor" in `patient_detail_screen.dart`
+- [x] Ergebnis mit Einheit, Referenzbereich, Kategorie-Badge, Auffällig-Warnung
+- [x] In `main.dart` registriert
+
+### M66.3 - web_owner: Laborbefunde read-only ✅
+- [x] `OwnerLabResultProvider` (loadForPet, read-only)
+- [x] `_LabResultsCard` im AnimalDetailScreen (Vorschau mit Auffällig-Banner)
+- [x] In `main.dart` registriert
+
+---
+
+---
+
+## Phase 67: Gesundheitspass (Druckansicht) ✅ *(2026-05-06)*
+
+### M67.1 - Backend ✅
+- [x] `GET /pets/:id/health-passport` — aggregiert Tier, Besitzer, Impfungen, Allergien, Medikamente, Laborbefunde, Notfallkontakte
+
+### M67.2 - web_owner: HealthPassportScreen ✅
+- [x] Pet-Selector, Übersichts-Vorschau (Karten je Kategorie)
+- [x] „Drucken / PDF"-Button öffnet druckfertiges HTML im neuen Tab + löst window.print() aus
+- [x] Route `/health-passport` + Sidebar-Eintrag
+
+---
+
+---
+
+## Phase 68: Tierarzt-Bewertungen ✅ *(2026-05-06)*
+
+### M68.1 - Backend ✅
+- [x] Migration 035: Tabelle `organization_ratings` (rating 1–5, review, appointment_id)
+- [x] `RatingController`: GET/POST/DELETE /organizations/:id/ratings
+- [x] Durchschnitts-Stats (avg_rating, total_count) in GET-Antwort
+- [x] Upsert bei doppelter Bewertung für gleichen Termin
+
+### M68.2 - web_owner ✅
+- [x] „Bewerten"-Button auf abgeschlossenen Terminen mit Organisation
+- [x] 5-Sterne-Dialog + optionaler Kommentar
+- [x] `_OrgCard` im Marktplatz: lädt Durchschnittsbewertung, zeigt Sterne + Anzahl
+
+---
+
+---
+
+## Phase 69: Tier-Kalender (web_owner) ✅ *(2026-05-06)*
+
+### M69.1 - Kalender-Screen ✅
+- [x] `PetCalendarScreen` — Monatsansicht mit Farbpunkt-Markierungen je Ereignistyp
+- [x] Aggregiert: Termine, Impfungs-Ablaufdaten, Medikamenten-Enddaten, Erinnerungen
+- [x] Tier-Filter (alle oder einzelnes Tier)
+- [x] Klick auf Tag zeigt Ereignis-Liste des Tages
+- [x] Legende (Farben je Typ), "Heute"-Markierung
+- [x] Route `/calendar` + Sidebar-Eintrag
+
+---
+
+## Phase 70: Provider Tages-Agenda ✅ *(2026-05-06)*
+
+### M70.1 - Agenda-Panel im Dashboard ✅
+- [x] Heute-Termine chronologisch als kompakte Liste
+- [x] Vergangene Termine abgedimmt, inkl. Tier + Besitzername
+- [x] Nur sichtbar wenn Termine heute vorhanden
+
+---
+
+---
+
+## Phase 71: Vet-Dashboard — Zuletzt gesehene Patienten ✅ *(2026-05-06)*
+
+### M71.1 ✅
+- [x] `_RecentlySeenPatients`-Chips im Vet-Dashboard
+- [x] Zeigt die letzten 5 Patienten (aus vergangenen Terminen, dedupliziert)
+- [x] Klick navigiert direkt zur Patientendetailansicht
+
+---
+
+## Phase 72: Dashboard Medikament „Schnell-Geben" ✅ *(2026-05-06)*
+
+### M72.1 ✅
+- [x] Check-Icon-Button auf jedem Medikament im Dashboard-Panel
+- [x] Ruft `MedicationProvider.administer()` direkt aus dem Dashboard auf
+
+---
+
+---
+
+## Phase 73: Admin Wachstums-Grafik ✅ *(2026-05-06)*
+
+### M73.1 - Backend ✅
+- [x] `GET /admin/growth` — neue Nutzer, Tiere und Termine pro Tag (letzte 30 Tage)
+
+### M73.2 - web_admin ✅
+- [x] `_GrowthChart`-Widget mit Balkendiagramm (CustomPainter, 3 Datensätze)
+- [x] Parallel geladen neben `/admin/stats` beim Dashbaord-Init
+- [x] Farb-Legende (Nutzer / Tiere / Termine)
+
+---
+
+---
+
+## Phase 74: Tier-Timeline (web_owner) ✅ *(2026-05-06)*
+
+### M74.1 ✅
+- [x] `PetTimelineScreen` — chronologische Übersicht aller Ereignisse (Termine, Impfungen, Gewicht, Labor)
+- [x] Tier-Selector als FilterChips, Farbkodierung je Typ
+- [x] Vertikale Timeline-Darstellung mit Verbindungslinien
+- [x] Route `/timeline` + Sidebar-Eintrag
+
+---
+
+## Phase 75: Diagnosen-Vorschläge (web_vet) ✅ *(2026-05-06)*
+
+### M75.1 ✅
+- [x] 10 häufige Tier-Diagnosen als Schnellauswahl-Chips im Behandlungsnotizen-Dialog
+- [x] Klick füllt Diagnose-Feld automatisch vor (überschreibbar)
+
+---
+
+## Phase 76: Kunden-Arten-Filter (web_provider) ✅ *(2026-05-06)*
+
+### M76.1 ✅
+- [x] FilterChips in Kunden-Liste: Alle / Hund / Katze / etc. (automatisch aus vorhandenen Daten)
+- [x] Kombination mit bestehender Text-Suche
+
+---
+
+---
+
+## Phase 77: Admin CSV-Export ✅ *(2026-05-06)*
+
+### M77.1 ✅
+- [x] CSV-Export-Button in der Benutzerverwaltung (web_admin)
+- [x] Direkter Browser-Download via `dart:html` Blob + Anchor
+- [x] Felder: ID, E-Mail, Name, Rolle, Aktiv, Verifiziert, Erstellt
+
+---
+
+## Phase 78: Vet Patienten-Dossier-Druck ✅ *(2026-05-06)*
+
+### M78.1 ✅
+- [x] Drucken-Button in der AppBar des PatientDetailScreen
+- [x] `_printDossier()`: Impfungen, aktive Medikamente, letzte 10 Akte-Einträge als HTML
+- [x] Öffnet neuen Tab + löst window.print() aus
+
+---
+
+---
+
+## Phase 79: Rate-Limiting für Auth-Endpoints ✅ *(2026-05-06)*
+
+### M79.1 ✅
+- [x] `rate_limit_middleware.dart` — In-Memory, 10 Versuche / 60 Sekunden pro IP
+- [x] Auf `/auth`-Route angewendet
+- [x] Erfolgreicher Login setzt Zähler zurück; 401/403 erhöhen ihn
+
+---
+
+## Phase 80: Tier-Statistiken (Backend + web_owner) ✅ *(2026-05-06)*
+
+### M80.1 - Backend ✅
+- [x] `GET /pets/:id/stats` — aggregiert Impfungen, Medikamente, Termine, Akte, Labor, Allergien, letzte Messwerte, nächste Impfablauffrist
+
+### M80.2 - web_owner ✅
+- [x] `_QuickStatsRow` mit farbigen Chips direkt im AnimalDetailScreen
+- [x] Lädt beim initState asynchron, erscheint wenn verfügbar
+
+---
+
+---
+
+## Phase 81: Globale Suche (web_owner) ✅ *(2026-05-06)*
+
+### M81.1 ✅
+- [x] TopBar-Suchfeld ist jetzt funktional (statt Dummy-Platzhalter)
+- [x] Durchsucht Tiere (Name, Rasse, Art), Termine (Titel, Praxis), Erinnerungen (Titel)
+- [x] Dropdown mit max. 6 Ergebnissen, Klick navigiert direkt
+- [x] Clear-Button, Schließen nach Auswahl
+
+---
+
+---
+
+## Phase 82: Leistungs-Vorlage & Service-Duplizierung (web_provider) ✅ *(2026-05-06)*
+
+### M82.1 ✅
+- [x] „Als Vorlage"-Button auf jedem Leistungs-Eintrag
+- [x] Öffnet den Leistungs-Dialog mit vorausgefülltem Titel + Typ
+
+---
+
+---
+
+## Phase 83: Tier-Archivierung ✅ *(2026-05-06)*
+
+### M83.1 - Backend ✅
+- [x] Migration 036: `archived_at` + `archived_reason` zu `pets`
+- [x] `PUT /pets/:id/archive` — setzt archived_at auf NOW()
+- [x] `PUT /pets/:id/unarchive` — setzt archived_at auf NULL
+
+### M83.2 - web_owner ✅
+- [x] „Archivieren"-Button im AnimalDetailScreen (neben Löschen)
+- [x] Dialog mit optionalem Grund, navigiert nach Archivierung zurück zur Liste
+
+---
+
+---
+
+## Phase 84: Quick-Add Erinnerung im Dashboard ✅ *(2026-05-06)*
+
+### M84.1 ✅
+- [x] „+"-Button im Erinnerungs-Panel auf dem Dashboard
+- [x] Dialog: Titel + Datum → `ReminderProvider.create()` direkt
+
+---
+
+## Phase 85: API-Fehlerbehandlung verbessert ✅ *(2026-05-06)*
+
+### M85.1 ✅
+- [x] ApiService._handleResponse: Typisierte Fehlermeldungen je HTTP-Status (401, 403, 404, 409, 429, 5xx)
+- [x] Body wird sicher geparst, auch wenn leer
+
+---
+
+## Phase 86: Fütterungs-Streak ✅ *(2026-05-06)*
+
+### M86.1 ✅
+- [x] `_StreakBadge` im Fütterungs-Protokoll: Anzahl aufeinanderfolgender Fütterungs-Tage
+- [x] 🔥 Emoji + "X Tage"-Badge, erscheint nur wenn Streak > 0
+
+---
+
+## Phase 87: Impf-Zertifikat Ausdruck (web_vet) ✅ *(2026-05-06)*
+
+### M87.1 ✅
+- [x] „Zertifikat"-Button im Impfungen-Tab von PatientDetailScreen
+- [x] Druckbares HTML: Tabelle aller Impfungen (Impfstoff, Hersteller, Charge, Datum, Gültig bis, Tierarzt)
+
+---
+
+---
+
+## Phase 88: Patienten-Zuweisung (web_vet) ✅ *(2026-05-06)*
+
+### M88.1 - Backend ✅
+- [x] Migration 037: Tabelle `patient_assignments` (pet_id, org_id, assigned_to, note) UNIQUE per Pet+Org
+- [x] `PatientAssignmentController`: GET/PUT/DELETE /pets/:petId/assignment
+
+### M88.2 - web_vet ✅
+- [x] Zuweisung laden in initState
+- [x] AppBar zeigt zuständigen Mitarbeiter als Chip
+- [x] „Zuweisen"-Button öffnet Dialog (Dropdown: alle Org-Mitglieder + Notiz)
+- [x] DELETE bei "Keine Zuweisung" Auswahl
+
+---
+
+---
+
+## Phase 89: Wiederholungs-Termine (web_vet + Backend) ✅ *(2026-05-06)*
+
+### M89.1 - Backend ✅
+- [x] Migration 038: `is_recurring`, `recurrence_interval` (enum), `recurrence_count`, `parent_appointment_id` zu appointments
+- [x] POST /appointments erstellt automatisch Follow-up-Termine (max 12 Wiederholungen)
+
+### M89.2 - web_vet ✅
+- [x] „Wiederholungstermin"-Switch im Neu-Termin-Dialog
+- [x] Dropdown: Täglich / Wöchentlich / Monatlich / Jährlich + Anzahl
+- [x] SnackBar zeigt Anzahl erstellter Wiederholungen
+
+---
+
+---
+
+## Phase 90: Admin Benutzer-Aktivität ✅ *(2026-05-06)*
+
+### M90.1 - Backend ✅
+- [x] `GET /admin/users/:id` gibt jetzt zusätzlich `stats` (Tier-Anzahl, Termin-Anzahl) und `recent_activity` (letzte 5 Audit-Log-Einträge) zurück
+
+### M90.2 - web_admin ✅
+- [x] UserDetailScreen lädt direkt via API statt aus Cache
+- [x] Statistik-Karte: Tiere + Termine-Anzahl
+- [x] Letzte Aktivität als Liste (Action + Ressource + Datum)
+- [x] `_StatTile`-Widget für kompakte Stat-Anzeige
+
+---
+
+---
+
+## Phase 91: Tier-Vergleich (web_owner) ✅ *(2026-05-06)*
+
+### M91.1 ✅
+- [x] `PetComparisonScreen` — bis zu 3 Tiere gleichzeitig vergleichen
+- [x] Tabellen-Ansicht: Tierart, Rasse, Alter, Gewicht, Impfungen, Medikamente, Termine, Allergien, Chip
+- [x] Stats via /pets/:id/stats geladen (async)
+- [x] Route `/compare` + Sidebar-Eintrag
+
+---
+
+## Phase 92: Gesundheits-Score ✅ *(2026-05-06)*
+
+### M92.1 - Backend ✅
+- [x] `health_score` (0–100) in GET /pets/:id/stats: berechnet aus Impfstatus, Ablauffristen, Gewichts-Tracking
+
+### M92.2 - web_owner ✅
+- [x] `_HealthScoreBar` im AnimalDetailScreen: Fortschrittsbalken + Label (Gut/Mittel/Aufmerksamkeit)
+- [x] Farbkodierung: grün ≥80, orange ≥50, rot <50
+
+---
+
+---
+
+## Phase 93: API-Info Endpoint & Dashboard Quick-Actions ✅ *(2026-05-06)*
+
+### M93.1 ✅
+- [x] GET / gibt jetzt strukturierte API-Info (version, migrations, endpoints) zurück
+- [x] Dashboard Quick-Actions um Kalender, Gesundheitspass, Tier-Vergleich erweitert
+
+---
+
+---
+
+## Phase 94: Medikamenten-Duplikat-Warnung ✅ *(2026-05-06)*
+
+### M94.1 - Backend ✅
+- [x] POST /pets/:id/medications: Prüft ob ähnliches Medikament bereits aktiv → `warning` in Response
+
+### M94.2 - web_vet ✅
+- [x] `MedicalProvider.medicationWarning` gespeichert nach `createMedication()`
+- [x] Orange SnackBar mit Warnung (5 Sekunden) wenn Duplikat gefunden
+
+---
+
+---
+
+## Phase 95: Jahresrückblick (web_owner) ✅ *(2026-05-06)*
+
+### M95.1 ✅
+- [x] `YearReviewScreen` — Jahr-Selector, Pet-Selector
+- [x] Hero-Statistik-Chips (Termine, Abgeschlossen, Impfungen, Gewichtsmessungen)
+- [x] Monatliches Balkendiagramm der Termine
+- [x] Gewichtsverlauf-Zusammenfassung (Start → Ende + Delta)
+- [x] Persönlicher Summary-Text je nach Aktivitätslevel
+- [x] Route `/year-review` + Sidebar-Eintrag
+
+---
+
+---
+
+## Phase 96: Impfstatus-Ampel im Dashboard ✅ *(2026-05-06)*
+
+### M96.1 ✅
+- [x] `_VaccinationStatusRow` im Dashboard: Tier-Badges mit grün (OK) oder orange (bald ablaufend)
+- [x] Nutzt bereits geladene `_expiringVaccinations`-Daten
+
+---
+
+## Phase 97: Input-Sanitizer Utility ✅ *(2026-05-06)*
+
+### M97.1 ✅
+- [x] `InputSanitizer`-Klasse in backend/lib/utils/sanitizer.dart
+- [x] sanitizeText, sanitizeEmail, sanitizeName, sanitizePhone, clampInt, isValidUuid/Email
+
+---
+
+## Phase 98: Skeleton-Loading (web_owner) ✅ *(2026-05-06)*
+
+### M98.1 ✅
+- [x] `SkeletonBox`, `PetCardSkeleton`, `PetListSkeleton` Widgets (pulsierende Animation)
+- [x] AnimalsScreen zeigt Skeleton während pets.isLoading && pets.isEmpty
+
+---
+
+---
+
+## Phase 99: Schnell-Notiz auf Patientenliste (web_vet) ✅ *(2026-05-06)*
+
+### M99.1 ✅
+- [x] Notiz-Button auf jedem Patienten-Listeneintrag in PatientsScreen
+- [x] Dialog mit Freitext → POST /pets/:id/notes (visibility: colleagues)
+
+---
+
+## Phase 100: CLAUDE.md & Memory aktualisiert ✅ *(2026-05-06)*
+
+### M100.1 ✅
+- [x] CLAUDE.md: Migrations-Zähler auf 38, neue Tabellen dokumentiert
+- [x] Memory: Vollständiger Stand nach Phase 100
+
+---
+
 ## Notizen
 
 *Anpassungen und Änderungen an der Roadmap hier dokumentieren.*
