@@ -708,9 +708,11 @@ class _FeedingLogPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Protokoll',
-            style: Theme.of(context).textTheme.headlineSmall,
+          Row(
+            children: [
+              Expanded(child: Text('Protokoll', style: Theme.of(context).textTheme.headlineSmall)),
+              _StreakBadge(log: log),
+            ],
           ),
           if (rate != null) ...[
             const SizedBox(height: 12),
@@ -874,6 +876,61 @@ class _EmptyState extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StreakBadge extends StatelessWidget {
+  final List<FeedingLogEntry> log;
+  const _StreakBadge({required this.log});
+
+  int _calcStreak() {
+    if (log.isEmpty) return 0;
+    final fedDays = log
+        .where((e) => !e.skipped)
+        .map((e) => DateTime(e.fedAt.year, e.fedAt.month, e.fedAt.day))
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a)); // Neueste zuerst
+
+    if (fedDays.isEmpty) return 0;
+
+    int streak = 0;
+    DateTime expected = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+
+    for (final d in fedDays) {
+      if (d == expected || d == expected.subtract(const Duration(days: 1))) {
+        streak++;
+        expected = d.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final streak = _calcStreak();
+    if (streak == 0) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('🔥', style: TextStyle(fontSize: 14)),
+          const SizedBox(width: 4),
+          Text('$streak Tag${streak == 1 ? '' : 'e'}',
+              style: const TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w700, color: Colors.orange)),
+        ],
       ),
     );
   }

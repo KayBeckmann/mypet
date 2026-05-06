@@ -146,7 +146,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                                 : provider.past.take(5).toList())
                             .map((a) => Padding(
                                   padding: const EdgeInsets.only(bottom: 8),
-                                  child: _AppointmentTile(appointment: a),
+                                  child: _AppointmentTile(
+                                    appointment: a,
+                                    onRate: a.status == AppointmentStatus.completed &&
+                                            a.organizationId != null
+                                        ? () => _showRatingDialog(context, a)
+                                        : null,
+                                  ),
                                 )),
                         if (provider.past.length > 5) ...[
                           const SizedBox(height: 8),
@@ -187,6 +193,85 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       context: context,
       builder: (ctx) => BookAppointmentDialog(pets: pets),
     );
+  }
+
+  Future<void> _showRatingDialog(BuildContext context, Appointment a) async {
+    int selectedRating = 5;
+    final reviewCtrl = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: Text('${a.organizationName ?? 'Praxis'} bewerten'),
+          content: SizedBox(
+            width: 360,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Wie war dein Termin?',
+                    style: TextStyle(color: LivingLedgerTheme.onSurfaceVariant)),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (i) {
+                    final star = i + 1;
+                    return IconButton(
+                      icon: Icon(
+                        star <= selectedRating ? Icons.star_rounded : Icons.star_border_rounded,
+                        color: Colors.amber,
+                        size: 36,
+                      ),
+                      onPressed: () => setDs(() => selectedRating = star),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: reviewCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Kommentar (optional)',
+                    border: OutlineInputBorder(),
+                    hintText: 'Deine Erfahrung...',
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Abbrechen')),
+            FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Bewertung abgeben')),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final api = context.read<ApiService>();
+        await api.post('/organizations/${a.organizationId}/ratings', body: {
+          'rating': selectedRating,
+          'appointment_id': a.id,
+          if (reviewCtrl.text.trim().isNotEmpty) 'review': reviewCtrl.text.trim(),
+        });
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Bewertung gespeichert. Danke!')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Fehler: $e')),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _confirmCancel(BuildContext context, Appointment a) async {
@@ -298,8 +383,9 @@ class _EmptyHint extends StatelessWidget {
 class _AppointmentTile extends StatelessWidget {
   final Appointment appointment;
   final VoidCallback? onCancel;
+  final VoidCallback? onRate;
 
-  const _AppointmentTile({required this.appointment, this.onCancel});
+  const _AppointmentTile({required this.appointment, this.onCancel, this.onRate});
 
   @override
   Widget build(BuildContext context) {
@@ -466,6 +552,54 @@ class _AppointmentTile extends StatelessWidget {
                   color: LivingLedgerTheme.onSurfaceVariant),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
+            ),
+          ],
+
+          // Treatment notes (for completed appointments)
+          if (appointment.status == AppointmentStatus.completed &&
+              (appointment.diagnosis != null || appointment.treatmentNotes != null)) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: LivingLedgerTheme.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: LivingLedgerTheme.primary.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.medical_information_outlined, size: 13, color: LivingLedgerTheme.primary),
+                      const SizedBox(width: 4),
+                      Text('Behandlungsbericht', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: LivingLedgerTheme.primary)),
+                    ],
+                  ),
+                  if (appointment.diagnosis != null) ...[
+                    const SizedBox(height: 4),
+                    Text('Diagnose: ${appointment.diagnosis}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                  ],
+                  if (appointment.treatmentNotes != null) ...[
+                    const SizedBox(height: 2),
+                    Text(appointment.treatmentNotes!, style: TextStyle(fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant)),
+                  ],
+                ],
+              ),
+            ),
+          ],
+
+          // Rate button for completed appointments
+          if (onRate != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: onRate,
+                icon: const Icon(Icons.star_border_rounded, size: 16, color: Colors.amber),
+                label: const Text('Bewerten', style: TextStyle(fontSize: 12, color: Colors.amber)),
+                style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4)),
+              ),
             ),
           ],
 

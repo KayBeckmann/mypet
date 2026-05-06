@@ -23,6 +23,9 @@ import '../providers/prescription_provider.dart';
 import '../providers/owner_notes_provider.dart';
 import '../providers/allergy_provider.dart';
 import '../providers/emergency_contact_provider.dart';
+import '../providers/temperature_provider.dart';
+import '../providers/lab_result_provider.dart';
+import '../services/api_service.dart';
 import '../services/file_picker_service.dart';
 
 class AnimalDetailScreen extends StatefulWidget {
@@ -39,6 +42,8 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
   final _dateFormat = DateFormat('dd.MM.yyyy');
 
   @override
+  Map<String, dynamic>? _petStats;
+
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -47,7 +52,16 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
       context.read<MedicationProvider>().loadForPet(widget.petId);
       final wp = context.read<WeightProvider>();
       if (wp.selectedPetId != widget.petId) wp.loadForPet(widget.petId);
+      _loadPetStats();
     });
+  }
+
+  Future<void> _loadPetStats() async {
+    try {
+      final api = context.read<ApiService>();
+      final data = await api.get('/pets/${widget.petId}/stats');
+      if (mounted) setState(() => _petStats = data['stats'] as Map<String, dynamic>?);
+    } catch (_) {}
   }
 
   @override
@@ -314,6 +328,14 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
           ),
           const SizedBox(height: 32),
 
+          // Health Score + Quick Stats
+          if (_petStats != null) ...[
+            _HealthScoreBar(score: _petStats!['health_score'] as int? ?? 0),
+            const SizedBox(height: 12),
+            _QuickStatsRow(stats: _petStats!),
+            const SizedBox(height: 20),
+          ],
+
           // Vaccination + Media Row
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,6 +370,8 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
 
           // Weight trend (full width)
           _WeightCard(petId: widget.petId),
+          _TemperatureCard(petId: widget.petId),
+          _LabResultsCard(petId: widget.petId),
           const SizedBox(height: 20),
 
           // Upcoming appointments for this pet
@@ -375,6 +399,16 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
                 ),
               ),
               const SizedBox(width: 16),
+              TextButton.icon(
+                onPressed: () => _showArchiveDialog(context, pet),
+                icon: Icon(Icons.archive_outlined,
+                    size: 18, color: Colors.orange),
+                label: const Text(
+                  'Archivieren',
+                  style: TextStyle(color: Colors.orange),
+                ),
+              ),
+              const SizedBox(width: 8),
               TextButton.icon(
                 onPressed: () => _showDeleteDialog(context, pet),
                 icon: Icon(Icons.delete_outline_rounded,
@@ -875,6 +909,62 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showArchiveDialog(BuildContext context, Pet pet) async {
+    final reasonCtrl = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('${pet.name} archivieren'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Das Tier wird in ein Archiv verschoben und erscheint nicht mehr in der aktiven Tierliste.'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Grund (optional)',
+                border: OutlineInputBorder(),
+                hintText: 'z.B. verstorben, abgegeben...',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Abbrechen')),
+          OutlinedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: OutlinedButton.styleFrom(foregroundColor: Colors.orange),
+            child: const Text('Archivieren'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final api = context.read<ApiService>();
+        await api.put('/pets/${pet.id}/archive', body: {
+          if (reasonCtrl.text.trim().isNotEmpty) 'reason': reasonCtrl.text.trim(),
+        });
+        if (context.mounted) {
+          await context.read<PetProvider>().loadPets();
+          context.go('/animals');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${pet.name} wurde archiviert')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Fehler: $e')),
+          );
+        }
+      }
+    }
   }
 
   void _showDeleteDialog(BuildContext context, Pet pet) {
@@ -2157,6 +2247,344 @@ class _SparklinePainter extends CustomPainter {
   @override
   bool shouldRepaint(_SparklinePainter old) =>
       old.values != values || old.color != color;
+}
+
+// ── Temperature Card ──────────────────────────────────────────────────────────
+
+class _TemperatureCard extends StatelessWidget {
+  final String petId;
+  const _TemperatureCard({required this.petId});
+
+  @override
+  Widget build(BuildContext context) {
+    final tp = context.watch<TemperatureProvider>();
+    if (tp.selectedPetId != petId) {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => context.read<TemperatureProvider>().loadForPet(petId));
+    }
+    final entries = tp.selectedPetId == petId ? tp.entries : <TemperatureEntry>[];
+    final latest = entries.isEmpty ? null : entries.last;
+
+    return _DetailCard(
+      title: 'KÖRPERTEMPERATUR',
+      action: TextButton.icon(
+        onPressed: () => context.go('/temperature'),
+        icon: const Icon(Icons.thermostat_rounded, size: 14),
+        label: const Text('Alle'),
+        style: TextButton.styleFrom(
+            padding: EdgeInsets.zero, textStyle: const TextStyle(fontSize: 12)),
+      ),
+      children: [
+        if (tp.loading && entries.isEmpty)
+          const Center(child: CircularProgressIndicator(strokeWidth: 2))
+        else if (latest == null)
+          Row(
+            children: [
+              Expanded(
+                child: _EmptyState(
+                  icon: Icons.thermostat_outlined,
+                  label: 'Noch keine Temperatur gemessen',
+                ),
+              ),
+            ],
+          )
+        else ...[
+          Row(
+            children: [
+              Icon(
+                Icons.thermostat_rounded,
+                size: 36,
+                color: latest.isHigh
+                    ? LivingLedgerTheme.error
+                    : latest.isLow
+                        ? Colors.blue
+                        : LivingLedgerTheme.success,
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${latest.temperatureCelsius.toStringAsFixed(1)} °C',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: latest.isHigh
+                          ? LivingLedgerTheme.error
+                          : latest.isLow
+                              ? Colors.blue
+                              : LivingLedgerTheme.success,
+                    ),
+                  ),
+                  Text(
+                    latest.isHigh
+                        ? 'Erhöht'
+                        : latest.isLow
+                            ? 'Niedrig'
+                            : 'Normal',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: LivingLedgerTheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                '${entries.length} Messungen',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: LivingLedgerTheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          if (latest.note != null) ...[
+            const SizedBox(height: 8),
+            Text(latest.note!,
+                style: TextStyle(
+                    fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant)),
+          ],
+        ],
+      ],
+    );
+  }
+}
+
+// ── Health Score Bar ──────────────────────────────────────────────────────────
+
+class _HealthScoreBar extends StatelessWidget {
+  final int score;
+  const _HealthScoreBar({required this.score});
+
+  Color get _color {
+    if (score >= 80) return LivingLedgerTheme.success;
+    if (score >= 50) return Colors.orange;
+    return LivingLedgerTheme.error;
+  }
+
+  String get _label {
+    if (score >= 80) return 'Gut';
+    if (score >= 50) return 'Mittel';
+    return 'Aufmerksamkeit erforderlich';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: _color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.favorite_rounded, color: _color, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text('Gesundheits-Score',
+                        style: TextStyle(fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant)),
+                    const Spacer(),
+                    Text('$score/100',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: _color)),
+                    const SizedBox(width: 6),
+                    Text(_label,
+                        style: TextStyle(fontSize: 12, color: _color)),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: score / 100,
+                    backgroundColor: _color.withValues(alpha: 0.15),
+                    valueColor: AlwaysStoppedAnimation(_color),
+                    minHeight: 6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Quick Stats Row ───────────────────────────────────────────────────────────
+
+class _QuickStatsRow extends StatelessWidget {
+  final Map<String, dynamic> stats;
+  const _QuickStatsRow({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final nextExpiry = stats['next_vaccination_expiry'] as Map<String, dynamic>?;
+    final daysRemaining = nextExpiry?['days_remaining'] as int?;
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        _StatChip(
+          icon: Icons.vaccines_rounded,
+          value: '${stats['vaccinations_total'] ?? 0}',
+          label: 'Impfungen',
+          color: Colors.teal,
+        ),
+        _StatChip(
+          icon: Icons.medication_rounded,
+          value: '${stats['active_medications'] ?? 0}',
+          label: 'Medikamente',
+          color: Colors.purple,
+        ),
+        _StatChip(
+          icon: Icons.event_rounded,
+          value: '${stats['appointments_total'] ?? 0}',
+          label: 'Termine',
+          color: LivingLedgerTheme.primary,
+        ),
+        _StatChip(
+          icon: Icons.folder_rounded,
+          value: '${stats['medical_records_total'] ?? 0}',
+          label: 'Akte',
+          color: Colors.brown,
+        ),
+        _StatChip(
+          icon: Icons.biotech_outlined,
+          value: '${stats['lab_results_total'] ?? 0}',
+          label: 'Labor',
+          color: Colors.deepPurple,
+        ),
+        if (daysRemaining != null)
+          _StatChip(
+            icon: Icons.vaccines_rounded,
+            value: daysRemaining <= 0 ? 'Abgelaufen' : '${daysRemaining}d',
+            label: 'Nächste Impfung',
+            color: daysRemaining <= 30 ? LivingLedgerTheme.error : Colors.orange,
+          ),
+      ],
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final Color color;
+  const _StatChip({required this.icon, required this.value, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 16),
+          const SizedBox(width: 6),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: color)),
+              Text(label, style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Lab Results Card ──────────────────────────────────────────────────────────
+
+class _LabResultsCard extends StatelessWidget {
+  final String petId;
+  const _LabResultsCard({required this.petId});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<OwnerLabResultProvider>();
+    if (provider.selectedPetId != petId) {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => context.read<OwnerLabResultProvider>().loadForPet(petId));
+    }
+    final results = provider.selectedPetId == petId ? provider.results : <OwnerLabResult>[];
+    final abnormal = results.where((r) => r.isAbnormal).toList();
+    final preview = results.take(4).toList();
+
+    return _DetailCard(
+      title: 'LABORBEFUNDE',
+      children: [
+        if (provider.loading && results.isEmpty)
+          const Center(child: CircularProgressIndicator(strokeWidth: 2))
+        else if (results.isEmpty)
+          _EmptyState(
+            icon: Icons.biotech_outlined,
+            label: 'Noch keine Laborbefunde eingetragen',
+          )
+        else ...[
+          if (abnormal.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: LivingLedgerTheme.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, size: 14, color: LivingLedgerTheme.error),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${abnormal.length} auffällige Wert${abnormal.length == 1 ? '' : 'e'}',
+                    style: TextStyle(fontSize: 12, color: LivingLedgerTheme.error, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ...preview.map((r) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                Icon(
+                  r.isAbnormal ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
+                  size: 14,
+                  color: r.isAbnormal ? LivingLedgerTheme.error : LivingLedgerTheme.success,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${r.testName}: ${r.resultValue}${r.unit != null ? ' ${r.unit}' : ''}',
+                    style: const TextStyle(fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(r.dateLabel, style: TextStyle(fontSize: 11, color: LivingLedgerTheme.onSurfaceVariant)),
+              ],
+            ),
+          )),
+          if (results.length > 4)
+            Text(
+              '+ ${results.length - 4} weitere',
+              style: TextStyle(fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant),
+            ),
+        ],
+      ],
+    );
+  }
 }
 
 // ── Notes Card ───────────────────────────────────────────────────────────────

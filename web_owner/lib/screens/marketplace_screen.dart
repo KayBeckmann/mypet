@@ -174,13 +174,45 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   }
 }
 
-class _OrgCard extends StatelessWidget {
+class _OrgCard extends StatefulWidget {
   final Map<String, dynamic> org;
   const _OrgCard({required this.org});
 
   @override
+  State<_OrgCard> createState() => _OrgCardState();
+}
+
+class _OrgCardState extends State<_OrgCard> {
+  double? _avgRating;
+  int _totalCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRatings();
+  }
+
+  Future<void> _loadRatings() async {
+    try {
+      final api = context.read<ApiService>();
+      final orgId = widget.org['id'] as String?;
+      if (orgId == null) return;
+      final data = await api.get('/organizations/$orgId/ratings');
+      final stats = data['stats'] as Map<String, dynamic>?;
+      if (mounted && stats != null) {
+        setState(() {
+          _avgRating = stats['avg_rating'] != null
+              ? double.tryParse(stats['avg_rating'].toString())
+              : null;
+          _totalCount = stats['total_count'] as int? ?? 0;
+        });
+      }
+    } catch (_) {}
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final type = org['type'] as String? ?? '';
+    final type = widget.org['type'] as String? ?? '';
     final isVet = type == 'vet_practice';
     final color =
         isVet ? LivingLedgerTheme.primary : LivingLedgerTheme.secondary;
@@ -217,7 +249,7 @@ class _OrgCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      org['name'] as String? ?? '',
+                      widget.org['name'] as String? ?? '',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -236,10 +268,26 @@ class _OrgCard extends StatelessWidget {
               ),
             ],
           ),
-          if ((org['specialization'] as String?)?.isNotEmpty == true) ...[
+          if (_avgRating != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                ...List.generate(5, (i) => Icon(
+                  i < _avgRating!.round() ? Icons.star_rounded : Icons.star_border_rounded,
+                  color: Colors.amber, size: 14,
+                )),
+                const SizedBox(width: 4),
+                Text(
+                  '$_avgRating ($_totalCount)',
+                  style: TextStyle(fontSize: 11, color: LivingLedgerTheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ],
+          if ((widget.org['specialization'] as String?)?.isNotEmpty == true) ...[
             const SizedBox(height: 8),
             Text(
-              org['specialization'] as String,
+              widget.org['specialization'] as String,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: LivingLedgerTheme.onSurfaceVariant,
                   ),
@@ -247,7 +295,7 @@ class _OrgCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ],
-          if ((org['address'] as String?)?.isNotEmpty == true) ...[
+          if ((widget.org['address'] as String?)?.isNotEmpty == true) ...[
             const SizedBox(height: 8),
             Row(
               children: [
@@ -256,7 +304,7 @@ class _OrgCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    org['address'] as String,
+                    widget.org['address'] as String,
                     style: TextStyle(
                         fontSize: 12,
                         color: LivingLedgerTheme.onSurfaceVariant),
@@ -267,30 +315,30 @@ class _OrgCard extends StatelessWidget {
               ],
             ),
           ],
-          if ((org['phone'] as String?)?.isNotEmpty == true ||
-              (org['email'] as String?)?.isNotEmpty == true) ...[
+          if ((widget.org['phone'] as String?)?.isNotEmpty == true ||
+              (widget.org['email'] as String?)?.isNotEmpty == true) ...[
             const SizedBox(height: 8),
             Row(
               children: [
-                if ((org['phone'] as String?)?.isNotEmpty == true) ...[
+                if ((widget.org['phone'] as String?)?.isNotEmpty == true) ...[
                   Icon(Icons.phone_outlined,
                       size: 14, color: LivingLedgerTheme.onSurfaceVariant),
                   const SizedBox(width: 4),
                   Text(
-                    org['phone'] as String,
+                    widget.org['phone'] as String,
                     style: TextStyle(
                         fontSize: 12,
                         color: LivingLedgerTheme.onSurfaceVariant),
                   ),
                   const SizedBox(width: 12),
                 ],
-                if ((org['email'] as String?)?.isNotEmpty == true) ...[
+                if ((widget.org['email'] as String?)?.isNotEmpty == true) ...[
                   Icon(Icons.email_outlined,
                       size: 14, color: LivingLedgerTheme.onSurfaceVariant),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      org['email'] as String,
+                      widget.org['email'] as String,
                       style: TextStyle(
                           fontSize: 12,
                           color: LivingLedgerTheme.onSurfaceVariant),

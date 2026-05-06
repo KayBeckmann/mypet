@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
+import '../providers/pet_provider.dart';
+import '../providers/appointment_provider.dart';
+import '../providers/reminder_provider.dart';
 import 'sidebar.dart';
 
 const double _kWideBreakpoint = 1024;
@@ -174,10 +177,90 @@ class _NarrowLayout extends StatelessWidget {
 
 // ── TopBar ─────────────────────────────────────────────────────────────────
 
-class _TopBar extends StatelessWidget {
+class _TopBar extends StatefulWidget {
   final bool showTitle;
 
   const _TopBar({this.showTitle = false});
+
+  @override
+  State<_TopBar> createState() => _TopBarState();
+}
+
+class _TopBarState extends State<_TopBar> {
+  final _searchCtrl = TextEditingController();
+  final _focusNode = FocusNode();
+  bool _showResults = false;
+  List<_SearchResult> _results = [];
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onSearch(String query) {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _results = [];
+        _showResults = false;
+      });
+      return;
+    }
+
+    final q = query.toLowerCase();
+    final results = <_SearchResult>[];
+
+    // Search pets
+    final pets = context.read<PetProvider>().pets;
+    for (final p in pets) {
+      if (p.name.toLowerCase().contains(q) ||
+          (p.species?.toLowerCase().contains(q) ?? false) ||
+          (p.breed?.toLowerCase().contains(q) ?? false)) {
+        results.add(_SearchResult(
+          icon: Icons.pets_rounded,
+          title: p.name,
+          subtitle: '${p.species ?? ''} · ${p.breed ?? ''}',
+          route: '/animals/${p.id}',
+          color: LivingLedgerTheme.primary,
+        ));
+      }
+    }
+
+    // Search appointments
+    final appts = context.read<AppointmentProvider>().appointments;
+    for (final a in appts) {
+      if (a.title.toLowerCase().contains(q) ||
+          (a.organizationName?.toLowerCase().contains(q) ?? false)) {
+        results.add(_SearchResult(
+          icon: Icons.event_rounded,
+          title: a.title,
+          subtitle: a.statusLabel,
+          route: '/appointments',
+          color: Colors.blue,
+        ));
+      }
+    }
+
+    // Search reminders
+    final reminders = context.read<ReminderProvider>().reminders;
+    for (final r in reminders) {
+      if (r.title.toLowerCase().contains(q)) {
+        results.add(_SearchResult(
+          icon: Icons.alarm_rounded,
+          title: r.title,
+          subtitle: 'Erinnerung',
+          route: '/reminders',
+          color: Colors.teal,
+        ));
+      }
+    }
+
+    setState(() {
+      _results = results.take(6).toList();
+      _showResults = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +270,7 @@ class _TopBar extends StatelessWidget {
       color: LivingLedgerTheme.surface,
       child: Row(
         children: [
-          if (showTitle) ...[
+          if (widget.showTitle) ...[
             Text(
               'Living Ledger',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -200,37 +283,93 @@ class _TopBar extends StatelessWidget {
 
           // Search Bar
           Expanded(
-            child: Container(
-              height: 42,
-              constraints: const BoxConstraints(maxWidth: 400),
-              decoration: BoxDecoration(
-                color: LivingLedgerTheme.surfaceContainerHigh,
-                borderRadius:
-                    BorderRadius.circular(LivingLedgerTheme.radiusFull),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.search,
-                    size: 20,
-                    color: LivingLedgerTheme.onSurfaceVariant,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  height: 42,
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  decoration: BoxDecoration(
+                    color: LivingLedgerTheme.surfaceContainerHigh,
+                    borderRadius:
+                        BorderRadius.circular(LivingLedgerTheme.radiusFull),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Suchen …',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: LivingLedgerTheme.onSurfaceVariant,
+                  child: TextField(
+                    controller: _searchCtrl,
+                    focusNode: _focusNode,
+                    onChanged: _onSearch,
+                    onTap: () {
+                      if (_searchCtrl.text.isNotEmpty) {
+                        setState(() => _showResults = true);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Tiere, Termine, Erinnerungen suchen…',
+                      hintStyle: TextStyle(color: LivingLedgerTheme.onSurfaceVariant, fontSize: 14),
+                      prefixIcon: Icon(Icons.search, size: 20, color: LivingLedgerTheme.onSurfaceVariant),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 11),
+                      suffixIcon: _searchCtrl.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.close, size: 16),
+                              onPressed: () {
+                                _searchCtrl.clear();
+                                setState(() {_results = []; _showResults = false;});
+                              },
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+                if (_showResults && _results.isNotEmpty)
+                  Positioned(
+                    top: 46,
+                    left: 0,
+                    right: 0,
+                    child: Material(
+                      elevation: 8,
+                      borderRadius: BorderRadius.circular(12),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 400),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: _results.map((r) => InkWell(
+                            onTap: () {
+                              _searchCtrl.clear();
+                              setState(() {_results = []; _showResults = false;});
+                              context.go(r.route);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              child: Row(
+                                children: [
+                                  Icon(r.icon, color: r.color, size: 18),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(r.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                        if (r.subtitle.isNotEmpty)
+                                          Text(r.subtitle, style: TextStyle(fontSize: 11, color: LivingLedgerTheme.onSurfaceVariant)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )).toList(),
                         ),
+                      ),
+                    ),
                   ),
-                ],
-              ),
+              ],
             ),
           ),
 
           const Spacer(),
 
-          _TopBarIcon(icon: Icons.notifications_outlined, onTap: () {}),
+          _TopBarIcon(icon: Icons.notifications_outlined, onTap: () => context.go('/notifications')),
           const SizedBox(width: 8),
           _TopBarIcon(
             icon: Icons.settings_outlined,
@@ -242,6 +381,21 @@ class _TopBar extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SearchResult {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String route;
+  final Color color;
+  const _SearchResult({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.route,
+    required this.color,
+  });
 }
 
 // ── Shared Widgets ─────────────────────────────────────────────────────────

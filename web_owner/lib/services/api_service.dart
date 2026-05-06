@@ -115,14 +115,43 @@ class ApiService {
   String get baseUrl => _baseUrl;
 
   Map<String, dynamic> _handleResponse(http.Response response) {
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return body;
+      if (response.body.isEmpty) return {};
+      return jsonDecode(response.body) as Map<String, dynamic>;
     }
-    throw ApiException(
-      statusCode: response.statusCode,
-      message: body['error'] as String? ?? 'Ein Fehler ist aufgetreten',
-    );
+
+    String message;
+    switch (response.statusCode) {
+      case 401:
+        message = 'Nicht angemeldet. Bitte neu einloggen.';
+        break;
+      case 403:
+        message = 'Keine Berechtigung für diese Aktion.';
+        break;
+      case 404:
+        message = 'Nicht gefunden.';
+        break;
+      case 409:
+        message = 'Konflikt: Diese Aktion widerspricht einem bestehenden Eintrag.';
+        break;
+      case 429:
+        message = 'Zu viele Anfragen. Bitte warte einen Moment.';
+        break;
+      case 500:
+      case 502:
+      case 503:
+        message = 'Server nicht erreichbar. Bitte versuche es später.';
+        break;
+      default:
+        message = 'Ein Fehler ist aufgetreten.';
+    }
+
+    try {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      message = body['error'] as String? ?? message;
+    } catch (_) {}
+
+    throw ApiException(statusCode: response.statusCode, message: message);
   }
 }
 

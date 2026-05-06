@@ -18,6 +18,8 @@ class Appointment {
   final String? location;
   final String? notes;
   final String? cancelledReason;
+  final String? treatmentNotes;
+  final String? diagnosis;
   final DateTime createdAt;
 
   const Appointment({
@@ -38,6 +40,8 @@ class Appointment {
     this.location,
     this.notes,
     this.cancelledReason,
+    this.treatmentNotes,
+    this.diagnosis,
     required this.createdAt,
   });
 
@@ -60,6 +64,8 @@ class Appointment {
       location: j['location'] as String?,
       notes: j['notes'] as String?,
       cancelledReason: j['cancelled_reason'] as String?,
+      treatmentNotes: j['treatment_notes'] as String?,
+      diagnosis: j['diagnosis'] as String?,
       createdAt: DateTime.parse(j['created_at'] as String),
     );
   }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/pet_provider.dart';
 import '../widgets/pet_card.dart';
+import '../widgets/skeleton_loader.dart';
 
 class AnimalsScreen extends StatefulWidget {
   const AnimalsScreen({super.key});
@@ -113,7 +114,9 @@ class _AnimalsScreenState extends State<AnimalsScreen> {
               const SizedBox(height: 16),
 
             // Animals Grid or Empty State
-            if (pets.isEmpty)
+            if (petProvider.isLoading && pets.isEmpty)
+              const PetListSkeleton(count: 3)
+            else if (pets.isEmpty)
               _EmptyState()
             else
               LayoutBuilder(

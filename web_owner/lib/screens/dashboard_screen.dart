@@ -136,6 +136,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       label: 'Tierärzte finden',
                       onTap: () => context.go('/marketplace'),
                     ),
+                    QuickActionChip(
+                      icon: Icons.calendar_month_rounded,
+                      label: 'Kalender',
+                      onTap: () => context.go('/calendar'),
+                    ),
+                    QuickActionChip(
+                      icon: Icons.health_and_safety_rounded,
+                      label: 'Gesundheitspass',
+                      onTap: () => context.go('/health-passport'),
+                    ),
+                    QuickActionChip(
+                      icon: Icons.compare_arrows_rounded,
+                      label: 'Tier-Vergleich',
+                      onTap: () => context.go('/compare'),
+                    ),
                   ],
                 ),
                 // Familien-Einladungen
@@ -170,6 +185,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 if (_expiringVaccinations.isNotEmpty) ...[
                   _ExpiringVaccinationsPanel(
                       vaccinations: _expiringVaccinations),
+                  const SizedBox(height: 24),
+                ],
+
+                // Impfstatus-Ampel
+                if (petProvider.pets.isNotEmpty) ...[
+                  _VaccinationStatusRow(
+                    pets: petProvider.pets,
+                    expiringVaccinations: _expiringVaccinations,
+                  ),
                   const SizedBox(height: 24),
                 ],
 
@@ -351,9 +375,73 @@ class _RemindersPanel extends StatelessWidget {
 
   const _RemindersPanel({required this.reminders});
 
-  // Needed to call ReminderProvider from a StatelessWidget
   void _dismiss(BuildContext context, String id) {
     context.read<ReminderProvider>().dismiss(id);
+  }
+
+  Future<void> _quickAddReminder(BuildContext context) async {
+    final titleCtrl = TextEditingController();
+    final dateCtrl = TextEditingController();
+    DateTime? selectedDate;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          title: const Text('Schnell-Erinnerung'),
+          content: SizedBox(
+            width: 320,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleCtrl,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Titel *',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.calendar_today, size: 16),
+                  label: Text(selectedDate != null
+                      ? '${selectedDate!.day}.${selectedDate!.month}.${selectedDate!.year}'
+                      : 'Datum wählen'),
+                  onPressed: () async {
+                    final d = await showDatePicker(
+                      context: ctx,
+                      initialDate: DateTime.now().add(const Duration(days: 1)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (d != null) setDs(() => selectedDate = d);
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Abbrechen')),
+            FilledButton(
+              onPressed: () {
+                if (titleCtrl.text.trim().isEmpty) return;
+                Navigator.pop(ctx, true);
+              },
+              child: const Text('Speichern'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      final provider = context.read<ReminderProvider>();
+      await provider.create(
+        title: titleCtrl.text.trim(),
+        remindAt: selectedDate ?? DateTime.now().add(const Duration(days: 1)),
+      );
+    }
   }
 
   @override
@@ -374,8 +462,15 @@ class _RemindersPanel extends StatelessWidget {
               const Icon(Icons.alarm_rounded,
                   size: 20, color: LivingLedgerTheme.tertiary),
               const SizedBox(width: 8),
-              Text('Erinnerungen',
-                  style: Theme.of(context).textTheme.headlineSmall),
+              Expanded(child: Text('Erinnerungen',
+                  style: Theme.of(context).textTheme.headlineSmall)),
+              IconButton(
+                icon: const Icon(Icons.add_alarm_rounded, size: 18),
+                tooltip: 'Schnell-Erinnerung',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () => _quickAddReminder(context),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -576,6 +671,17 @@ class _MedicationsPanel extends StatelessWidget {
                           color: m.endsSoon
                               ? LivingLedgerTheme.tertiary
                               : LivingLedgerTheme.onSurfaceVariant),
+                    ),
+                    const SizedBox(width: 6),
+                    IconButton(
+                      icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                      color: LivingLedgerTheme.success,
+                      tooltip: 'Gegeben',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: m.petId.isNotEmpty
+                          ? () => context.read<MedicationProvider>().administer(m.petId, m.id)
+                          : null,
                     ),
                   ],
                 ),
@@ -938,6 +1044,52 @@ class _StatChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+class _VaccinationStatusRow extends StatelessWidget {
+  final List<Pet> pets;
+  final List<Map<String, dynamic>> expiringVaccinations;
+  const _VaccinationStatusRow({required this.pets, required this.expiringVaccinations});
+
+  @override
+  Widget build(BuildContext context) {
+    final expiringPetIds = expiringVaccinations
+        .map((v) => v['pet_id']?.toString())
+        .toSet();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Impfstatus',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: pets.map((p) {
+            final isExpiring = expiringPetIds.contains(p.id);
+            final color = isExpiring ? LivingLedgerTheme.tertiary : LivingLedgerTheme.success;
+            final icon = isExpiring ? Icons.warning_amber_rounded : Icons.check_circle_rounded;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, color: color, size: 14),
+                  const SizedBox(width: 6),
+                  Text(p.name, style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }
