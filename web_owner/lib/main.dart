@@ -19,6 +19,8 @@ import 'providers/prescription_provider.dart';
 import 'providers/owner_notes_provider.dart';
 import 'providers/allergy_provider.dart';
 import 'providers/emergency_contact_provider.dart';
+import 'providers/temperature_provider.dart';
+import 'providers/lab_result_provider.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -91,6 +93,12 @@ class _MyPetOwnerAppState extends State<MyPetOwnerApp> {
         ),
         ChangeNotifierProvider(
           create: (_) => EmergencyContactProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => TemperatureProvider(api: _apiService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => OwnerLabResultProvider(api: _apiService),
         ),
       ],
       child: const _AppWithAuth(),

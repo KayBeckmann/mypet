@@ -22,6 +22,12 @@ import '../screens/reminders_screen.dart';
 import '../screens/medications_screen.dart';
 import '../screens/notifications_screen.dart';
 import '../screens/emergency_contacts_screen.dart';
+import '../screens/temperature_screen.dart';
+import '../screens/health_passport_screen.dart';
+import '../screens/pet_calendar_screen.dart';
+import '../screens/pet_timeline_screen.dart';
+import '../screens/pet_comparison_screen.dart';
+import '../screens/year_review_screen.dart';
 import '../widgets/app_shell.dart';
 
 GoRouter createRouter(AuthProvider authProvider) {
@@ -121,6 +127,30 @@ GoRouter createRouter(AuthProvider authProvider) {
           GoRoute(
             path: '/weight',
             builder: (context, state) => const WeightScreen(),
+          ),
+          GoRoute(
+            path: '/temperature',
+            builder: (context, state) => const TemperatureScreen(),
+          ),
+          GoRoute(
+            path: '/health-passport',
+            builder: (context, state) => const HealthPassportScreen(),
+          ),
+          GoRoute(
+            path: '/calendar',
+            builder: (context, state) => const PetCalendarScreen(),
+          ),
+          GoRoute(
+            path: '/timeline',
+            builder: (context, state) => const PetTimelineScreen(),
+          ),
+          GoRoute(
+            path: '/compare',
+            builder: (context, state) => const PetComparisonScreen(),
+          ),
+          GoRoute(
+            path: '/year-review',
+            builder: (context, state) => const YearReviewScreen(),
           ),
           GoRoute(
             path: '/reminders',
