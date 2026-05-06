@@ -23,6 +23,8 @@ class PetController {
     router.delete('/<id>', _deletePet);
     router.post('/<id>/photo', _uploadPhoto);
     router.delete('/<id>/photo', _deletePhoto);
+    router.put('/<id>/archive', _archivePet);
+    router.put('/<id>/unarchive', _unarchivePet);
 
     return router;
   }
@@ -99,7 +101,8 @@ class PetController {
         SELECT DISTINCT p.id, p.owner_id, p.name, p.species, p.breed,
                p.birth_date, p.weight_kg, p.weight_goal_kg, p.weight_goal_note,
                p.microchip_id, p.image_url,
-               p.notes, p.is_active, p.created_at, p.updated_at
+               p.notes, p.is_active, p.archived_at, p.archived_reason,
+               p.created_at, p.updated_at
         FROM pets p
         WHERE p.id = @id::uuid
           AND p.is_active = true
@@ -305,6 +308,62 @@ class PetController {
       );
     } catch (e) {
       print('❌ Pet-Delete-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// PUT /pets/:id/archive — Tier archivieren
+  Future<Response> _archivePet(Request request, String id) async {
+    try {
+      final userId = request.context['userId'] as String;
+      final body = jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+      final reason = body['reason'] as String?;
+
+      final result = await _db.queryOne(
+        '''
+        UPDATE pets
+        SET archived_at = NOW(), archived_reason = @reason
+        WHERE id = @id::uuid AND owner_id = @owner_id::uuid AND archived_at IS NULL
+        RETURNING id
+        ''',
+        parameters: {'id': id, 'owner_id': userId, 'reason': reason},
+      );
+
+      if (result == null) return _error(404, 'Tier nicht gefunden oder bereits archiviert');
+
+      return Response.ok(
+        jsonEncode({'message': 'Tier archiviert'}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Pet-Archive-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// PUT /pets/:id/unarchive — Tier wiederherstellen
+  Future<Response> _unarchivePet(Request request, String id) async {
+    try {
+      final userId = request.context['userId'] as String;
+
+      final result = await _db.queryOne(
+        '''
+        UPDATE pets
+        SET archived_at = NULL, archived_reason = NULL
+        WHERE id = @id::uuid AND owner_id = @owner_id::uuid AND archived_at IS NOT NULL
+        RETURNING id
+        ''',
+        parameters: {'id': id, 'owner_id': userId},
+      );
+
+      if (result == null) return _error(404, 'Tier nicht gefunden oder nicht archiviert');
+
+      return Response.ok(
+        jsonEncode({'message': 'Tier wiederhergestellt'}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Pet-Unarchive-Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }
@@ -577,6 +636,10 @@ class PetController {
       'image_url': pet['image_url'],
       'notes': pet['notes'],
       'is_active': pet['is_active'],
+      'archived_at': pet['archived_at'] != null
+          ? (pet['archived_at'] as DateTime).toIso8601String()
+          : null,
+      'archived_reason': pet['archived_reason'],
       'created_at': (pet['created_at'] as DateTime).toIso8601String(),
       'updated_at': (pet['updated_at'] as DateTime).toIso8601String(),
       if (pet['owner_name'] != null) 'owner_name': pet['owner_name'],

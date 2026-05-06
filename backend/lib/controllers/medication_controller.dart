@@ -84,6 +84,19 @@ class MedicationController {
         return _error(400, 'Ungültige Häufigkeit');
       }
 
+      // Warnung bei ähnlichem aktiven Medikament
+      final duplicateWarning = await _db.queryOne(
+        '''
+        SELECT name FROM medications
+        WHERE pet_id = @pet_id::uuid
+          AND is_active = true
+          AND name ILIKE @name
+          AND id IS NOT NULL
+        LIMIT 1
+        ''',
+        parameters: {'pet_id': petId, 'name': '%${name.trim().split(' ').first}%'},
+      );
+
       final med = await _db.queryOne(
         '''
         INSERT INTO medications
@@ -112,7 +125,11 @@ class MedicationController {
 
       return Response(
         201,
-        body: jsonEncode({'medication': _sanitize(med!)}),
+        body: jsonEncode({
+          'medication': _sanitize(med!),
+          if (duplicateWarning != null)
+            'warning': 'Hinweis: "${duplicateWarning['name']}" ist bereits aktiv für dieses Tier.',
+        }),
         headers: {'Content-Type': 'application/json'},
       );
     } catch (e) {

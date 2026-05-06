@@ -22,6 +22,7 @@ class AdminController {
     router.delete('/users/<id>', _deactivateUser);
     router.get('/organizations', _listOrganizations);
     router.get('/audit-log', _getAuditLog);
+    router.get('/growth', _getGrowth);
 
     return router;
   }
@@ -195,17 +196,41 @@ class AdminController {
   /// GET /admin/users/:id
   Future<Response> _getUser(Request request, String id) async {
     try {
-      final user = await _db.queryOne(
-        '''
-        SELECT id, email, name, role, is_active, email_verified, created_at, updated_at
-        FROM users WHERE id = @id::uuid
-        ''',
-        parameters: {'id': id},
-      );
+      final results = await Future.wait([
+        _db.queryOne(
+          'SELECT id, email, name, role, is_active, email_verified, created_at, updated_at FROM users WHERE id = @id::uuid',
+          parameters: {'id': id},
+        ),
+        _db.queryOne('SELECT COUNT(*) AS c FROM pets WHERE owner_id = @id::uuid', parameters: {'id': id}),
+        _db.queryOne('SELECT COUNT(*) AS c FROM appointments WHERE owner_id = @id::uuid OR provider_id = @id::uuid', parameters: {'id': id}),
+        _db.queryAll(
+          'SELECT action, resource_type, resource_id, created_at FROM audit_log WHERE user_id = @id::uuid ORDER BY created_at DESC LIMIT 5',
+          parameters: {'id': id},
+        ),
+      ]);
+
+      final user = results[0] as Map<String, dynamic>?;
       if (user == null) return _error(404, 'Benutzer nicht gefunden');
 
+      final petCount = int.tryParse((results[1] as Map<String, dynamic>?)?['c']?.toString() ?? '0') ?? 0;
+      final apptCount = int.tryParse((results[2] as Map<String, dynamic>?)?['c']?.toString() ?? '0') ?? 0;
+      final recentActivity = (results[3] as List<Map<String, dynamic>>).map((a) => {
+        'action': a['action'],
+        'resource_type': a['resource_type'],
+        'created_at': (a['created_at'] as DateTime).toIso8601String(),
+      }).toList();
+
       return Response.ok(
-        jsonEncode({'user': _sanitizeUser(user)}),
+        jsonEncode({
+          'user': {
+            ..._sanitizeUser(user),
+            'stats': {
+              'pet_count': petCount,
+              'appointment_count': apptCount,
+            },
+            'recent_activity': recentActivity,
+          },
+        }),
         headers: {'Content-Type': 'application/json'},
       );
     } catch (e) {
@@ -484,6 +509,64 @@ class AdminController {
       'created_at': (user['created_at'] as DateTime).toIso8601String(),
       'updated_at': (user['updated_at'] as DateTime).toIso8601String(),
     };
+  }
+
+  /// GET /admin/growth — Registrierungen + neue Tiere pro Tag, letzte 30 Tage
+  Future<Response> _getGrowth(Request request) async {
+    try {
+      final userGrowth = await _db.queryAll('''
+        SELECT
+          date_trunc('day', created_at) AS day,
+          COUNT(*) AS new_users
+        FROM users
+        WHERE created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY 1
+        ORDER BY 1
+      ''');
+
+      final petGrowth = await _db.queryAll('''
+        SELECT
+          date_trunc('day', created_at) AS day,
+          COUNT(*) AS new_pets
+        FROM pets
+        WHERE created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY 1
+        ORDER BY 1
+      ''');
+
+      final apptGrowth = await _db.queryAll('''
+        SELECT
+          date_trunc('day', created_at) AS day,
+          COUNT(*) AS new_appointments
+        FROM appointments
+        WHERE created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY 1
+        ORDER BY 1
+      ''');
+
+      return Response.ok(
+        jsonEncode({
+          'growth': {
+            'users': userGrowth.map((r) => {
+              'day': (r['day'] as DateTime).toIso8601String().substring(0, 10),
+              'count': int.tryParse(r['new_users'].toString()) ?? 0,
+            }).toList(),
+            'pets': petGrowth.map((r) => {
+              'day': (r['day'] as DateTime).toIso8601String().substring(0, 10),
+              'count': int.tryParse(r['new_pets'].toString()) ?? 0,
+            }).toList(),
+            'appointments': apptGrowth.map((r) => {
+              'day': (r['day'] as DateTime).toIso8601String().substring(0, 10),
+              'count': int.tryParse(r['new_appointments'].toString()) ?? 0,
+            }).toList(),
+          }
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Admin getGrowth Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
   }
 
   Response _error(int statusCode, String message) {

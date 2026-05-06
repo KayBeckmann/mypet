@@ -21,6 +21,7 @@ class AppointmentController {
     router.put('/<id>/no-show', _noShow);
     router.put('/<id>/cancel', _cancel);
     router.put('/<id>/fee', _setFee);
+    router.put('/<id>/notes', _setNotes);
     router.delete('/<id>', _delete);
 
     return router;
@@ -183,9 +184,71 @@ class AppointmentController {
         },
       );
 
+      // Wiederholungs-Termine anlegen
+      final isRecurring = body['is_recurring'] as bool? ?? false;
+      final recurrenceInterval = body['recurrence_interval'] as String?;
+      final recurrenceCount = body['recurrence_count'] as int? ?? 0;
+
+      final createdIds = [appointment!['id'].toString()];
+
+      if (isRecurring && recurrenceInterval != null && recurrenceCount > 0) {
+        Duration interval;
+        switch (recurrenceInterval) {
+          case 'daily':
+            interval = const Duration(days: 1);
+            break;
+          case 'weekly':
+            interval = const Duration(days: 7);
+            break;
+          case 'monthly':
+            interval = const Duration(days: 30);
+            break;
+          case 'yearly':
+            interval = const Duration(days: 365);
+            break;
+          default:
+            interval = const Duration(days: 7);
+        }
+
+        final parentId = appointment['id'].toString();
+        for (var i = 1; i <= recurrenceCount.clamp(1, 12); i++) {
+          final nextAt = scheduledAt.add(interval * i);
+          await _db.queryOne(
+            '''
+            INSERT INTO appointments
+              (pet_id, owner_id, provider_id, organization_id, title, description,
+               scheduled_at, duration_minutes, location, notes,
+               is_recurring, recurrence_interval, parent_appointment_id)
+            VALUES
+              (@pet_id::uuid, @owner_id::uuid, @provider_id::uuid, @org_id::uuid,
+               @title, @description, @scheduled_at::timestamp, @duration_minutes,
+               @location, @notes, true, @interval::recurrence_interval, @parent::uuid)
+            RETURNING id
+            ''',
+            parameters: {
+              'pet_id': petId,
+              'owner_id': pet['owner_id'].toString(),
+              'provider_id': body['provider_id'] ?? userId,
+              'org_id': orgId ?? body['organization_id'],
+              'title': title.trim(),
+              'description': body['description'],
+              'scheduled_at': nextAt,
+              'duration_minutes': body['duration_minutes'] ?? 30,
+              'location': body['location'],
+              'notes': body['notes'],
+              'interval': recurrenceInterval,
+              'parent': parentId,
+            },
+          );
+        }
+      }
+
       return Response(
         201,
-        body: jsonEncode({'appointment': _sanitize(appointment!)}),
+        body: jsonEncode({
+          'appointment': _sanitize(appointment),
+          'recurring_count': createdIds.length - 1,
+        }),
         headers: {'Content-Type': 'application/json'},
       );
     } catch (e) {
@@ -447,6 +510,8 @@ class AppointmentController {
       'service_fee_cents': a['service_fee_cents'] as int?,
       'service_fee_currency': a['service_fee_currency'] as String? ?? 'EUR',
       'service_fee_note': a['service_fee_note'] as String?,
+      'treatment_notes': a['treatment_notes'] as String?,
+      'diagnosis': a['diagnosis'] as String?,
       'created_at': (a['created_at'] as DateTime).toIso8601String(),
       'updated_at': (a['updated_at'] as DateTime).toIso8601String(),
     };
@@ -495,6 +560,64 @@ class AppointmentController {
       );
     } catch (e) {
       print('❌ setFee Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// PUT /appointments/:id/notes — Tierarzt/Dienstleister trägt Behandlungsnotizen ein
+  Future<Response> _setNotes(Request request, String id) async {
+    try {
+      final userId = request.context['userId'] as String;
+      final userRole = request.context['userRole'] as String;
+      final body =
+          jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+
+      if (userRole == 'owner') {
+        return _error(403, 'Nur Tierärzte und Dienstleister können Notizen setzen');
+      }
+
+      final treatmentNotes = body['treatment_notes'] as String?;
+      final diagnosis = body['diagnosis'] as String?;
+
+      final existing = await _db.queryOne(
+        'SELECT provider_id, organization_id, status FROM appointments WHERE id = @id::uuid',
+        parameters: {'id': id},
+      );
+      if (existing == null) return _error(404, 'Termin nicht gefunden');
+
+      final providerId = existing['provider_id']?.toString();
+      final status = existing['status'].toString();
+
+      if (providerId != userId) {
+        return _error(403, 'Nur der zuständige Dienstleister kann Notizen setzen');
+      }
+
+      if (!['completed', 'confirmed', 'no_show'].contains(status)) {
+        return _error(400, 'Notizen können nur für bestätigte oder abgeschlossene Termine gesetzt werden');
+      }
+
+      final updated = await _db.queryOne('''
+        UPDATE appointments
+        SET treatment_notes = @treatment_notes,
+            diagnosis = @diagnosis
+        WHERE id = @id::uuid
+        RETURNING *,
+          (SELECT name FROM users WHERE id = owner_id) AS owner_name,
+          (SELECT name FROM users WHERE id = provider_id) AS provider_name,
+          (SELECT name FROM pets WHERE id = pet_id) AS pet_name,
+          (SELECT name FROM organizations WHERE id = organization_id) AS organization_name
+      ''', parameters: {
+        'id': id,
+        'treatment_notes': treatmentNotes,
+        'diagnosis': diagnosis,
+      });
+
+      return Response.ok(
+        jsonEncode({'appointment': _sanitize(updated!)}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ setNotes Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }
