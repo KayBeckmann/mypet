@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mypet_shared/shared.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/users_provider.dart';
@@ -30,26 +31,16 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       _error = null;
     });
     try {
-      final provider = context.read<UsersProvider>();
-      // Benutzer aus gecachter Liste holen
-      final cached = provider.users.where((u) => u['id'] == widget.userId).toList();
-      if (cached.isNotEmpty) {
-        setState(() {
-          _user = cached.first;
-          _isLoading = false;
-        });
-      } else {
-        await provider.loadUsers();
-        final found = provider.users.where((u) => u['id'] == widget.userId).toList();
-        setState(() {
-          _user = found.isNotEmpty ? found.first : null;
-          _isLoading = false;
-          if (_user == null) _error = 'Benutzer nicht gefunden';
-        });
-      }
-    } catch (_) {
+      final api = context.read<ApiService>();
+      final data = await api.get('/admin/users/${widget.userId}');
       setState(() {
-        _error = 'Fehler beim Laden';
+        _user = data['user'] as Map<String, dynamic>?;
+        _isLoading = false;
+        if (_user == null) _error = 'Benutzer nicht gefunden';
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Fehler beim Laden: $e';
         _isLoading = false;
       });
     }
@@ -275,6 +266,62 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 
               const SizedBox(height: AdminTheme.spacingMd),
 
+              // Statistiken & Aktivität
+              if (user['stats'] != null) ...[
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AdminTheme.spacingLg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Statistiken',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                        const SizedBox(height: AdminTheme.spacingMd),
+                        Row(
+                          children: [
+                            _StatTile(
+                              label: 'Tiere',
+                              value: '${(user['stats'] as Map)['pet_count'] ?? 0}',
+                              icon: Icons.pets_rounded,
+                            ),
+                            const SizedBox(width: 12),
+                            _StatTile(
+                              label: 'Termine',
+                              value: '${(user['stats'] as Map)['appointment_count'] ?? 0}',
+                              icon: Icons.event_rounded,
+                            ),
+                          ],
+                        ),
+                        if (user['recent_activity'] != null &&
+                            (user['recent_activity'] as List).isNotEmpty) ...[
+                          const SizedBox(height: AdminTheme.spacingMd),
+                          Text('Letzte Aktivität',
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                          const SizedBox(height: 8),
+                          ...(user['recent_activity'] as List).map((a) => Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Row(
+                              children: [
+                                Icon(Icons.circle, size: 6, color: AdminTheme.outline),
+                                const SizedBox(width: 8),
+                                Text('${a['action']} ${a['resource_type']}',
+                                    style: const TextStyle(fontSize: 12)),
+                                const Spacer(),
+                                Text(
+                                  _fmtDate(a['created_at'] as String?),
+                                  style: TextStyle(fontSize: 11, color: AdminTheme.onSurfaceVariant),
+                                ),
+                              ],
+                            ),
+                          )),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AdminTheme.spacingMd),
+              ],
+
               // Rolle ändern
               Card(
                 child: Padding(
@@ -359,6 +406,16 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     );
   }
 
+  String _fmtDate(String? iso) {
+    if (iso == null) return '—';
+    try {
+      final d = DateTime.parse(iso);
+      return '${d.day.toString().padLeft(2,'0')}.${d.month.toString().padLeft(2,'0')}.${d.year}';
+    } catch (_) {
+      return iso.substring(0, 10);
+    }
+  }
+
   String _roleLabel(String role) {
     switch (role) {
       case 'owner':
@@ -372,5 +429,39 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       default:
         return role;
     }
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  const _StatTile({required this.label, required this.value, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AdminTheme.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AdminTheme.outline.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: AdminTheme.primary),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                Text(label, style: const TextStyle(fontSize: 11, color: AdminTheme.onSurfaceVariant)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

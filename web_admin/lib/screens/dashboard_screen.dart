@@ -14,6 +14,7 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Map<String, int>? _stats;
+  Map<String, dynamic>? _growth;
   bool _loading = true;
   String? _error;
 
@@ -30,10 +31,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
     try {
       final api = context.read<ApiService>();
-      final data = await api.get('/admin/stats');
-      final raw = data['stats'] as Map<String, dynamic>;
+      final results = await Future.wait([
+        api.get('/admin/stats'),
+        api.get('/admin/growth'),
+      ]);
+      final raw = results[0]['stats'] as Map<String, dynamic>;
       setState(() {
         _stats = raw.map((k, v) => MapEntry(k, (v as num).toInt()));
+        _growth = results[1]['growth'] as Map<String, dynamic>?;
         _loading = false;
       });
     } catch (e) {
@@ -94,6 +99,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 // Stats grid
                 _StatsGrid(stats: _stats!),
                 const SizedBox(height: 32),
+
+                // Growth chart
+                if (_growth != null) ...[
+                  Text('Wachstum (letzte 30 Tage)',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 16),
+                  _GrowthChart(growth: _growth!),
+                  const SizedBox(height: 32),
+                ],
 
                 // Quick actions
                 Text('Schnellzugriff',
@@ -302,6 +319,143 @@ class _ErrorCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _GrowthChart extends StatelessWidget {
+  final Map<String, dynamic> growth;
+  const _GrowthChart({required this.growth});
+
+  List<int> _counts(String key) {
+    final list = (growth[key] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+    return list.map((e) => (e['count'] as int? ?? 0)).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final users = _counts('users');
+    final pets = _counts('pets');
+    final appts = _counts('appointments');
+
+    final allValues = [...users, ...pets, ...appts];
+    final maxVal = allValues.isEmpty
+        ? 1
+        : allValues.reduce((a, b) => a > b ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AdminTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: AdminTheme.outline.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Legend
+          Wrap(
+            spacing: 16,
+            children: const [
+              _ChartLegend(color: Color(0xFF1565C0), label: 'Neue Nutzer'),
+              _ChartLegend(color: Color(0xFFE65100), label: 'Neue Tiere'),
+              _ChartLegend(color: Color(0xFF2E7D32), label: 'Termine'),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Chart
+          SizedBox(
+            height: 140,
+            child: CustomPaint(
+              painter: _BarChartPainter(
+                datasets: [
+                  _Dataset(users, const Color(0xFF1565C0)),
+                  _Dataset(pets, const Color(0xFFE65100)),
+                  _Dataset(appts, const Color(0xFF2E7D32)),
+                ],
+                maxVal: maxVal == 0 ? 1 : maxVal,
+              ),
+              child: const SizedBox.expand(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Dataset {
+  final List<int> values;
+  final Color color;
+  const _Dataset(this.values, this.color);
+}
+
+class _BarChartPainter extends CustomPainter {
+  final List<_Dataset> datasets;
+  final int maxVal;
+  const _BarChartPainter({required this.datasets, required this.maxVal});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (datasets.isEmpty) return;
+    final maxLen = datasets.map((d) => d.values.length).reduce((a, b) => a > b ? a : b);
+    if (maxLen == 0) return;
+
+    final barWidth = size.width / (maxLen * datasets.length + maxLen);
+    final groupWidth = barWidth * datasets.length;
+
+    for (var di = 0; di < datasets.length; di++) {
+      final ds = datasets[di];
+      final paint = Paint()..color = ds.color.withValues(alpha: 0.75);
+      for (var i = 0; i < ds.values.length; i++) {
+        final v = ds.values[i];
+        final barH = (v / maxVal) * size.height * 0.9;
+        final x = i * (groupWidth + barWidth) + di * barWidth;
+        final rect = Rect.fromLTWH(
+          x, size.height - barH, barWidth * 0.8, barH,
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(rect, const Radius.circular(2)),
+          paint,
+        );
+      }
+    }
+
+    // Baseline
+    canvas.drawLine(
+      Offset(0, size.height),
+      Offset(size.width, size.height),
+      Paint()
+        ..color = AdminTheme.outline.withValues(alpha: 0.3)
+        ..strokeWidth = 1,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class _ChartLegend extends StatelessWidget {
+  final Color color;
+  final String label;
+  const _ChartLegend({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ],
     );
   }
 }

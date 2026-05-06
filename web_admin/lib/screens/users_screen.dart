@@ -1,3 +1,5 @@
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -38,6 +40,36 @@ class _UsersScreenState extends State<UsersScreen> {
         );
   }
 
+  void _exportCsv(BuildContext context) {
+    final users = context.read<UsersProvider>().users;
+    if (users.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Keine Benutzer zum Exportieren')),
+      );
+      return;
+    }
+    final header = 'ID,E-Mail,Name,Rolle,Aktiv,E-Mail verifiziert,Erstellt\n';
+    final rows = users.map((u) {
+      return [
+        u['id'] ?? '',
+        u['email'] ?? '',
+        '"${(u['name'] as String? ?? '').replaceAll('"', '""')}"',
+        u['role'] ?? '',
+        u['is_active'] == true ? 'Ja' : 'Nein',
+        u['email_verified'] == true ? 'Ja' : 'Nein',
+        u['created_at'] ?? '',
+      ].join(',');
+    }).join('\n');
+    final csv = header + rows;
+
+    final blob = html.Blob([csv], 'text/csv');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    html.AnchorElement(href: url)
+      ..setAttribute('download', 'mypet_users_${DateTime.now().millisecondsSinceEpoch}.csv')
+      ..click();
+    html.Url.revokeObjectUrl(url);
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.read<AdminAuthProvider>();
@@ -62,6 +94,11 @@ class _UsersScreenState extends State<UsersScreen> {
                 style: const TextStyle(fontSize: 13),
               ),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.download_rounded),
+            tooltip: 'CSV exportieren',
+            onPressed: () => _exportCsv(context),
           ),
           IconButton(
             icon: const Icon(Icons.logout),
