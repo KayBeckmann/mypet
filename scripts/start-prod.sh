@@ -1,26 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Produktionsumgebung starten
+#
+# HINWEIS: Auf Servern mit < 2 GB RAM bitte stattdessen verwenden:
+#   make deploy   oder   bash scripts/deploy.sh
+#
+# Dieses Skript startet den Stack ohne Rebuild (setzt bereits gebaute Images voraus).
 
-set -e
+set -euo pipefail
 
-echo "🚀 Starte Produktionsumgebung..."
-
-# .env prüfen
 if [ ! -f .env ]; then
-    echo "❌ .env nicht gefunden!"
-    echo "   Bitte .env.example nach .env kopieren und anpassen."
-    exit 1
+  echo "FEHLER: .env nicht gefunden! cp .env.example .env && nano .env"
+  exit 1
 fi
 
-# Container bauen und starten
-docker-compose up -d --build
+docker compose up -d
 
 echo ""
-echo "✅ Produktionsumgebung gestartet!"
-echo ""
-echo "📦 Services:"
-echo "   - Backend:      http://localhost:${BACKEND_PORT:-8080}"
-echo "   - Besitzer-App: http://localhost:${OWNER_PORT:-3001}"
-echo "   - Tierarzt-App: http://localhost:${VET_PORT:-3002}"
-echo "   - Dienstleister-App: http://localhost:${PROVIDER_PORT:-3003}"
-echo ""
+echo "Stack-Status:"
+docker compose ps
