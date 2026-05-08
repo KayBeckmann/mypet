@@ -212,7 +212,7 @@ class AppointmentController {
 
         final parentId = appointment['id'].toString();
         for (var i = 1; i <= recurrenceCount.clamp(1, 12); i++) {
-          final nextAt = scheduledAt.add(interval * i);
+          final nextAt = scheduledDate.add(interval * i);
           await _db.queryOne(
             '''
             INSERT INTO appointments
