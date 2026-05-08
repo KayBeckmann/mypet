@@ -1,0 +1,139 @@
+name: Build & Publish Docker Images
+
+# Baut alle Service-Images und pushed sie ins GitHub Container Registry (GHCR).
+# Der Produktions-Server muss dann nur noch `docker compose pull && docker compose up -d` ausführen.
+#
+# Voraussetzung: Repository-Variable "API_BASE_URL" in GitHub setzen
+#   Settings → Secrets and variables → Actions → Variables → New repository variable
+#   Name: API_BASE_URL   Value: http://<server-ip>:8080
+
+on:
+  push:
+    branches: [master]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_BASE: ghcr.io/${{ github.repository_owner }}/mypet
+
+jobs:
+  # ── Backend (Dart) ──────────────────────────────────────────────────────
+  backend:
+    name: Build backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/mypet/backend:latest
+
+  # ── Flutter Web — Tierbesitzer ──────────────────────────────────────────
+  web-owner:
+    name: Build web-owner
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: web_owner/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest
+          build-args: |
+            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
+
+  # ── Flutter Web — Tierarzt ──────────────────────────────────────────────
+  web-vet:
+    name: Build web-vet
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: web_vet/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest
+          build-args: |
+            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
+
+  # ── Flutter Web — Dienstleister ─────────────────────────────────────────
+  web-provider:
+    name: Build web-provider
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: web_provider/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest
+          build-args: |
+            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
+
+  # ── Flutter Web — Superadmin ────────────────────────────────────────────
+  web-admin:
+    name: Build web-admin
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: web_admin/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest
+          build-args: |
+            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}

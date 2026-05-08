@@ -1,5 +1,13 @@
 version: '3.8'
 
+# DEPLOYMENT-HINWEIS:
+# Auf dem Produktions-Server kein lokales Build nötig!
+# Images werden via GitHub Actions gebaut und im GHCR gehostet.
+# Deployment: git pull && docker compose pull && docker compose up -d
+#
+# Für lokales Entwicklungs-Build (viel RAM benötigt):
+#   make build && docker compose up -d
+
 services:
   # PostgreSQL Datenbank
   db:
@@ -22,6 +30,7 @@ services:
 
   # Dart Backend
   backend:
+    image: ghcr.io/kaybeckmann/mypet/backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -51,6 +60,7 @@ services:
 
   # Flutter Web - Tierbesitzer
   web-owner:
+    image: ghcr.io/kaybeckmann/mypet/web-owner:latest
     build:
       context: .
       dockerfile: web_owner/Dockerfile
@@ -65,6 +75,7 @@ services:
 
   # Flutter Web - Tierarzt
   web-vet:
+    image: ghcr.io/kaybeckmann/mypet/web-vet:latest
     build:
       context: .
       dockerfile: web_vet/Dockerfile
@@ -79,6 +90,7 @@ services:
 
   # Flutter Web - Dienstleister
   web-provider:
+    image: ghcr.io/kaybeckmann/mypet/web-provider:latest
     build:
       context: .
       dockerfile: web_provider/Dockerfile
@@ -93,6 +105,7 @@ services:
 
   # Flutter Web - Superadmin Dashboard
   web-admin:
+    image: ghcr.io/kaybeckmann/mypet/web-admin:latest
     build:
       context: .
       dockerfile: web_admin/Dockerfile
@@ -106,8 +119,6 @@ services:
       - "${ADMIN_PORT:-3004}:80"
 
   # Flutter Android - Tierbesitzer App (APK Builder)
-  # APK bauen: docker-compose --profile android build android-owner
-  # APK extrahieren: docker-compose --profile android run --rm android-owner
   android-owner:
     build:
       context: .
