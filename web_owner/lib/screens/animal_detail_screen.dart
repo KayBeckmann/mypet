@@ -41,9 +41,9 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
   bool _isUploadingPhoto = false;
   final _dateFormat = DateFormat('dd.MM.yyyy');
 
-  @override
   Map<String, dynamic>? _petStats;
 
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -536,7 +536,7 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
       if (allergies.any((a) => a.severity == 'severe'))
         '⚠️ ALLERGIE: ${allergies.where((a) => a.severity == 'severe').map((a) => a.allergen).join(', ')}',
       if (meds.isNotEmpty)
-        'Medikamente: ${meds.take(3).map((m) => m.medicationName).join(', ')}',
+        'Medikamente: ${meds.take(3).map((m) => m.name).join(', ')}',
       if (primaryContact != null)
         'Notfall: ${primaryContact.name} ${primaryContact.phone}',
     ];

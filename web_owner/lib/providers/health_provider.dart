@@ -131,8 +131,14 @@ class OwnerHealthProvider extends ChangeNotifier {
   final Set<String> _loading = {};
   final Map<String, String?> _errors = {};
 
+  String? _currentPetId;
+  String? get selectedPetId => _currentPetId;
+
   List<Vaccination> vaccinationsForPet(String petId) =>
       _vaccinations[petId] ?? [];
+
+  List<Vaccination> get vaccinations =>
+      _currentPetId != null ? (_vaccinations[_currentPetId!] ?? []) : [];
 
   List<MedicalRecord> recordsForPet(String petId) =>
       _records[petId] ?? [];
@@ -141,6 +147,7 @@ class OwnerHealthProvider extends ChangeNotifier {
   String? error(String petId) => _errors[petId];
 
   Future<void> loadForPet(String petId) async {
+    _currentPetId = petId;
     if (_loading.contains(petId)) return;
     _loading.add(petId);
     _errors.remove(petId);

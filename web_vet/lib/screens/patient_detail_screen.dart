@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:mypet_shared/shared.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../providers/auth_provider.dart';
 import '../providers/appointment_provider.dart';
 import '../providers/medical_provider.dart';
 import '../providers/media_provider.dart';
@@ -174,7 +175,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   }
 
   // ── Dossier drucken ──
-  void _printDossier(BuildContext context, String petName, String? ownerName, VetMedicalProvider medical) {
+  void _printDossier(BuildContext context, String petName, String? ownerName, MedicalProvider medical) {
     final vaccs = medical.vaccinations;
     final meds = medical.medications;
     final records = medical.records;
@@ -220,9 +221,8 @@ ${records.isEmpty ? '<p style="color:#999">Keine Einträge</p>' : '<table><tr><t
 
     final blob = html.Blob([html_], 'text/html');
     final url = html.Url.createObjectUrlFromBlob(blob);
-    final win = html.window.open(url, '_blank');
+    html.window.open(url, '_blank');
     Future.delayed(const Duration(milliseconds: 500), () {
-      win?.print();
       html.Url.revokeObjectUrl(url);
     });
   }
@@ -912,9 +912,8 @@ class _VaccinationsTab extends StatelessWidget {
 
     final blob = html.Blob([html_], 'text/html');
     final url = html.Url.createObjectUrlFromBlob(blob);
-    final win = html.window.open(url, '_blank');
+    html.window.open(url, '_blank');
     Future.delayed(const Duration(milliseconds: 500), () {
-      win?.print();
       html.Url.revokeObjectUrl(url);
     });
   }

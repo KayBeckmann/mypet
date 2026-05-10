@@ -209,9 +209,8 @@ ${contacts.isNotEmpty ? '''
 
     final blob = html.Blob([html_], 'text/html');
     final url = html.Url.createObjectUrlFromBlob(blob);
-    final window = html.window.open(url, '_blank');
+    html.window.open(url, '_blank');
     Future.delayed(const Duration(milliseconds: 500), () {
-      window?.print();
       html.Url.revokeObjectUrl(url);
     });
   }

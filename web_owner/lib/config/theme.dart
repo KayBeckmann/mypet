@@ -44,6 +44,13 @@ class LivingLedgerTheme {
   static const Color error = Color(0xFFC62828);
   static const Color info = Color(0xFF1565C0);
 
+  // ── Gradients ──
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [primary, primaryContainer],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   // ── Spacing Scale ──
   static const double spacingXs = 4.0;
   static const double spacingSm = 8.0;

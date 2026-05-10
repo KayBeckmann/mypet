@@ -42,7 +42,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
       filtered = filtered
           .where((r) =>
               r.title.toLowerCase().contains(q) ||
-              (r.notes?.toLowerCase().contains(q) ?? false))
+              r.message.toLowerCase().contains(q))
           .toList();
     }
 

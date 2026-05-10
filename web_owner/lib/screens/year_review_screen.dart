@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../models/appointment.dart';
 import '../models/pet.dart';
 import '../providers/appointment_provider.dart';
 import '../providers/health_provider.dart';
@@ -50,9 +51,7 @@ class _YearReviewScreenState extends State<YearReviewScreen> {
 
     final yearVaccinations = healthProvider.selectedPetId == _selectedPetId
         ? healthProvider.vaccinations.where((v) {
-            final d = v['vaccinated_at'];
-            if (d == null) return false;
-            final dt = d is DateTime ? d : DateTime.tryParse(d.toString());
+            final dt = v.administeredAt;
             return dt?.year == _year;
           }).toList()
         : [];

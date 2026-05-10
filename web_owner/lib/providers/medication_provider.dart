@@ -128,6 +128,8 @@ class MedicationProvider extends ChangeNotifier {
   List<Medication> forPet(String petId) => _medications[petId] ?? [];
   List<Medication> activeForPet(String petId) =>
       forPet(petId).where((m) => m.isActive && !m.isExpired).toList();
+  List<Medication> get medications =>
+      _selectedPetId != null ? (_medications[_selectedPetId!] ?? []) : [];
   bool isLoading(String petId) => _loading.contains(petId);
   String? error(String petId) => _errors[petId];
   String? get selectedPetId => _selectedPetId;

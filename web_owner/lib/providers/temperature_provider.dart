@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mypet_shared/shared.dart';
+import '../services/api_service.dart';
 
 class TemperatureEntry {
   final String id;

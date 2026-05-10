@@ -362,7 +362,7 @@ class _OrgCardState extends State<_OrgCard> {
                   context: context,
                   builder: (_) => BookAppointmentDialog(
                     pets: pets,
-                    preselectedOrg: org,
+                    preselectedOrg: widget.org,
                   ),
                 );
               },

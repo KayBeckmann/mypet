@@ -81,14 +81,13 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     final healthProvider = context.read<OwnerHealthProvider>();
     if (healthProvider.selectedPetId == petId) {
       for (final v in healthProvider.vaccinations) {
-        final dateRaw = v['vaccinated_at'];
-        final date = dateRaw is DateTime ? dateRaw : DateTime.tryParse(dateRaw.toString());
+        final date = v.administeredAt;
         if (date == null) continue;
         events.add(_TLEvent(
           type: _TLType.vaccination,
           date: date,
-          title: 'Impfung: ${v['vaccine_name'] ?? '?'}',
-          subtitle: v['manufacturer'] as String?,
+          title: 'Impfung: ${v.vaccineName}',
+          subtitle: v.manufacturer,
           color: Colors.teal,
           icon: Icons.vaccines_rounded,
         ));

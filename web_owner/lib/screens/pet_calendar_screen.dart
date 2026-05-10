@@ -61,17 +61,15 @@ class _PetCalendarScreenState extends State<PetCalendarScreen> {
     final healthProvider = context.read<OwnerHealthProvider>();
     if (petId == null || healthProvider.selectedPetId == petId) {
       for (final v in healthProvider.vaccinations) {
-        final expiry = v['valid_until'];
-        if (expiry != null) {
-          final d = expiry is DateTime ? expiry : DateTime.tryParse(expiry.toString());
-          if (d != null) {
-            entries.add(_CalEntry(
-              title: 'Impfung läuft ab: ${v['vaccine_name'] ?? '?'}',
-              type: _CalEntryType.vaccinationExpiry,
-              date: d,
-              color: d.isBefore(DateTime.now()) ? LivingLedgerTheme.error : Colors.orange,
-            ));
-          }
+        if (v.validUntil != null) {
+          entries.add(_CalEntry(
+            title: 'Impfung läuft ab: ${v.vaccineName}',
+            type: _CalEntryType.vaccinationExpiry,
+            date: v.validUntil!,
+            color: v.validUntil!.isBefore(DateTime.now())
+                ? LivingLedgerTheme.error
+                : Colors.orange,
+          ));
         }
       }
     }
@@ -92,12 +90,11 @@ class _PetCalendarScreenState extends State<PetCalendarScreen> {
     // Reminders
     final reminderProvider = context.read<ReminderProvider>();
     for (final r in reminderProvider.reminders) {
-      if (r.dueDate == null) continue;
       entries.add(_CalEntry(
         title: r.title,
         type: _CalEntryType.reminder,
-        date: r.dueDate!,
-        color: r.isOverdue ? LivingLedgerTheme.error : Colors.teal,
+        date: r.remindAt,
+        color: r.isPast ? LivingLedgerTheme.error : Colors.teal,
       ));
     }
 
