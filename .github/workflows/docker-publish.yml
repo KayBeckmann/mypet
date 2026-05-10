@@ -1,19 +1,8 @@
 name: Build & Publish Docker Images
 
-# Baut alle Service-Images und pushed sie ins GitHub Container Registry (GHCR).
-# Der Produktions-Server muss dann nur noch `docker compose pull && docker compose up -d` ausführen.
-#
-# Voraussetzung: Repository-Variable "API_BASE_URL" in GitHub setzen
-#   Settings → Secrets and variables → Actions → Variables → New repository variable
-#   Name: API_BASE_URL   Value: http://<server-ip>:8080
-
 on:
   push:
     branches: [master]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_BASE: ghcr.io/${{ github.repository_owner }}/mypet
 
 jobs:
   # ── Backend (Dart) ──────────────────────────────────────────────────────
@@ -29,10 +18,11 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build and push backend
-        run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/mypet/backend:latest ./backend
-          docker push ghcr.io/${{ github.repository_owner }}/mypet/backend:latest
+      - name: Build backend image
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/mypet/backend:latest ./backend
+
+      - name: Push backend image
+        run: docker push ghcr.io/${{ github.repository_owner }}/mypet/backend:latest
 
   # ── Flutter Web — Tierbesitzer ──────────────────────────────────────────
   web-owner:
@@ -47,14 +37,16 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build and push web-owner
+      - name: Build web-owner image
         run: |
           docker build \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_owner/Dockerfile \
             -t ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest \
             .
-          docker push ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest
+
+      - name: Push web-owner image
+        run: docker push ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest
 
   # ── Flutter Web — Tierarzt ──────────────────────────────────────────────
   web-vet:
@@ -69,14 +61,16 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build and push web-vet
+      - name: Build web-vet image
         run: |
           docker build \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_vet/Dockerfile \
             -t ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest \
             .
-          docker push ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest
+
+      - name: Push web-vet image
+        run: docker push ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest
 
   # ── Flutter Web — Dienstleister ─────────────────────────────────────────
   web-provider:
@@ -91,14 +85,16 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build and push web-provider
+      - name: Build web-provider image
         run: |
           docker build \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_provider/Dockerfile \
             -t ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest \
             .
-          docker push ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest
+
+      - name: Push web-provider image
+        run: docker push ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest
 
   # ── Flutter Web — Superadmin ────────────────────────────────────────────
   web-admin:
@@ -113,11 +109,13 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build and push web-admin
+      - name: Build web-admin image
         run: |
           docker build \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_admin/Dockerfile \
             -t ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest \
             .
-          docker push ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest
+
+      - name: Push web-admin image
+        run: docker push ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest
