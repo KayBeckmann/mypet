@@ -19,7 +19,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -31,14 +30,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          push: true
-          provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/mypet/backend:latest
-          cache-from: type=gha,scope=backend
-          cache-to: type=gha,mode=max,scope=backend
+      - name: Build and push backend
+        run: |
+          docker buildx build \
+            --push \
+            --no-cache \
+            -t ghcr.io/${{ github.repository_owner }}/mypet/backend:latest \
+            ./backend
 
   # ── Flutter Web — Tierbesitzer ──────────────────────────────────────────
   web-owner:
@@ -47,7 +45,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -59,17 +56,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: web_owner/Dockerfile
-          push: true
-          provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest
-          build-args: |
-            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
-          cache-from: type=gha,scope=web-owner
-          cache-to: type=gha,mode=max,scope=web-owner
+      - name: Build and push web-owner
+        run: |
+          docker buildx build \
+            --push \
+            --no-cache \
+            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
+            -f web_owner/Dockerfile \
+            -t ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest \
+            .
 
   # ── Flutter Web — Tierarzt ──────────────────────────────────────────────
   web-vet:
@@ -78,7 +73,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -90,17 +84,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: web_vet/Dockerfile
-          push: true
-          provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest
-          build-args: |
-            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
-          cache-from: type=gha,scope=web-vet
-          cache-to: type=gha,mode=max,scope=web-vet
+      - name: Build and push web-vet
+        run: |
+          docker buildx build \
+            --push \
+            --no-cache \
+            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
+            -f web_vet/Dockerfile \
+            -t ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest \
+            .
 
   # ── Flutter Web — Dienstleister ─────────────────────────────────────────
   web-provider:
@@ -109,7 +101,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -121,17 +112,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: web_provider/Dockerfile
-          push: true
-          provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest
-          build-args: |
-            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
-          cache-from: type=gha,scope=web-provider
-          cache-to: type=gha,mode=max,scope=web-provider
+      - name: Build and push web-provider
+        run: |
+          docker buildx build \
+            --push \
+            --no-cache \
+            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
+            -f web_provider/Dockerfile \
+            -t ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest \
+            .
 
   # ── Flutter Web — Superadmin ────────────────────────────────────────────
   web-admin:
@@ -140,7 +129,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -152,14 +140,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: web_admin/Dockerfile
-          push: true
-          provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest
-          build-args: |
-            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
-          cache-from: type=gha,scope=web-admin
-          cache-to: type=gha,mode=max,scope=web-admin
+      - name: Build and push web-admin
+        run: |
+          docker buildx build \
+            --push \
+            --no-cache \
+            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
+            -f web_admin/Dockerfile \
+            -t ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest \
+            .
