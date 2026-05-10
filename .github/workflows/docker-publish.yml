@@ -26,20 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          push: true
-          provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/mypet/backend:latest
+      - name: Build and push backend
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/mypet/backend:latest ./backend
+          docker push ghcr.io/${{ github.repository_owner }}/mypet/backend:latest
 
   # ── Flutter Web — Tierbesitzer ──────────────────────────────────────────
   web-owner:
@@ -51,23 +44,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: web_owner/Dockerfile
-          push: true
-          provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest
-          build-args: |
-            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
+      - name: Build and push web-owner
+        run: |
+          docker build \
+            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
+            -f web_owner/Dockerfile \
+            -t ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest \
+            .
+          docker push ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest
 
   # ── Flutter Web — Tierarzt ──────────────────────────────────────────────
   web-vet:
@@ -79,23 +66,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: web_vet/Dockerfile
-          push: true
-          provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest
-          build-args: |
-            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
+      - name: Build and push web-vet
+        run: |
+          docker build \
+            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
+            -f web_vet/Dockerfile \
+            -t ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest \
+            .
+          docker push ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest
 
   # ── Flutter Web — Dienstleister ─────────────────────────────────────────
   web-provider:
@@ -107,23 +88,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: web_provider/Dockerfile
-          push: true
-          provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest
-          build-args: |
-            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
+      - name: Build and push web-provider
+        run: |
+          docker build \
+            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
+            -f web_provider/Dockerfile \
+            -t ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest \
+            .
+          docker push ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest
 
   # ── Flutter Web — Superadmin ────────────────────────────────────────────
   web-admin:
@@ -135,20 +110,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: web_admin/Dockerfile
-          push: true
-          provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest
-          build-args: |
-            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
+      - name: Build and push web-admin
+        run: |
+          docker build \
+            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
+            -f web_admin/Dockerfile \
+            -t ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest \
+            .
+          docker push ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest
