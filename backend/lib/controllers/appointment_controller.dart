@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:postgres/postgres.dart';
+
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import '../database/database.dart';
@@ -442,29 +442,6 @@ class AppointmentController {
       );
     } catch (e) {
       print('❌ cancelAppointment Fehler: $e');
-      return _error(500, 'Interner Serverfehler');
-    }
-  }
-
-  Future<Response> _updateStatus(
-      String id, String status, Request request) async {
-    try {
-      final appointment = await _db.queryOne(
-        '''
-        UPDATE appointments SET status = @status::appointment_status
-        WHERE id = @id::uuid
-        RETURNING *
-        ''',
-        parameters: {'id': id, 'status': status},
-      );
-      if (appointment == null) return _error(404, 'Termin nicht gefunden');
-
-      return Response.ok(
-        jsonEncode({'appointment': _sanitize(appointment)}),
-        headers: {'Content-Type': 'application/json'},
-      );
-    } catch (e) {
-      print('❌ updateStatus Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }

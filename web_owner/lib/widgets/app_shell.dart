@@ -215,7 +215,7 @@ class _TopBarState extends State<_TopBar> {
     final pets = context.read<PetProvider>().pets;
     for (final p in pets) {
       if (p.name.toLowerCase().contains(q) ||
-          (p.species?.toLowerCase().contains(q) ?? false) ||
+          p.species.name.toLowerCase().contains(q) ||
           (p.breed?.toLowerCase().contains(q) ?? false)) {
         results.add(_SearchResult(
           icon: Icons.pets_rounded,

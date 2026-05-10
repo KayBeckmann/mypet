@@ -570,7 +570,6 @@ class PetController {
   /// Einfacher Multipart-Parser
   List<_MultipartPart> _parseMultipart(Uint8List body, String boundary) {
     final parts = <_MultipartPart>[];
-    final boundaryBytes = '--$boundary'.codeUnits;
     final bodyStr = String.fromCharCodes(body);
 
     // Teile am Boundary aufteilen

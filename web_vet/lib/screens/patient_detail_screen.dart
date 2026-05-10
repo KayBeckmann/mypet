@@ -188,7 +188,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
     }
 
     final vaccRows = vaccs.map((v) => '<tr><td>${v['vaccine_name'] ?? '—'}</td><td>${_fmtDate(v['vaccinated_at'])}</td><td>${_fmtDate(v['valid_until'])}</td></tr>').join('');
-    final medRows = meds.map((m) => '<tr><td>${m.name}</td><td>${m.dosage ?? '—'}</td><td>${m.frequencyLabel}</td><td>${m.isActive ? 'Aktiv' : 'Beendet'}</td></tr>').join('');
+    final medRows = meds.map((m) => '<tr><td>${m['name'] ?? '—'}</td><td>${m['dosage'] ?? '—'}</td><td>${m['frequency'] ?? '—'}</td><td>${(m['is_active'] as bool? ?? true) ? 'Aktiv' : 'Beendet'}</td></tr>').join('');
     final recRows = records.take(10).map((r) => '<tr><td>${r['record_type'] ?? '—'}</td><td>${r['title'] ?? '—'}</td><td>${r['diagnosis'] ?? '—'}</td><td>${_fmtDate(r['created_at'])}</td></tr>').join('');
 
     final html_ = '''<!DOCTYPE html>
@@ -210,7 +210,7 @@ td{border-bottom:1px solid #eee;padding:3px 6px}
 <h2>Impfungen (${vaccs.length})</h2>
 ${vaccs.isEmpty ? '<p style="color:#999">Keine Impfungen</p>' : '<table><tr><th>Impfstoff</th><th>Datum</th><th>Gültig bis</th></tr>$vaccRows</table>'}
 
-<h2>Aktive Medikamente (${meds.where((m) => m.isActive).length})</h2>
+<h2>Aktive Medikamente (${meds.where((m) => m['is_active'] as bool? ?? true).length})</h2>
 ${meds.isEmpty ? '<p style="color:#999">Keine Medikamente</p>' : '<table><tr><th>Medikament</th><th>Dosierung</th><th>Häufigkeit</th><th>Status</th></tr>$medRows</table>'}
 
 <h2>Med. Akte (letzte ${records.take(10).length} Einträge)</h2>
