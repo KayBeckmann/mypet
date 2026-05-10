@@ -143,4 +143,4 @@ jobs:
         run: docker build -t mypet-backend:${{ github.sha }} ./backend
 
       - name: Build web-owner image
-        run: docker build -t mypet-web-owner:${{ github.sha }} ./web_owner
+        run: docker build -f web_owner/Dockerfile -t mypet-web-owner:${{ github.sha }} .

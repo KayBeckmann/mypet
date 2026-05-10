@@ -1,5 +1,12 @@
 name: Build & Publish Docker Images
 
+# Baut alle Service-Images und pushed sie ins GitHub Container Registry (GHCR).
+# Der Produktions-Server muss dann nur noch `docker compose pull && docker compose up -d` ausführen.
+#
+# Voraussetzung: Repository-Variable "API_BASE_URL" in GitHub setzen
+#   Settings → Secrets and variables → Actions → Variables → New repository variable
+#   Name: API_BASE_URL   Value: http://<server-ip>:8080
+
 on:
   push:
     branches: [master]
@@ -12,17 +19,26 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Build backend image
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/mypet/backend:latest ./backend
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push backend image
-        run: docker push ghcr.io/${{ github.repository_owner }}/mypet/backend:latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          provenance: false
+          tags: ghcr.io/${{ github.repository_owner }}/mypet/backend:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
 
   # ── Flutter Web — Tierbesitzer ──────────────────────────────────────────
   web-owner:
@@ -31,22 +47,29 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Build web-owner image
-        run: |
-          docker build \
-            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
-            -f web_owner/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest \
-            .
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push web-owner image
-        run: docker push ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: web_owner/Dockerfile
+          push: true
+          provenance: false
+          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest
+          build-args: |
+            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
+          cache-from: type=gha,scope=web-owner
+          cache-to: type=gha,mode=max,scope=web-owner
 
   # ── Flutter Web — Tierarzt ──────────────────────────────────────────────
   web-vet:
@@ -55,22 +78,29 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Build web-vet image
-        run: |
-          docker build \
-            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
-            -f web_vet/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest \
-            .
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push web-vet image
-        run: docker push ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: web_vet/Dockerfile
+          push: true
+          provenance: false
+          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest
+          build-args: |
+            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
+          cache-from: type=gha,scope=web-vet
+          cache-to: type=gha,mode=max,scope=web-vet
 
   # ── Flutter Web — Dienstleister ─────────────────────────────────────────
   web-provider:
@@ -79,22 +109,29 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Build web-provider image
-        run: |
-          docker build \
-            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
-            -f web_provider/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest \
-            .
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push web-provider image
-        run: docker push ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: web_provider/Dockerfile
+          push: true
+          provenance: false
+          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest
+          build-args: |
+            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
+          cache-from: type=gha,scope=web-provider
+          cache-to: type=gha,mode=max,scope=web-provider
 
   # ── Flutter Web — Superadmin ────────────────────────────────────────────
   web-admin:
@@ -103,19 +140,26 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Build web-admin image
-        run: |
-          docker build \
-            --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
-            -f web_admin/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest \
-            .
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push web-admin image
-        run: docker push ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: web_admin/Dockerfile
+          push: true
+          provenance: false
+          tags: ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest
+          build-args: |
+            API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
+          cache-from: type=gha,scope=web-admin
+          cache-to: type=gha,mode=max,scope=web-admin
