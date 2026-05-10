@@ -38,6 +38,7 @@ jobs:
         with:
           context: ./backend
           push: true
+          provenance: false
           tags: ghcr.io/${{ github.repository_owner }}/mypet/backend:latest
 
   # ── Flutter Web — Tierbesitzer ──────────────────────────────────────────
@@ -63,6 +64,7 @@ jobs:
           context: .
           file: web_owner/Dockerfile
           push: true
+          provenance: false
           tags: ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest
           build-args: |
             API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
@@ -90,6 +92,7 @@ jobs:
           context: .
           file: web_vet/Dockerfile
           push: true
+          provenance: false
           tags: ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest
           build-args: |
             API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
@@ -117,6 +120,7 @@ jobs:
           context: .
           file: web_provider/Dockerfile
           push: true
+          provenance: false
           tags: ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest
           build-args: |
             API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
@@ -144,6 +148,7 @@ jobs:
           context: .
           file: web_admin/Dockerfile
           push: true
+          provenance: false
           tags: ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest
           build-args: |
             API_BASE_URL=${{ vars.API_BASE_URL || 'http://localhost:8080' }}
