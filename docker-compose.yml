@@ -30,7 +30,7 @@ services:
 
   # Dart Backend
   backend:
-    image: ghcr.io/kaybeckmann/mypet/backend:latest
+    image: ghcr.io/kaybeckmann/mypet-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -60,7 +60,7 @@ services:
 
   # Flutter Web - Tierbesitzer
   web-owner:
-    image: ghcr.io/kaybeckmann/mypet/web-owner:latest
+    image: ghcr.io/kaybeckmann/mypet-web-owner:latest
     build:
       context: .
       dockerfile: web_owner/Dockerfile
@@ -75,7 +75,7 @@ services:
 
   # Flutter Web - Tierarzt
   web-vet:
-    image: ghcr.io/kaybeckmann/mypet/web-vet:latest
+    image: ghcr.io/kaybeckmann/mypet-web-vet:latest
     build:
       context: .
       dockerfile: web_vet/Dockerfile
@@ -90,7 +90,7 @@ services:
 
   # Flutter Web - Dienstleister
   web-provider:
-    image: ghcr.io/kaybeckmann/mypet/web-provider:latest
+    image: ghcr.io/kaybeckmann/mypet-web-provider:latest
     build:
       context: .
       dockerfile: web_provider/Dockerfile
@@ -105,7 +105,7 @@ services:
 
   # Flutter Web - Superadmin Dashboard
   web-admin:
-    image: ghcr.io/kaybeckmann/mypet/web-admin:latest
+    image: ghcr.io/kaybeckmann/mypet-web-admin:latest
     build:
       context: .
       dockerfile: web_admin/Dockerfile

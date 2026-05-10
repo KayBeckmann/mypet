@@ -35,7 +35,7 @@ jobs:
           docker buildx build \
             --push \
             --no-cache \
-            -t ghcr.io/${{ github.repository_owner }}/mypet/backend:latest \
+            -t ghcr.io/${{ github.repository_owner }}/mypet-backend:latest \
             ./backend
 
   # ── Flutter Web — Tierbesitzer ──────────────────────────────────────────
@@ -63,7 +63,7 @@ jobs:
             --no-cache \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_owner/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet/web-owner:latest \
+            -t ghcr.io/${{ github.repository_owner }}/mypet-web-owner:latest \
             .
 
   # ── Flutter Web — Tierarzt ──────────────────────────────────────────────
@@ -91,7 +91,7 @@ jobs:
             --no-cache \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_vet/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet/web-vet:latest \
+            -t ghcr.io/${{ github.repository_owner }}/mypet-web-vet:latest \
             .
 
   # ── Flutter Web — Dienstleister ─────────────────────────────────────────
@@ -119,7 +119,7 @@ jobs:
             --no-cache \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_provider/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet/web-provider:latest \
+            -t ghcr.io/${{ github.repository_owner }}/mypet-web-provider:latest \
             .
 
   # ── Flutter Web — Superadmin ────────────────────────────────────────────
@@ -147,5 +147,5 @@ jobs:
             --no-cache \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_admin/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet/web-admin:latest \
+            -t ghcr.io/${{ github.repository_owner }}/mypet-web-admin:latest \
             .
