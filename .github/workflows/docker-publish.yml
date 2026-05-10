@@ -30,12 +30,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Build and push backend
         run: |
           docker buildx build \
             --push \
             --no-cache \
-            -t ghcr.io/${{ github.repository_owner }}/mypet-backend:latest \
+            -t ghcr.io/${{ env.OWNER }}/mypet-backend:latest \
             ./backend
 
   # ── Flutter Web — Tierbesitzer ──────────────────────────────────────────
@@ -56,6 +59,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Build and push web-owner
         run: |
           docker buildx build \
@@ -63,7 +69,7 @@ jobs:
             --no-cache \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_owner/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet-web-owner:latest \
+            -t ghcr.io/${{ env.OWNER }}/mypet-web-owner:latest \
             .
 
   # ── Flutter Web — Tierarzt ──────────────────────────────────────────────
@@ -84,6 +90,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Build and push web-vet
         run: |
           docker buildx build \
@@ -91,7 +100,7 @@ jobs:
             --no-cache \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_vet/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet-web-vet:latest \
+            -t ghcr.io/${{ env.OWNER }}/mypet-web-vet:latest \
             .
 
   # ── Flutter Web — Dienstleister ─────────────────────────────────────────
@@ -112,6 +121,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Build and push web-provider
         run: |
           docker buildx build \
@@ -119,7 +131,7 @@ jobs:
             --no-cache \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_provider/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet-web-provider:latest \
+            -t ghcr.io/${{ env.OWNER }}/mypet-web-provider:latest \
             .
 
   # ── Flutter Web — Superadmin ────────────────────────────────────────────
@@ -140,6 +152,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Build and push web-admin
         run: |
           docker buildx build \
@@ -147,5 +162,5 @@ jobs:
             --no-cache \
             --build-arg API_BASE_URL="${{ vars.API_BASE_URL || 'http://localhost:8080' }}" \
             -f web_admin/Dockerfile \
-            -t ghcr.io/${{ github.repository_owner }}/mypet-web-admin:latest \
+            -t ghcr.io/${{ env.OWNER }}/mypet-web-admin:latest \
             .
