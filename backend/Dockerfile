@@ -30,4 +30,4 @@ RUN mkdir -p /app/uploads
 
 EXPOSE 8080
 
-CMD ["/app/bin/server"]
+CMD ["/bin/sh", "-c", "/app/bin/server --migrate && /app/bin/server"]
