@@ -41,13 +41,18 @@ class DashboardScreen extends StatelessWidget {
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () async {
               final petProv = context.read<MobilePetProvider>();
-              context.read<MobileReminderProvider>().load();
-              context.read<MobileAppointmentProvider>().load();
+              final remProv = context.read<MobileReminderProvider>();
+              final apptProv = context.read<MobileAppointmentProvider>();
+              final medProv = context.read<MobileMedicationProvider>();
+              final weightProv = context.read<MobileWeightProvider>();
+              final healthProv = context.read<MobileHealthProvider>();
+              remProv.load();
+              apptProv.load();
               await petProv.load();
               for (final pet in petProv.pets) {
-                context.read<MobileMedicationProvider>().loadForPet(pet.id);
-                context.read<MobileWeightProvider>().loadForPet(pet.id);
-                context.read<MobileHealthProvider>().loadForPet(pet.id);
+                medProv.loadForPet(pet.id);
+                weightProv.loadForPet(pet.id);
+                healthProv.loadForPet(pet.id);
               }
             },
           ),
@@ -56,15 +61,20 @@ class DashboardScreen extends StatelessWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           final petProv = context.read<MobilePetProvider>();
+          final remProv = context.read<MobileReminderProvider>();
+          final apptProv = context.read<MobileAppointmentProvider>();
+          final medProv = context.read<MobileMedicationProvider>();
+          final weightProv = context.read<MobileWeightProvider>();
+          final healthProv = context.read<MobileHealthProvider>();
           await Future.wait([
             petProv.load(),
-            context.read<MobileReminderProvider>().load(),
-            context.read<MobileAppointmentProvider>().load(),
+            remProv.load(),
+            apptProv.load(),
           ]);
           for (final pet in petProv.pets) {
-            context.read<MobileMedicationProvider>().loadForPet(pet.id);
-            context.read<MobileWeightProvider>().loadForPet(pet.id);
-            context.read<MobileHealthProvider>().loadForPet(pet.id);
+            medProv.loadForPet(pet.id);
+            weightProv.loadForPet(pet.id);
+            healthProv.loadForPet(pet.id);
           }
         },
         child: ListView(

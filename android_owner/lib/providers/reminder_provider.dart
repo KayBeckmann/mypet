@@ -52,6 +52,7 @@ class MobileReminderProvider extends ChangeNotifier {
   List<MobileReminder> get overdue =>
       _reminders.where((r) => r.isOverdue).toList();
   bool get loading => _loading;
+  String? get error => _error;
 
   Future<void> load() async {
     _loading = true;

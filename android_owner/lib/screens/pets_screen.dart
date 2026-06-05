@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mypet_shared/shared.dart';
 import 'package:provider/provider.dart';
 import '../providers/pet_provider.dart';
 import '../providers/medication_provider.dart';
@@ -518,16 +517,15 @@ class _MedCardState extends State<_MedCard> {
         .read<MobileMedicationProvider>()
         .administer(widget.pet.id, widget.med.id);
     setState(() => _administering = false);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(ok
-              ? '${widget.med.name} als gegeben markiert ✓'
-              : 'Fehler beim Speichern'),
-          backgroundColor: ok ? Colors.green : Colors.red,
-        ),
-      );
-    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok
+            ? '${widget.med.name} als gegeben markiert ✓'
+            : 'Fehler beim Speichern'),
+        backgroundColor: ok ? Colors.green : Colors.red,
+      ),
+    );
   }
 
   @override
@@ -844,6 +842,7 @@ class _WeightTab extends StatefulWidget {
 class _WeightTabState extends State<_WeightTab> {
   Future<void> _addWeight() async {
     final ctrl = TextEditingController();
+    final weightProv = context.read<MobileWeightProvider>();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -874,20 +873,16 @@ class _WeightTabState extends State<_WeightTab> {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
-      final v = double.parse(ctrl.text.replaceAll(',', '.'));
-      final ok = await context
-          .read<MobileWeightProvider>()
-          .addEntry(petId: widget.pet.id, weightKg: v);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ok ? '${v.toStringAsFixed(1)} kg gespeichert ✓' : 'Fehler'),
-            backgroundColor: ok ? Colors.green : Colors.red,
-          ),
-        );
-      }
-    }
+    if (confirmed != true) return;
+    final v = double.parse(ctrl.text.replaceAll(',', '.'));
+    final ok = await weightProv.addEntry(petId: widget.pet.id, weightKg: v);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok ? '${v.toStringAsFixed(1)} kg gespeichert ✓' : 'Fehler'),
+        backgroundColor: ok ? Colors.green : Colors.red,
+      ),
+    );
   }
 
   @override
@@ -1022,8 +1017,11 @@ class _SparklinePainter extends CustomPainter {
     for (var i = 0; i < values.length; i++) {
       final x = i * size.width / (values.length - 1);
       final y = size.height - (values[i] - min) / range * size.height;
-      if (i == 0) path.moveTo(x, y);
-      else path.lineTo(x, y);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
     }
     canvas.drawPath(path, paint);
 
@@ -1057,6 +1055,7 @@ class _NotesTabState extends State<_NotesTab> {
   Future<void> _addNote() async {
     final titleCtrl = TextEditingController();
     final contentCtrl = TextEditingController();
+    final healthProv = context.read<MobileHealthProvider>();
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1093,21 +1092,21 @@ class _NotesTabState extends State<_NotesTab> {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
-      final ok = await context.read<MobileHealthProvider>().addNote(
-            petId: widget.pet.id,
-            title: titleCtrl.text.trim(),
-            content: contentCtrl.text.trim(),
-          );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ok ? 'Notiz gespeichert' : 'Fehler'),
-            backgroundColor: ok ? Colors.green : Colors.red,
-          ),
-        );
-      }
-    }
+    if (confirmed != true) return;
+    final title = titleCtrl.text.trim();
+    final content = contentCtrl.text.trim();
+    final ok = await healthProv.addNote(
+      petId: widget.pet.id,
+      title: title,
+      content: content,
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok ? 'Notiz gespeichert' : 'Fehler'),
+        backgroundColor: ok ? Colors.green : Colors.red,
+      ),
+    );
   }
 
   @override

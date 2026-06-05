@@ -82,7 +82,7 @@ class RemindersScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 if (pets.isNotEmpty)
                   DropdownButtonFormField<String>(
-                    value: selectedPetId,
+                    initialValue: selectedPetId,
                     decoration: const InputDecoration(
                       labelText: 'Tier (optional)',
                       border: OutlineInputBorder(),

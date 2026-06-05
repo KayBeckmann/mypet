@@ -11,6 +11,8 @@ pubspec.lock
 
 # ===== Flutter =====
 **/android/
+# android_owner/android/ wird explizit getrackt (nötig für Docker-APK-Build)
+!android_owner/android/
 **/ios/
 **/linux/
 **/macos/

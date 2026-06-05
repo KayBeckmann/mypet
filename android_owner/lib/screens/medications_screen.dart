@@ -42,7 +42,7 @@ class MedicationsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 if (endingSoon.isNotEmpty) ...[
-                  _SectionHeader(
+                  const _SectionHeader(
                     icon: Icons.warning_amber_rounded,
                     label: 'Läuft bald ab',
                     color: Colors.orange,
@@ -120,7 +120,7 @@ class _MedTileState extends State<_MedTile> {
         .administer(widget.pm.pet.id, widget.pm.med.id);
     if (!mounted) return;
     setState(() => _administering = false);
-    ScaffoldMessenger.of(ctx).showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(ok ? '${widget.pm.med.name} gegeben ✓' : 'Fehler beim Speichern'),
         backgroundColor: ok ? Colors.green : Colors.red,
