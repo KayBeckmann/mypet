@@ -53,12 +53,24 @@ Future<void> main(List<String> args) async {
     config.printConfig();
   }
 
-  // Datenbank verbinden
+  // Datenbank verbinden — mit Wiederholungsversuchen, damit ein Server-
+  // Neustart nicht dauerhaft ohne Datenbank hängen bleibt, nur weil Postgres
+  // beim allerersten Verbindungsversuch noch nicht bereit war (z. B. nach
+  // einem Host-Neustart, wo docker-composes depends_on-Reihenfolge nicht
+  // greift). Für --migrate/--status/--rollback reicht ein kurzes Zeitfenster
+  // (10 Versuche), damit CLI-Aufrufe bei wirklich fehlender Datenbank auch
+  // zügig mit einer klaren Fehlermeldung abbrechen statt endlos zu warten.
   final db = Database();
+  final isCliCommand = args.contains('--migrate') ||
+      args.contains('-m') ||
+      args.contains('--status') ||
+      args.contains('-s') ||
+      args.contains('--rollback') ||
+      args.contains('-r');
   try {
-    await db.connect();
+    await db.connectWithRetry(maxAttempts: isCliCommand ? 10 : null);
   } catch (e) {
-    print('❌ Datenbank-Verbindung fehlgeschlagen: $e');
+    print('❌ Datenbank-Verbindung endgültig fehlgeschlagen: $e');
     print('   Starte Server ohne Datenbank...');
   }
 
