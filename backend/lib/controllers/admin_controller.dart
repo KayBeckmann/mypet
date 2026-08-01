@@ -3,12 +3,16 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'package:bcrypt/bcrypt.dart';
 import '../database/database.dart';
+import 'organization_controller.dart';
 
 /// Controller für Superadmin-Verwaltung
 class AdminController {
   final Database _db;
+  late final OrganizationController _orgController;
 
-  AdminController(this._db);
+  AdminController(this._db) {
+    _orgController = OrganizationController(_db);
+  }
 
   Router get router {
     final router = Router();
@@ -21,6 +25,7 @@ class AdminController {
     router.put('/users/<id>/reset-password', _resetPassword);
     router.delete('/users/<id>', _deactivateUser);
     router.get('/organizations', _listOrganizations);
+    router.post('/organizations', _createOrganization);
     router.get('/organizations/<id>', _getOrganization);
     router.put('/organizations/<id>', _setOrganizationActive);
     router.get('/audit-log', _getAuditLog);
@@ -441,6 +446,66 @@ class AdminController {
       );
     } catch (e) {
       print('❌ Admin listOrganizations Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// POST /admin/organizations — Organisation anlegen und einem
+  /// bestehenden Benutzer als Admin-Mitglied zuweisen.
+  ///
+  /// Anders als POST /organizations (Selbstbedienung: der eingeloggte
+  /// Tierarzt/Dienstleister legt seine eigene Praxis an) wählt hier der
+  /// Superadmin explizit den Ziel-Benutzer über admin_user_id — nötig, um
+  /// die allererste Praxis/Firma für einen frisch angelegten Benutzer zu
+  /// bootstrappen, ohne dass sich dieser vorher selbst einloggen muss.
+  Future<Response> _createOrganization(Request request) async {
+    try {
+      final body =
+          jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+
+      final adminUserId = body['admin_user_id'] as String?;
+      final type = body['type'] as String?;
+      if (adminUserId == null || adminUserId.trim().isEmpty) {
+        return _error(400, 'admin_user_id ist erforderlich');
+      }
+
+      final user = await _db.queryOne(
+        'SELECT id, role FROM users WHERE id = @id::uuid',
+        parameters: {'id': adminUserId},
+      );
+      if (user == null) {
+        return _error(404, 'Benutzer nicht gefunden');
+      }
+
+      final role = user['role'].toString();
+      final expectedRole = type == 'vet_practice' ? 'vet' : 'provider';
+      if (role != expectedRole) {
+        return _error(400,
+            'Benutzer hat Rolle "$role", für Typ "$type" wird aber "$expectedRole" erwartet');
+      }
+
+      final existingMembership = await _db.queryOne(
+        'SELECT id FROM organization_members WHERE user_id = @id::uuid AND is_active = true LIMIT 1',
+        parameters: {'id': adminUserId},
+      );
+      if (existingMembership != null) {
+        return _error(
+            409, 'Benutzer ist bereits Mitglied einer Organisation');
+      }
+
+      final org =
+          await _orgController.createOrganizationForUser(adminUserId, body);
+
+      return Response(
+        201,
+        body: jsonEncode(
+            {'organization': _orgController.serializeOrganization(org)}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } on OrganizationValidationException catch (e) {
+      return _error(400, e.message);
+    } catch (e) {
+      print('❌ Admin createOrganization Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }

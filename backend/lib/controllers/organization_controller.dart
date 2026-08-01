@@ -199,7 +199,7 @@ class OrganizationController {
 
       return Response.ok(
         jsonEncode({
-          'organizations': orgs.map(_serializeOrganization).toList(),
+          'organizations': orgs.map(serializeOrganization).toList(),
           'count': orgs.length,
         }),
         headers: {'Content-Type': 'application/json'},
@@ -262,18 +262,43 @@ class OrganizationController {
       final body =
           jsonDecode(await request.readAsString()) as Map<String, dynamic>;
 
-      final name = body['name'] as String?;
-      final type = body['type'] as String?;
+      final org = await createOrganizationForUser(userId, body);
 
-      if (name == null || name.trim().isEmpty) {
-        return _error(400, 'Name ist erforderlich');
-      }
-      if (type == null || !_validTypes.contains(type)) {
-        return _error(400,
-            'Gültiger Typ ist erforderlich (vet_practice | provider_company)');
-      }
+      return Response(
+        201,
+        body: jsonEncode({'organization': serializeOrganization(org)}),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } on OrganizationValidationException catch (e) {
+      return _error(400, e.message);
+    } catch (e) {
+      print('❌ Organization-Create-Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
 
-      final org = await _db.transaction((tx) async {
+  /// Legt eine Organisation an und macht [creatorUserId] zu ihrem
+  /// Admin-Mitglied. Geteilte Kernlogik für die Selbstbedienung
+  /// (POST /organizations, Ersteller = eingeloggter Nutzer) und die
+  /// Superadmin-Verwaltung (POST /admin/organizations, Ersteller = vom
+  /// Superadmin ausgewählter Nutzer) — siehe AdminController.
+  Future<Map<String, dynamic>> createOrganizationForUser(
+    String creatorUserId,
+    Map<String, dynamic> body,
+  ) async {
+    final name = body['name'] as String?;
+    final type = body['type'] as String?;
+
+    if (name == null || name.trim().isEmpty) {
+      throw OrganizationValidationException('Name ist erforderlich');
+    }
+    if (type == null || !_validTypes.contains(type)) {
+      throw OrganizationValidationException(
+          'Gültiger Typ ist erforderlich (vet_practice | provider_company)');
+    }
+
+    final userId = creatorUserId;
+    final org = await _db.transaction((tx) async {
         // Organisation anlegen
         final orgResult = await tx.execute(
           Sql.named('''
@@ -369,15 +394,7 @@ class OrganizationController {
         details: {'name': org['name'], 'type': org['type']?.toString()},
       );
 
-      return Response(
-        201,
-        body: jsonEncode({'organization': _serializeOrganization(org)}),
-        headers: {'Content-Type': 'application/json'},
-      );
-    } catch (e) {
-      print('❌ Organization-Create-Fehler: $e');
-      return _error(500, 'Interner Serverfehler');
-    }
+    return org;
   }
 
   /// GET /organizations/:id - Organisation abrufen
@@ -407,7 +424,7 @@ class OrganizationController {
         return _error(404, 'Organisation nicht gefunden');
       }
 
-      final result = _serializeOrganization(org);
+      final result = serializeOrganization(org);
       result['member_role'] = membership['role'].toString();
       result['member_position'] = membership['position'];
 
@@ -476,7 +493,7 @@ class OrganizationController {
       );
 
       return Response.ok(
-        jsonEncode({'organization': _serializeOrganization(org!)}),
+        jsonEncode({'organization': serializeOrganization(org!)}),
         headers: {'Content-Type': 'application/json'},
       );
     } catch (e) {
@@ -879,7 +896,7 @@ class OrganizationController {
     );
   }
 
-  Map<String, dynamic> _serializeOrganization(Map<String, dynamic> org) {
+  Map<String, dynamic> serializeOrganization(Map<String, dynamic> org) {
     return {
       'id': org['id'].toString(),
       'name': org['name'],
@@ -977,4 +994,10 @@ class OrganizationController {
       headers: {'Content-Type': 'application/json'},
     );
   }
+}
+
+/// Validierungsfehler beim Anlegen einer Organisation (400, nicht 500).
+class OrganizationValidationException implements Exception {
+  final String message;
+  OrganizationValidationException(this.message);
 }

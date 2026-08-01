@@ -77,6 +77,12 @@ class _AdminOrganizationsScreenState extends State<AdminOrganizationsScreen> {
         ),
         title: const Text('Organisationen'),
         actions: [
+          TextButton.icon(
+            onPressed: () => context.go('/organizations/create'),
+            style: TextButton.styleFrom(foregroundColor: AdminTheme.onPrimary),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Anlegen'),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(
                 horizontal: AdminTheme.spacingMd),
