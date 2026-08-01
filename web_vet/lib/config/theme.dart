@@ -1,57 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Tierarzt-Variante des Living Ledger Design Systems.
-/// Professionelles, klares Blau als Primärfarbe, dezente Akzente.
+/// Tierarzt-Variante, jetzt ausgerichtet auf das "Clinical Compassion"
+/// Designsystem aus dem Google-Stitch-Mockup
+/// (mockup/stitch_mypet_health_companion/clinical_compassion/DESIGN.md):
+/// modern-corporate, minimalistisch, Tonal-Layering statt Schatten,
+/// Grün nur sparsam für Erfolg/Speichern/Bestätigen-Aktionen.
 class VetTheme {
   VetTheme._();
 
-  // ── Primary (Clinical Blue) ──
-  static const Color primary = Color(0xFF2C5F7C);
-  static const Color primaryContainer = Color(0xFF3E7B9C);
+  // ── Primary (Brand Green — nur für Erfolg/Speichern/Bestätigen) ──
+  static const Color primary = Color(0xFF4CAF50);
+  static const Color primaryContainer = Color(0xFFD7E4EC);
   static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color onPrimaryContainer = Color(0xFFD4E8F4);
+  static const Color onPrimaryContainer = Color(0xFF003C0B);
 
-  // ── Secondary (Grün als Gesundheits-Akzent) ──
-  static const Color secondary = Color(0xFF2E7D32);
-  static const Color secondaryContainer = Color(0xFFE8F5E9);
+  // ── Secondary (Slate — Sidebar/Header-Rahmen) ──
+  static const Color secondary = Color(0xFF263238);
+  static const Color secondaryContainer = Color(0xFF37474F);
   static const Color onSecondary = Color(0xFFFFFFFF);
-  static const Color onSecondaryContainer = Color(0xFF1B3D1F);
+  static const Color onSecondaryContainer = Color(0xFFFFFFFF);
 
-  // ── Tertiary (Warnfarbe) ──
-  static const Color tertiary = Color(0xFFD4782F);
-  static const Color tertiaryContainer = Color(0xFFFDE8D0);
+  // ── Tertiary (Dringlichkeit / Notfall) ──
+  static const Color tertiary = Color(0xFFD32F2F);
+  static const Color tertiaryContainer = Color(0xFFFFDAD7);
   static const Color onTertiary = Color(0xFFFFFFFF);
-  static const Color onTertiaryContainer = Color(0xFF5C3415);
+  static const Color onTertiaryContainer = Color(0xFF930015);
 
-  // ── Surfaces ──
-  static const Color surface = Color(0xFFF9FAF4);
-  static const Color surfaceContainerLow = Color(0xFFF3F4EE);
+  // ── Surfaces (Layer 0 Canvas / Layer 1 Cards) ──
+  static const Color surface = Color(0xFFF5F5F5);
+  static const Color surfaceContainerLow = Color(0xFFF9F9F9);
   static const Color surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const Color surfaceContainerHigh = Color(0xFFE7E9E3);
+  static const Color surfaceContainerHigh = Color(0xFFEEEEEE);
 
   // ── On-Surface ──
-  static const Color onSurface = Color(0xFF191C19);
-  static const Color onSurfaceVariant = Color(0xFF414941);
-  static const Color outline = Color(0xFF717971);
-  static const Color outlineVariant = Color(0xFFC1C9BE);
+  static const Color onSurface = Color(0xFF1A1A1A);
+  static const Color onSurfaceVariant = Color(0xFF3F4A3C);
+  static const Color outline = Color(0xFFE0E0E0);
+  static const Color outlineVariant = Color(0xFFEEEEEE);
 
-  static const Color error = Color(0xFFC62828);
+  static const Color error = Color(0xFFBA1A1A);
 
   // ── Spacing ──
   static const double spacingXs = 4.0;
   static const double spacingSm = 8.0;
   static const double spacingMd = 16.0;
   static const double spacingLg = 24.0;
-  static const double spacingXl = 32.0;
+  static const double spacingXl = 40.0;
 
-  // ── Radius ──
-  static const double radiusMd = 12.0;
-  static const double radiusLg = 16.0;
+  // ── Radius ("Soft 0.25rem" Shape-Sprache, weniger rund als web_owner) ──
+  static const double radiusMd = 4.0;
+  static const double radiusLg = 8.0;
   static const double radiusFull = 999.0;
 
   static ThemeData get themeData {
-    final textTheme = GoogleFonts.manropeTextTheme();
+    final textTheme = GoogleFonts.publicSansTextTheme();
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -87,14 +90,18 @@ class VetTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surfaceContainerHigh,
+        fillColor: surfaceContainerLowest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+          borderSide: BorderSide(color: outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: const BorderSide(color: primary, width: 2),
+          borderSide: const BorderSide(color: primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: spacingMd,
@@ -111,9 +118,9 @@ class VetTheme {
             vertical: spacingMd,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusFull),
+            borderRadius: BorderRadius.circular(radiusMd),
           ),
-          textStyle: GoogleFonts.manrope(
+          textStyle: GoogleFonts.publicSans(
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
