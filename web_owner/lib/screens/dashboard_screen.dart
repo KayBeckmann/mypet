@@ -15,7 +15,6 @@ import '../providers/family_provider.dart';
 import '../models/appointment.dart';
 import '../widgets/pet_card.dart';
 import '../widgets/appointment_card.dart';
-import '../widgets/quick_action_chip.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -57,6 +56,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (_) {}
   }
 
+  /// Leichtgewichtiger Wellness-Indikator aus bereits geladenen
+  /// Dashboard-Daten (keine zusätzlichen API-Calls je Tier). Kein Ersatz für
+  /// den serverseitigen Health-Score pro Tier (siehe AnimalDetailScreen),
+  /// sondern eine grobe Gesamt-Einschätzung für den Dashboard-Header.
+  int _wellnessScore({
+    required List<Map<String, dynamic>> expiringVaccinations,
+    required List<Reminder> overdueReminders,
+    required List<Medication> endingSoonMeds,
+  }) {
+    var score = 100;
+    for (final v in expiringVaccinations) {
+      final validUntil = v['valid_until'] as String?;
+      final date = validUntil != null ? DateTime.tryParse(validUntil) : null;
+      final daysLeft =
+          date != null ? date.difference(DateTime.now()).inDays : null;
+      score -= (daysLeft != null && daysLeft <= 0) ? 10 : 4;
+    }
+    score -= overdueReminders.length * 5;
+    score -= endingSoonMeds.length * 3;
+    return score.clamp(0, 100);
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -74,6 +95,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (n.isBefore(now)) n = DateTime(now.year + 1, bd.month, bd.day);
       return n;
     }
+
     final upcomingBirthdays = petProvider.pets.where((p) {
       if (p.birthDate == null) return false;
       return nextBirthday(p.birthDate!).difference(now).inDays <= 14;
@@ -84,285 +106,253 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .expand((p) => medicationProvider.forPet(p.id))
         .where((m) => m.isActive && !m.isExpired)
         .toList();
+    final endingSoonMeds = activeMeds.where((m) => m.endsSoon).toList();
+    final overdueReminders =
+        reminderProvider.upcoming.where((r) => r.isPast).toList();
+    final wellness = _wellnessScore(
+      expiringVaccinations: _expiringVaccinations,
+      overdueReminders: overdueReminders,
+      endingSoonMeds: endingSoonMeds,
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(40, 24, 40, 40),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Main Content Area ──
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Welcome & Wellness Score ──
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 16,
               children: [
-                // Greeting
-                Text(
-                  _greeting(userName),
-                  style: Theme.of(context).textTheme.displaySmall,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Alles im Blick auf dem Living Ledger. '
-                  'Deine Tiere sind heute bestens versorgt.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: LivingLedgerTheme.onSurfaceVariant,
-                      ),
-                ),
-                const SizedBox(height: 24),
-
-                // Quick Actions
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    QuickActionChip(
-                      icon: Icons.vaccines_rounded,
-                      label: 'Impfpass',
-                      onTap: () => context.go('/animals'),
-                    ),
-                    QuickActionChip(
-                      icon: Icons.restaurant_rounded,
-                      label: 'Fütterung',
-                      onTap: () => context.go('/feeding'),
-                    ),
-                    QuickActionChip(
-                      icon: Icons.alarm_rounded,
-                      label: 'Erinnerungen',
-                      onTap: () => context.go('/reminders'),
-                    ),
-                    QuickActionChip(
-                      icon: Icons.storefront_rounded,
-                      label: 'Tierärzte finden',
-                      onTap: () => context.go('/marketplace'),
-                    ),
-                    QuickActionChip(
-                      icon: Icons.calendar_month_rounded,
-                      label: 'Kalender',
-                      onTap: () => context.go('/calendar'),
-                    ),
-                    QuickActionChip(
-                      icon: Icons.health_and_safety_rounded,
-                      label: 'Gesundheitspass',
-                      onTap: () => context.go('/health-passport'),
-                    ),
-                    QuickActionChip(
-                      icon: Icons.compare_arrows_rounded,
-                      label: 'Tier-Vergleich',
-                      onTap: () => context.go('/compare'),
-                    ),
-                  ],
-                ),
-                // Familien-Einladungen
-                if (familyInvitations.invitations.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  ...familyInvitations.invitations.map((inv) =>
-                      _FamilyInvitationBanner(
-                        invitation: inv,
-                        onAccept: () async {
-                          final ok = await familyInvitations.accept(inv.id);
-                          if (ok && context.mounted) {
-                            context.read<FamilyProvider>().loadFamilies();
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(
-                                  'Du bist jetzt Mitglied von "${inv.familyName}"'),
-                            ));
-                          }
-                        },
-                        onReject: () => familyInvitations.reject(inv.id),
-                      )),
-                ],
-
-                // Geburtstage
-                if (upcomingBirthdays.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _BirthdayPanel(pets: upcomingBirthdays),
-                ],
-
-                const SizedBox(height: 24),
-
-                // Ablaufende Impfungen
-                if (_expiringVaccinations.isNotEmpty) ...[
-                  _ExpiringVaccinationsPanel(
-                      vaccinations: _expiringVaccinations),
-                  const SizedBox(height: 24),
-                ],
-
-                // Impfstatus-Ampel
-                if (petProvider.pets.isNotEmpty) ...[
-                  _VaccinationStatusRow(
-                    pets: petProvider.pets,
-                    expiringVaccinations: _expiringVaccinations,
-                  ),
-                  const SizedBox(height: 24),
-                ],
-
-                // Pet Stats Summary
-                if (petProvider.pets.isNotEmpty) ...[
-                  _PetStatsSummary(pets: petProvider.pets),
-                  const SizedBox(height: 24),
-                ],
-
-                // Pet Section Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Deine Tiere',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      _greeting(userName),
+                      style: Theme.of(context).textTheme.headlineLarge,
                     ),
-                    TextButton(
-                      onPressed: () => context.go('/animals'),
-                      child: Text(
-                        'Alle ansehen →',
-                        style:
-                            Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: LivingLedgerTheme.onSurfaceVariant,
-                                ),
-                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Hier ist der aktuelle Stand deiner tierischen Familie.',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: LivingLedgerTheme.onSurfaceVariant,
+                          ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                if (petProvider.pets.isNotEmpty)
+                  _WellnessScoreCard(score: wellness),
+              ],
+            ),
+            const SizedBox(height: 24),
 
-                // Pet Cards Grid
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final crossAxisCount =
-                        constraints.maxWidth > 700 ? 2 : 1;
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 20,
-                        mainAxisSpacing: 20,
-                        childAspectRatio: 1.6,
+            // ── Quick Action Chips ──
+            _QuickActionChipsRow(),
+
+            // Familien-Einladungen
+            if (familyInvitations.invitations.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              ...familyInvitations.invitations.map((inv) =>
+                  _FamilyInvitationBanner(
+                    invitation: inv,
+                    onAccept: () async {
+                      final ok = await familyInvitations.accept(inv.id);
+                      if (ok && context.mounted) {
+                        context.read<FamilyProvider>().loadFamilies();
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                              'Du bist jetzt Mitglied von "${inv.familyName}"'),
+                        ));
+                      }
+                    },
+                    onReject: () => familyInvitations.reject(inv.id),
+                  )),
+            ],
+            const SizedBox(height: 24),
+
+            // ── Bento Grid: links breiter, rechts schmaler ──
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth > 900;
+                final left = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (activeMeds.isNotEmpty) ...[
+                      _ActiveMedicationsCard(medications: activeMeds),
+                      const SizedBox(height: 24),
+                    ],
+                    if (petProvider.pets.isNotEmpty) ...[
+                      _VaccinationTrafficLightCard(
+                        vaccinations: _expiringVaccinations,
                       ),
-                      itemCount: petProvider.pets.length,
-                      itemBuilder: (context, index) {
-                        final pet = petProvider.pets[index];
-                        return PetCard(
-                          pet: pet,
-                          imageBaseUrl: petProvider.apiBaseUrl,
-                          onTap: () =>
-                              context.go('/animals/${pet.id}'),
+                      const SizedBox(height: 24),
+                    ],
+                    if (upcomingBirthdays.isNotEmpty) ...[
+                      _BirthdayPanel(pets: upcomingBirthdays),
+                      const SizedBox(height: 24),
+                    ],
+                    if (petProvider.pets.isNotEmpty) ...[
+                      _PetStatsSummary(pets: petProvider.pets),
+                      const SizedBox(height: 24),
+                    ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Deine Tiere',
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        TextButton(
+                          onPressed: () => context.go('/animals'),
+                          child: const Text('Alle ansehen →'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    LayoutBuilder(
+                      builder: (context, gridConstraints) {
+                        final crossAxisCount =
+                            gridConstraints.maxWidth > 700 ? 2 : 1;
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            crossAxisSpacing: 20,
+                            mainAxisSpacing: 20,
+                            childAspectRatio: 1.6,
+                          ),
+                          itemCount: petProvider.pets.length,
+                          itemBuilder: (context, index) {
+                            final pet = petProvider.pets[index];
+                            return PetCard(
+                              pet: pet,
+                              imageBaseUrl: petProvider.apiBaseUrl,
+                              onTap: () => context.go('/animals/${pet.id}'),
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 32),
+                    ),
+                  ],
+                );
 
-          // ── Right Panel: Appointments + Meds + Reminders ──
-          SizedBox(
-            width: 300,
-            child: Column(
-              children: [
-                _AppointmentsPanel(
-                  appointments: appointmentProvider.upcoming,
-                ),
-                if (activeMeds.isNotEmpty) ...[
-                  const SizedBox(height: 20),
-                  _MedicationsPanel(medications: activeMeds),
-                ],
-                const SizedBox(height: 20),
-                _RemindersPanel(
-                  reminders: reminderProvider.upcoming,
-                ),
-              ],
+                final right = Column(
+                  children: [
+                    _RemindersTimelineCard(
+                      reminders: reminderProvider.upcoming,
+                    ),
+                    const SizedBox(height: 24),
+                    _AppointmentsPanel(
+                      appointments: appointmentProvider.upcoming,
+                    ),
+                  ],
+                );
+
+                if (!isWide) {
+                  return Column(
+                    children: [left, const SizedBox(height: 24), right],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 8, child: left),
+                    const SizedBox(width: 24),
+                    SizedBox(width: 340, child: right),
+                  ],
+                );
+              },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   String _greeting(String name) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Guten Morgen, $name.';
-    if (hour < 18) return 'Guten Tag, $name.';
-    return 'Guten Abend, $name.';
+    if (hour < 12) return 'Guten Morgen, $name';
+    if (hour < 18) return 'Guten Tag, $name';
+    return 'Guten Abend, $name';
   }
 }
 
-class _AppointmentsPanel extends StatelessWidget {
-  final List<Appointment> appointments;
+// ── Wellness Score Card (kreisförmiger Fortschrittsring, Header rechts) ──
 
-  const _AppointmentsPanel({required this.appointments});
+class _WellnessScoreCard extends StatelessWidget {
+  final int score;
+  const _WellnessScoreCard({required this.score});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      constraints: const BoxConstraints(minWidth: 250),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: LivingLedgerTheme.surfaceContainerLow,
+        color: LivingLedgerTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusXl),
+        boxShadow: LivingLedgerTheme.cardShadow,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
-          Row(
+          SizedBox(
+            width: 56,
+            height: 56,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: CircularProgressIndicator(
+                    value: score / 100,
+                    strokeWidth: 6,
+                    backgroundColor:
+                        LivingLedgerTheme.primaryContainer.withValues(alpha: 0.25),
+                    valueColor: const AlwaysStoppedAnimation(
+                        LivingLedgerTheme.primary),
+                  ),
+                ),
+                Text(
+                  '$score',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: LivingLedgerTheme.primary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.calendar_today_rounded,
-                size: 20,
-                color: LivingLedgerTheme.primary,
-              ),
-              const SizedBox(width: 8),
               Text(
-                'Termine',
-                style: Theme.of(context).textTheme.headlineSmall,
+                'Gesamt-Wellness',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: LivingLedgerTheme.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                score >= 85
+                    ? 'Alles im grünen Bereich'
+                    : score >= 60
+                        ? 'Ein paar Dinge brauchen Aufmerksamkeit'
+                        : 'Mehrere offene Punkte',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: LivingLedgerTheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
             ],
-          ),
-          const SizedBox(height: 20),
-
-          // Appointment List
-          if (appointments.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.event_available_rounded,
-                      size: 40,
-                      color: LivingLedgerTheme.onSurfaceVariant
-                          .withValues(alpha: 0.3),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Keine anstehenden Termine',
-                      style:
-                          Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: LivingLedgerTheme.onSurfaceVariant,
-                              ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            ...appointments.map((appointment) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: AppointmentCard(appointment: appointment),
-                )),
-
-          const SizedBox(height: 12),
-
-          // Link
-          SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              onPressed: () => context.go('/appointments'),
-              child: const Text('Alle Termine →'),
-            ),
           ),
         ],
       ),
@@ -370,10 +360,425 @@ class _AppointmentsPanel extends StatelessWidget {
   }
 }
 
-class _RemindersPanel extends StatelessWidget {
-  final List<Reminder> reminders;
+// ── Quick Action Chips (horizontal scrollbare Pill-Buttons) ──
 
-  const _RemindersPanel({required this.reminders});
+class _QuickActionChipsRow extends StatelessWidget {
+  _QuickActionChipsRow();
+
+  final List<_QuickAction> _actions = [
+    _QuickAction(Icons.medication_rounded, 'Medikament geben', '/medications',
+        emphasis: true),
+    _QuickAction(Icons.monitor_weight_rounded, 'Gewicht eintragen', '/weight'),
+    _QuickAction(
+        Icons.calendar_month_rounded, 'Termin buchen', '/appointments'),
+    _QuickAction(Icons.notifications_active_rounded, 'Erinnerung anlegen',
+        '/reminders'),
+    _QuickAction(Icons.restaurant_rounded, 'Fütterung protokollieren',
+        '/feeding'),
+    _QuickAction(Icons.vaccines_rounded, 'Impfungen ansehen', '/animals'),
+    _QuickAction(Icons.emergency_rounded, 'Notfallkontakte',
+        '/emergency-contacts',
+        danger: true),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _actions.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final a = _actions[index];
+          final color = a.danger
+              ? LivingLedgerTheme.error
+              : a.emphasis
+                  ? LivingLedgerTheme.primary
+                  : LivingLedgerTheme.onSurface;
+          final bg = a.danger
+              ? LivingLedgerTheme.error.withValues(alpha: 0.1)
+              : a.emphasis
+                  ? LivingLedgerTheme.primary.withValues(alpha: 0.1)
+                  : LivingLedgerTheme.surfaceContainerLowest;
+          return Material(
+            color: bg,
+            borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusFull),
+            child: InkWell(
+              borderRadius:
+                  BorderRadius.circular(LivingLedgerTheme.radiusFull),
+              onTap: () => context.go(a.route),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius:
+                      BorderRadius.circular(LivingLedgerTheme.radiusFull),
+                  border: Border.all(
+                    color: a.danger
+                        ? LivingLedgerTheme.error.withValues(alpha: 0.2)
+                        : a.emphasis
+                            ? LivingLedgerTheme.primary.withValues(alpha: 0.2)
+                            : LivingLedgerTheme.outlineVariant
+                                .withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(a.icon, size: 18, color: color),
+                    const SizedBox(width: 8),
+                    Text(a.label,
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelMedium
+                            ?.copyWith(color: color)),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _QuickAction {
+  final IconData icon;
+  final String label;
+  final String route;
+  final bool emphasis;
+  final bool danger;
+  _QuickAction(this.icon, this.label, this.route,
+      {this.emphasis = false, this.danger = false});
+}
+
+// ── Active Medications Card (2-Spalten Grid, Bento-Stil) ──
+
+class _ActiveMedicationsCard extends StatelessWidget {
+  final List<Medication> medications;
+  const _ActiveMedicationsCard({required this.medications});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: LivingLedgerTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusXl),
+        boxShadow: LivingLedgerTheme.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Aktive Medikamente',
+                  style: Theme.of(context).textTheme.headlineSmall),
+              TextButton(
+                onPressed: () => context.go('/medications'),
+                child: const Text('Alle ansehen'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(builder: (context, constraints) {
+            final crossAxisCount = constraints.maxWidth > 500 ? 2 : 1;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 2.6,
+              ),
+              itemCount: medications.length > 4 ? 4 : medications.length,
+              itemBuilder: (context, index) {
+                final m = medications[index];
+                final urgent = m.endsSoon;
+                final tint =
+                    urgent ? LivingLedgerTheme.tertiary : LivingLedgerTheme.secondary;
+                return Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    borderRadius:
+                        BorderRadius.circular(LivingLedgerTheme.radiusLg),
+                    border: Border.all(
+                        color: LivingLedgerTheme.outlineVariant
+                            .withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: tint.withValues(alpha: 0.15),
+                          borderRadius:
+                              BorderRadius.circular(LivingLedgerTheme.radiusMd),
+                        ),
+                        child: Icon(Icons.medication_rounded,
+                            color: tint, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(m.name,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis),
+                            if (m.dosage != null)
+                              Text(m.dosage!,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(m.frequencyLabel,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                            color: LivingLedgerTheme
+                                                .onSurfaceVariant)),
+                                SizedBox(
+                                  height: 26,
+                                  child: TextButton(
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10),
+                                      minimumSize: Size.zero,
+                                      backgroundColor:
+                                          LivingLedgerTheme.primary,
+                                      foregroundColor:
+                                          LivingLedgerTheme.onPrimary,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                            LivingLedgerTheme.radiusMd),
+                                      ),
+                                    ),
+                                    onPressed: m.petId.isNotEmpty
+                                        ? () => context
+                                            .read<MedicationProvider>()
+                                            .administer(m.petId, m.id)
+                                        : null,
+                                    child: const Text('Gegeben',
+                                        style: TextStyle(fontSize: 11)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          }),
+          if (medications.length > 4)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                '+ ${medications.length - 4} weitere',
+                style: TextStyle(
+                    fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Vaccination Traffic Light Card (rot/gelb/grün, wie Mockup) ──
+
+class _VaccinationTrafficLightCard extends StatelessWidget {
+  final List<Map<String, dynamic>> vaccinations;
+  const _VaccinationTrafficLightCard({required this.vaccinations});
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = DateFormat('dd.MM.yyyy');
+    final entries = vaccinations.map((v) {
+      final validUntil = v['valid_until'] as String?;
+      final date = validUntil != null ? DateTime.tryParse(validUntil) : null;
+      final daysLeft =
+          date != null ? date.difference(DateTime.now()).inDays : null;
+      return (v: v, date: date, daysLeft: daysLeft);
+    }).toList()
+      ..sort((a, b) => (a.daysLeft ?? 9999).compareTo(b.daysLeft ?? 9999));
+
+    final expired = entries.where((e) => (e.daysLeft ?? 1) <= 0).toList();
+    final soon =
+        entries.where((e) => (e.daysLeft ?? 99) > 0 && (e.daysLeft ?? 99) <= 14).toList();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: LivingLedgerTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusXl),
+        boxShadow: LivingLedgerTheme.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Impfstatus',
+                  style: Theme.of(context).textTheme.headlineSmall),
+              Icon(Icons.info_outline_rounded,
+                  color: LivingLedgerTheme.onSurfaceVariant, size: 20),
+            ],
+          ),
+          const SizedBox(height: 16),
+          for (final e in expired) ...[
+            _TrafficLightRow(
+              color: LivingLedgerTheme.error,
+              icon: Icons.warning_rounded,
+              title: '${e.v['vaccine_name'] ?? '—'}',
+              subtitle:
+                  '${e.v['pet_name'] ?? '—'} • Abgelaufen${e.date != null ? ' (${fmt.format(e.date!)})' : ''}',
+              actionLabel: 'Jetzt buchen',
+              actionColor: LivingLedgerTheme.error,
+              onTap: () => context.go('/appointments'),
+            ),
+            const SizedBox(height: 10),
+          ],
+          for (final e in soon) ...[
+            _TrafficLightRow(
+              color: LivingLedgerTheme.secondary,
+              icon: Icons.error_rounded,
+              title: '${e.v['vaccine_name'] ?? '—'}',
+              subtitle:
+                  '${e.v['pet_name'] ?? '—'} • läuft in ${e.daysLeft} Tagen ab',
+              actionLabel: 'Termin planen',
+              actionColor: LivingLedgerTheme.secondary,
+              onTap: () => context.go('/appointments'),
+            ),
+            const SizedBox(height: 10),
+          ],
+          if (expired.isEmpty && soon.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusLg),
+                border: Border.all(
+                    color:
+                        LivingLedgerTheme.outlineVariant.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: LivingLedgerTheme.primary.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.check_circle_rounded,
+                        color: LivingLedgerTheme.primary, size: 16),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Alle Impfungen sind aktuell.',
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrafficLightRow extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String actionLabel;
+  final Color actionColor;
+  final VoidCallback onTap;
+
+  const _TrafficLightRow({
+    required this.color,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.actionLabel,
+    required this.actionColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusLg),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            child: Icon(icon, color: Colors.white, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelMedium
+                        ?.copyWith(fontWeight: FontWeight.w700)),
+                Text(subtitle,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: LivingLedgerTheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: onTap,
+            style: TextButton.styleFrom(foregroundColor: actionColor),
+            child: Text(actionLabel),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Reminders Timeline Card ("Needs Attention", wie Mockup) ──
+
+class _RemindersTimelineCard extends StatelessWidget {
+  final List<Reminder> reminders;
+  const _RemindersTimelineCard({required this.reminders});
 
   void _dismiss(BuildContext context, String id) {
     context.read<ReminderProvider>().dismiss(id);
@@ -381,7 +786,6 @@ class _RemindersPanel extends StatelessWidget {
 
   Future<void> _quickAddReminder(BuildContext context) async {
     final titleCtrl = TextEditingController();
-    final dateCtrl = TextEditingController();
     DateTime? selectedDate;
 
     final confirmed = await showDialog<bool>(
@@ -422,7 +826,9 @@ class _RemindersPanel extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Abbrechen')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Abbrechen')),
             FilledButton(
               onPressed: () {
                 if (titleCtrl.text.trim().isEmpty) return;
@@ -447,23 +853,30 @@ class _RemindersPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fmt = DateFormat('dd.MM. HH:mm');
+    final items = reminders.take(4).toList();
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: LivingLedgerTheme.surfaceContainerLow,
+        color: LivingLedgerTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusXl),
+        boxShadow: LivingLedgerTheme.cardShadow,
+        border: Border(
+          top: BorderSide(color: LivingLedgerTheme.tertiary, width: 4),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.alarm_rounded,
+              const Icon(Icons.notifications_active_rounded,
                   size: 20, color: LivingLedgerTheme.tertiary),
               const SizedBox(width: 8),
-              Expanded(child: Text('Erinnerungen',
-                  style: Theme.of(context).textTheme.headlineSmall)),
+              Expanded(
+                child: Text('Braucht Aufmerksamkeit',
+                    style: Theme.of(context).textTheme.headlineSmall),
+              ),
               IconButton(
                 icon: const Icon(Icons.add_alarm_rounded, size: 18),
                 tooltip: 'Schnell-Erinnerung',
@@ -474,112 +887,121 @@ class _RemindersPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-
-          if (reminders.isEmpty)
+          if (items.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Center(
-                child: Text(
-                  'Keine ausstehenden Erinnerungen',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: LivingLedgerTheme.onSurfaceVariant,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
+              child: Text(
+                'Keine ausstehenden Erinnerungen',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: LivingLedgerTheme.onSurfaceVariant,
+                    ),
               ),
             )
           else
-            ...reminders.take(4).map((r) {
-              final isPast = r.isPast;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.only(top: 2),
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: isPast
-                            ? LivingLedgerTheme.tertiary
-                            : LivingLedgerTheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
+            Stack(
+              children: [
+                Positioned(
+                  left: 13,
+                  top: 6,
+                  bottom: 6,
+                  child: Container(
+                    width: 2,
+                    color: LivingLedgerTheme.outlineVariant.withValues(alpha: 0.3),
+                  ),
+                ),
+                Column(
+                  children: items.map((r) {
+                    final isPast = r.isPast;
+                    final dotColor = isPast
+                        ? LivingLedgerTheme.tertiary
+                        : LivingLedgerTheme.secondary;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            r.title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          Container(
+                            width: 28,
+                            alignment: Alignment.center,
+                            child: Container(
+                              width: 14,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                color: LivingLedgerTheme.surfaceContainerLowest,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: dotColor, width: 2),
+                              ),
+                            ),
                           ),
-                          Row(
-                            children: [
-                              Icon(
-                                isPast
-                                    ? Icons.warning_amber_rounded
-                                    : Icons.schedule_rounded,
-                                size: 11,
-                                color: isPast
-                                    ? LivingLedgerTheme.tertiary
-                                    : LivingLedgerTheme.onSurfaceVariant,
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: dotColor.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(
+                                    LivingLedgerTheme.radiusMd),
+                                border: Border.all(
+                                    color: dotColor.withValues(alpha: 0.2)),
                               ),
-                              const SizedBox(width: 3),
-                              Text(
-                                fmt.format(r.remindAt),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: isPast
-                                          ? LivingLedgerTheme.tertiary
-                                          : null,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(r.title,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelMedium
+                                                ?.copyWith(
+                                                    fontWeight:
+                                                        FontWeight.w700),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis),
+                                        Text(
+                                          isPast
+                                              ? 'Überfällig • ${fmt.format(r.remindAt)}'
+                                              : fmt.format(r.remindAt),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall
+                                              ?.copyWith(
+                                                color: isPast
+                                                    ? LivingLedgerTheme.tertiary
+                                                    : LivingLedgerTheme
+                                                        .onSurfaceVariant,
+                                              ),
+                                        ),
+                                      ],
                                     ),
+                                  ),
+                                  if (isPast)
+                                    GestureDetector(
+                                      onTap: () => _dismiss(context, r.id),
+                                      child: const Icon(
+                                        Icons.check_circle_outline_rounded,
+                                        size: 18,
+                                        color: LivingLedgerTheme.tertiary,
+                                      ),
+                                    ),
+                                ],
                               ),
-                              if (r.petName != null) ...[
-                                const Text(' · ',
-                                    style: TextStyle(
-                                        fontSize: 11,
-                                        color:
-                                            LivingLedgerTheme.onSurfaceVariant)),
-                                Text(r.petName!,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall),
-                              ],
-                            ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    if (isPast)
-                      GestureDetector(
-                        onTap: () => _dismiss(context, r.id),
-                        child: const Icon(
-                          Icons.check_circle_outline_rounded,
-                          size: 16,
-                          color: LivingLedgerTheme.tertiary,
-                        ),
-                      ),
-                  ],
+                    );
+                  }).toList(),
                 ),
-              );
-            }),
-
+              ],
+            ),
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
-            child: TextButton(
+            child: OutlinedButton(
               onPressed: () => context.go('/reminders'),
-              child: const Text('Alle Erinnerungen →'),
+              child: const Text('Erinnerungen verwalten'),
             ),
           ),
         ],
@@ -588,113 +1010,77 @@ class _RemindersPanel extends StatelessWidget {
   }
 }
 
-class _MedicationsPanel extends StatelessWidget {
-  final List<Medication> medications;
-  const _MedicationsPanel({required this.medications});
+// ── Appointments Panel ──
+
+class _AppointmentsPanel extends StatelessWidget {
+  final List<Appointment> appointments;
+
+  const _AppointmentsPanel({required this.appointments});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: LivingLedgerTheme.surfaceContainerLow,
+        color: LivingLedgerTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusXl),
+        boxShadow: LivingLedgerTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text(
-                'Aktive Medikamente',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+              Icon(
+                Icons.calendar_today_rounded,
+                size: 20,
+                color: LivingLedgerTheme.primary,
               ),
-              const Spacer(),
-              TextButton(
-                onPressed: () => context.go('/medications'),
-                style: TextButton.styleFrom(
-                    minimumSize: Size.zero, padding: EdgeInsets.zero),
-                child: Text('Alle →',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: LivingLedgerTheme.primary)),
+              const SizedBox(width: 8),
+              Text(
+                'Termine',
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          ...medications.take(4).map((m) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
+          const SizedBox(height: 16),
+          if (appointments.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Column(
                   children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: (m.endsSoon
-                                ? LivingLedgerTheme.tertiary
-                                : LivingLedgerTheme.primary)
-                            .withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.medication_rounded,
-                        size: 16,
-                        color: m.endsSoon
-                            ? LivingLedgerTheme.tertiary
-                            : LivingLedgerTheme.primary,
-                      ),
+                    Icon(
+                      Icons.event_available_rounded,
+                      size: 36,
+                      color: LivingLedgerTheme.onSurfaceVariant
+                          .withValues(alpha: 0.3),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(m.name,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis),
-                          if (m.dosage != null)
-                            Text(m.dosage!,
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: LivingLedgerTheme.onSurfaceVariant)),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(height: 10),
                     Text(
-                      m.frequencyLabel,
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: m.endsSoon
-                              ? LivingLedgerTheme.tertiary
-                              : LivingLedgerTheme.onSurfaceVariant),
-                    ),
-                    const SizedBox(width: 6),
-                    IconButton(
-                      icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
-                      color: LivingLedgerTheme.success,
-                      tooltip: 'Gegeben',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: m.petId.isNotEmpty
-                          ? () => context.read<MedicationProvider>().administer(m.petId, m.id)
-                          : null,
+                      'Keine anstehenden Termine',
+                      style:
+                          Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: LivingLedgerTheme.onSurfaceVariant,
+                              ),
                     ),
                   ],
                 ),
-              )),
-          if (medications.length > 4)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                '+ ${medications.length - 4} weitere',
-                style: TextStyle(
-                    fontSize: 12, color: LivingLedgerTheme.onSurfaceVariant),
               ),
+            )
+          else
+            ...appointments.map((appointment) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: AppointmentCard(appointment: appointment),
+                )),
+          const SizedBox(height: 4),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () => context.go('/appointments'),
+              child: const Text('Alle Termine →'),
             ),
+          ),
         ],
       ),
     );
@@ -790,87 +1176,6 @@ class _FamilyInvitationBanner extends StatelessWidget {
   }
 }
 
-class _ExpiringVaccinationsPanel extends StatelessWidget {
-  final List<Map<String, dynamic>> vaccinations;
-  const _ExpiringVaccinationsPanel({required this.vaccinations});
-
-  @override
-  Widget build(BuildContext context) {
-    final fmt = DateFormat('dd.MM.yyyy');
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusLg),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.vaccines_rounded, color: Colors.amber, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'Ablaufende Impfungen (nächste 30 Tage)',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () => context.go('/animals'),
-                child: const Text('Zum Impfpass →'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ...vaccinations.map((v) {
-            final validUntil = v['valid_until'] as String?;
-            DateTime? date;
-            if (validUntil != null) date = DateTime.tryParse(validUntil);
-            final daysLeft =
-                date != null ? date.difference(DateTime.now()).inDays : null;
-            final urgent = daysLeft != null && daysLeft <= 7;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: urgent ? LivingLedgerTheme.error : Colors.amber,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      '${v['pet_name'] ?? '—'} · ${v['vaccine_name'] ?? '—'}',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                  if (date != null)
-                    Text(
-                      '${fmt.format(date)}${daysLeft != null ? ' ($daysLeft T)' : ''}',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: urgent
-                              ? LivingLedgerTheme.error
-                              : Colors.amber.shade700,
-                          fontWeight: FontWeight.w600),
-                    ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-}
-
 class _BirthdayPanel extends StatelessWidget {
   final List<Pet> pets;
   const _BirthdayPanel({required this.pets});
@@ -879,6 +1184,7 @@ class _BirthdayPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.pink.withValues(alpha: 0.06),
@@ -905,7 +1211,9 @@ class _BirthdayPanel extends StatelessWidget {
           ...pets.map((p) {
             final bd = p.birthDate!;
             var next = DateTime(now.year, bd.month, bd.day);
-            if (next.isBefore(now)) next = DateTime(now.year + 1, bd.month, bd.day);
+            if (next.isBefore(now)) {
+              next = DateTime(now.year + 1, bd.month, bd.day);
+            }
             final daysLeft = next.difference(now).inDays;
             final years = next.year - bd.year;
             return Padding(
@@ -944,7 +1252,7 @@ class _BirthdayPanel extends StatelessWidget {
   }
 }
 
-// ── Pet Stats Summary ─────────────────────────────────────────────────────────
+// ── Pet Stats Summary ──
 
 class _PetStatsSummary extends StatelessWidget {
   final List<Pet> pets;
@@ -954,13 +1262,16 @@ class _PetStatsSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final speciesCounts = <String, int>{};
     for (final pet in pets) {
-      speciesCounts[pet.speciesLabel] = (speciesCounts[pet.speciesLabel] ?? 0) + 1;
+      speciesCounts[pet.speciesLabel] =
+          (speciesCounts[pet.speciesLabel] ?? 0) + 1;
     }
 
-    final ages = pets.where((p) => p.ageYears != null).map((p) => p.ageYears!).toList();
+    final ages =
+        pets.where((p) => p.ageYears != null).map((p) => p.ageYears!).toList();
     final avgAge = ages.isEmpty ? null : ages.reduce((a, b) => a + b) / ages.length;
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: LivingLedgerTheme.surfaceContainerLowest,
@@ -1044,52 +1355,6 @@ class _StatChip extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-class _VaccinationStatusRow extends StatelessWidget {
-  final List<Pet> pets;
-  final List<Map<String, dynamic>> expiringVaccinations;
-  const _VaccinationStatusRow({required this.pets, required this.expiringVaccinations});
-
-  @override
-  Widget build(BuildContext context) {
-    final expiringPetIds = expiringVaccinations
-        .map((v) => v['pet_id']?.toString())
-        .toSet();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Impfstatus',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: pets.map((p) {
-            final isExpiring = expiringPetIds.contains(p.id);
-            final color = isExpiring ? LivingLedgerTheme.tertiary : LivingLedgerTheme.success;
-            final icon = isExpiring ? Icons.warning_amber_rounded : Icons.check_circle_rounded;
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: color.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, color: color, size: 14),
-                  const SizedBox(width: 6),
-                  Text(p.name, style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w600)),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ],
     );
   }
 }
