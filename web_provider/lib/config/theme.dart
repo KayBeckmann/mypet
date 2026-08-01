@@ -1,47 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Dienstleister-Variante (Shops, Ketten, Makler, Züchter).
-/// Warmes Orange als Primärfarbe, grüner Sekundär-Akzent.
+/// Dienstleister-Variante, jetzt ausgerichtet auf das "MyPet Provider
+/// Utility"-Designsystem aus dem Google-Stitch-Mockup
+/// (mockup/stitch_mypet_health_companion/mypet_provider_utility/DESIGN.md):
+/// funktionale Minimalistik für Tradespeople, Grün nur für Erfolg/primäre
+/// Aktionen, Blau als sekundäre/Info-Akzentfarbe, Work Sans + JetBrains
+/// Mono (für Timestamps/IDs/Preise) statt Manrope.
 class ProviderTheme {
   ProviderTheme._();
 
-  static const Color primary = Color(0xFFD4782F);
-  static const Color primaryContainer = Color(0xFFE69447);
+  static const Color primary = Color(0xFF4CAF50);
+  static const Color primaryContainer = Color(0xFFA0F399);
   static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color onPrimaryContainer = Color(0xFF5C3415);
+  static const Color onPrimaryContainer = Color(0xFF217128);
 
-  static const Color secondary = Color(0xFF204E2B);
+  static const Color secondary = Color(0xFF2E7D32);
   static const Color secondaryContainer = Color(0xFFE8F5E9);
   static const Color onSecondary = Color(0xFFFFFFFF);
   static const Color onSecondaryContainer = Color(0xFF1B3D1F);
 
-  static const Color tertiary = Color(0xFF2C5F7C);
-  static const Color tertiaryContainer = Color(0xFFD4E8F4);
+  static const Color tertiary = Color(0xFF1976D2);
+  static const Color tertiaryContainer = Color(0xFFD4E3FF);
   static const Color onTertiary = Color(0xFFFFFFFF);
-  static const Color onTertiaryContainer = Color(0xFF1A3A4F);
+  static const Color onTertiaryContainer = Color(0xFF004786);
 
-  static const Color surface = Color(0xFFF9FAF4);
+  static const Color surface = Color(0xFFF5F5F5);
+  static const Color surfaceContainerLow = Color(0xFFF1F8E9);
   static const Color surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const Color surfaceContainerHigh = Color(0xFFE7E9E3);
+  static const Color surfaceContainerHigh = Color(0xFFEEEEEE);
 
-  static const Color onSurface = Color(0xFF191C19);
-  static const Color onSurfaceVariant = Color(0xFF414941);
-  static const Color outline = Color(0xFF717971);
-  static const Color outlineVariant = Color(0xFFC1C9BE);
-  static const Color error = Color(0xFFC62828);
+  static const Color onSurface = Color(0xFF212121);
+  static const Color onSurfaceVariant = Color(0xFF3F4A3C);
+  static const Color outline = Color(0xFFE0E0E0);
+  static const Color outlineVariant = Color(0xFFEEEEEE);
+  static const Color error = Color(0xFFBA1A1A);
 
   static const double spacingSm = 8.0;
   static const double spacingMd = 16.0;
   static const double spacingLg = 24.0;
   static const double spacingXl = 32.0;
 
-  static const double radiusMd = 12.0;
+  static const double radiusMd = 8.0;
   static const double radiusLg = 16.0;
   static const double radiusFull = 999.0;
 
+  /// Für Timestamps, IDs, Preise — "Utility"-Charakter des Provider-Tools.
+  static TextStyle monoLabel({double fontSize = 12, Color? color}) =>
+      GoogleFonts.jetBrainsMono(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.5,
+        color: color ?? onSurfaceVariant,
+      );
+
   static ThemeData get themeData {
-    final textTheme = GoogleFonts.manropeTextTheme();
+    final textTheme = GoogleFonts.workSansTextTheme();
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -77,10 +91,14 @@ class ProviderTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surfaceContainerHigh,
+        fillColor: surfaceContainerLowest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+          borderSide: const BorderSide(color: outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
@@ -101,9 +119,9 @@ class ProviderTheme {
             vertical: spacingMd,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusFull),
+            borderRadius: BorderRadius.circular(radiusMd),
           ),
-          textStyle: GoogleFonts.manrope(
+          textStyle: GoogleFonts.workSans(
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
