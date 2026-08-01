@@ -145,4 +145,28 @@ class MobilePetProvider extends ChangeNotifier {
       return [];
     }
   }
+
+  /// Legt ein neues Tier an. Bei Erfolg wird die Liste neu geladen.
+  Future<bool> create({
+    required String name,
+    required String species,
+    String breed = '',
+    DateTime? birthDate,
+    double? weightKg,
+  }) async {
+    try {
+      await _api.post('/pets', body: {
+        'name': name,
+        'species': species,
+        if (breed.isNotEmpty) 'breed': breed,
+        if (birthDate != null)
+          'birth_date': birthDate.toIso8601String().split('T').first,
+        if (weightKg != null) 'weight_kg': weightKg,
+      });
+      await load();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 }

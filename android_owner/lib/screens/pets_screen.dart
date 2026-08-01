@@ -5,6 +5,7 @@ import '../providers/pet_provider.dart';
 import '../providers/medication_provider.dart';
 import '../providers/weight_provider.dart';
 import '../providers/health_provider.dart';
+import 'add_pet_screen.dart';
 
 class PetsScreen extends StatefulWidget {
   const PetsScreen({super.key});
@@ -56,18 +57,38 @@ class _PetsScreenState extends State<PetsScreen> {
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurfaceVariant)),
+                      const SizedBox(height: 20),
+                      FilledButton.icon(
+                        onPressed: () => _openAddPet(context),
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('Erstes Tier anlegen'),
+                      ),
                     ],
                   ),
                 )
               : RefreshIndicator(
                   onRefresh: provider.load,
                   child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
                     itemCount: pets.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (_, i) => _PetCard(pet: pets[i]),
                   ),
                 ),
+      floatingActionButton: pets.isEmpty
+          ? null
+          : FloatingActionButton(
+              onPressed: () => _openAddPet(context),
+              tooltip: 'Tier anlegen',
+              child: const Icon(Icons.add_rounded),
+            ),
+    );
+  }
+
+  Future<void> _openAddPet(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AddPetScreen()),
     );
   }
 }
