@@ -1,43 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Admin-Theme — dunkles Anthrazit als Primärfarbe, klares Signal-Rot als Akzent.
+/// Admin-Theme, jetzt ausgerichtet auf das "MyPet Admin System"-Designsystem
+/// aus dem Google-Stitch-Mockup
+/// (mockup/stitch_mypet_health_companion/mypet_admin_system/DESIGN.md):
+/// functional-minimalist, hohe Datendichte, Tonal-Layering statt Schatten,
+/// Grün nur exklusiv für Save/Commit-Aktionen und positive Zustände.
 class AdminTheme {
   AdminTheme._();
 
-  // ── Primary (Anthrazit) ──
-  static const Color primary = Color(0xFF2D2D2D);
-  static const Color primaryContainer = Color(0xFF454545);
+  // ── Primary (Brand Green — exklusiv Save/Commit + positive Zustände) ──
+  static const Color primary = Color(0xFF4CAF50);
+  static const Color primaryContainer = Color(0xFF94F990);
   static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color onPrimaryContainer = Color(0xFFE0E0E0);
+  static const Color onPrimaryContainer = Color(0xFF003C0B);
 
-  // ── Secondary (Signal-Rot für Admin-Aktionen) ──
-  static const Color secondary = Color(0xFFC62828);
-  static const Color secondaryContainer = Color(0xFFFFEBEE);
+  // ── Secondary (dunkler Slate — Sidebar, starke Akzente) ──
+  static const Color secondary = Color(0xFF1A1A1A);
+  static const Color secondaryContainer = Color(0xFF334155);
   static const Color onSecondary = Color(0xFFFFFFFF);
-  static const Color onSecondaryContainer = Color(0xFF4E1010);
+  static const Color onSecondaryContainer = Color(0xFFFFFFFF);
 
-  // ── Tertiary (Bernstein für Warnungen) ──
-  static const Color tertiary = Color(0xFFE65100);
+  // ── Tertiary (Warnung) ──
+  static const Color tertiary = Color(0xFFF59E0B);
   static const Color tertiaryContainer = Color(0xFFFFF3E0);
   static const Color onTertiary = Color(0xFFFFFFFF);
   static const Color onTertiaryContainer = Color(0xFF5C2600);
 
-  // ── Surfaces ──
-  static const Color surface = Color(0xFFF5F5F5);
-  static const Color surfaceContainerLow = Color(0xFFEEEEEE);
+  // ── Surfaces (Level 0 Canvas / Level 1 Cards, Tonal Layering) ──
+  static const Color surface = Color(0xFFF8FAFC);
+  static const Color surfaceContainerLow = Color(0xFFF1F5F9);
   static const Color surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const Color surfaceContainerHigh = Color(0xFFE0E0E0);
+  static const Color surfaceContainerHigh = Color(0xFFE2E8F0);
 
   // ── On-Surface ──
-  static const Color onSurface = Color(0xFF1A1A1A);
-  static const Color onSurfaceVariant = Color(0xFF424242);
-  static const Color outline = Color(0xFF757575);
-  static const Color outlineVariant = Color(0xFFBDBDBD);
+  static const Color onSurface = Color(0xFF0F172A);
+  static const Color onSurfaceVariant = Color(0xFF64748B);
+  static const Color outline = Color(0xFFE2E8F0);
+  static const Color outlineVariant = Color(0xFFF1F5F9);
 
-  static const Color error = Color(0xFFC62828);
-  static const Color success = Color(0xFF2E7D32);
-  static const Color warning = Color(0xFFE65100);
+  // ── Data States (laut DESIGN.md) ──
+  static const Color error = Color(0xFFEF4444);
+  static const Color success = Color(0xFF4CAF50);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color info = Color(0xFF3B82F6);
 
   // ── Spacing ──
   static const double spacingXs = 4.0;
@@ -46,13 +52,33 @@ class AdminTheme {
   static const double spacingLg = 24.0;
   static const double spacingXl = 32.0;
 
-  // ── Radius ──
-  static const double radiusMd = 12.0;
-  static const double radiusLg = 16.0;
+  // ── Radius ("Soft 4px", diszipliniert — keine Pill-Buttons) ──
+  static const double radiusMd = 4.0;
+  static const double radiusLg = 8.0;
   static const double radiusFull = 999.0;
 
+  /// Für IDs, Beträge, Zeitstempel, Tabellendaten — "Data Typeface" laut
+  /// DESIGN.md, sorgt für sauber ausgerichtete Zahlenspalten.
+  static TextStyle dataMono({double fontSize = 13, Color? color}) =>
+      GoogleFonts.jetBrainsMono(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w500,
+        letterSpacing: -0.1,
+        color: color ?? onSurface,
+      );
+
+  /// Für Seitentitel/Sektionsüberschriften laut DESIGN.md (Inter für den
+  /// Rest der Oberfläche, siehe [themeData]).
+  static TextStyle heading({double fontSize = 24, Color? color}) =>
+      GoogleFonts.hankenGrotesk(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.02 * fontSize,
+        color: color ?? onSurface,
+      );
+
   static ThemeData get themeData {
-    final textTheme = GoogleFonts.manropeTextTheme();
+    final textTheme = GoogleFonts.interTextTheme();
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -83,16 +109,20 @@ class AdminTheme {
         color: surfaceContainerLowest,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLg),
-          side: const BorderSide(color: outlineVariant),
+          side: const BorderSide(color: outline),
         ),
         margin: EdgeInsets.zero,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surfaceContainerHigh,
+        fillColor: surfaceContainerLowest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+          borderSide: const BorderSide(color: outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
@@ -113,9 +143,9 @@ class AdminTheme {
             vertical: spacingMd,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusFull),
+            borderRadius: BorderRadius.circular(radiusMd),
           ),
-          textStyle: GoogleFonts.manrope(
+          textStyle: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
