@@ -122,7 +122,9 @@ class _AnimalsScreenState extends State<AnimalsScreen> {
               LayoutBuilder(
                 builder: (context, constraints) {
                   int crossAxisCount = 1;
-                  if (constraints.maxWidth > 1000) {
+                  if (constraints.maxWidth > 1300) {
+                    crossAxisCount = 4;
+                  } else if (constraints.maxWidth > 1000) {
                     crossAxisCount = 3;
                   } else if (constraints.maxWidth > 600) {
                     crossAxisCount = 2;
@@ -134,10 +136,15 @@ class _AnimalsScreenState extends State<AnimalsScreen> {
                       crossAxisCount: crossAxisCount,
                       crossAxisSpacing: 20,
                       mainAxisSpacing: 20,
-                      childAspectRatio: 1.6,
+                      childAspectRatio: 0.8,
                     ),
-                    itemCount: pets.length,
+                    itemCount: pets.length + 1,
                     itemBuilder: (context, index) {
+                      if (index == pets.length) {
+                        return _AddPetPlaceholderCard(
+                          onTap: () => context.go('/animals/add'),
+                        );
+                      }
                       final pet = pets[index];
                       return PetCard(
                         pet: pet,
@@ -153,6 +160,111 @@ class _AnimalsScreenState extends State<AnimalsScreen> {
       ),
     );
   }
+}
+
+class _AddPetPlaceholderCard extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AddPetPlaceholderCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusXl),
+      child: DottedBorderContainer(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: LivingLedgerTheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.add_rounded,
+                  color: LivingLedgerTheme.primary, size: 28),
+            ),
+            const SizedBox(height: 16),
+            Text('Neues Tier',
+                style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Lege ein Profil für dein nächstes Familienmitglied an.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: LivingLedgerTheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Container mit gestricheltem Rand (dashed border) für die "Add Pet"-Karte.
+class DottedBorderContainer extends StatelessWidget {
+  final Widget child;
+  const DottedBorderContainer({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _DashedBorderPainter(
+        color: LivingLedgerTheme.outlineVariant,
+        radius: LivingLedgerTheme.radiusXl,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: LivingLedgerTheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(LivingLedgerTheme.radiusXl),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double radius;
+  const _DashedBorderPainter({required this.color, required this.radius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(radius),
+    );
+    final path = Path()..addRRect(rect);
+    final dashPath = Path();
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      const dashWidth = 6.0;
+      const dashGap = 5.0;
+      while (distance < metric.length) {
+        dashPath.addPath(
+          metric.extractPath(distance, distance + dashWidth),
+          Offset.zero,
+        );
+        distance += dashWidth + dashGap;
+      }
+    }
+    canvas.drawPath(
+      dashPath,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) => false;
 }
 
 class _EmptyState extends StatelessWidget {
