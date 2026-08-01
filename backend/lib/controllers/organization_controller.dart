@@ -310,8 +310,8 @@ class OrganizationController {
               @address, @phone, @mobile, @email, @website, @opening_hours,
               @service_radius_km, @specialization, @created_by::uuid
             )
-            RETURNING id, name, type, provider_type, description, address,
-                      phone, mobile, email, website, opening_hours,
+            RETURNING id, name, type::text AS type, provider_type, description,
+                      address, phone, mobile, email, website, opening_hours,
                       service_radius_km, specialization, created_by,
                       is_active, created_at, updated_at
           '''),
