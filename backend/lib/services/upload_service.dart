@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:uuid/uuid.dart';
 import '../config/config.dart';
+import 'encryption_service.dart';
 
 /// Service für Datei-Uploads
 class UploadService {
@@ -11,6 +12,7 @@ class UploadService {
 
   final _config = Config();
   final _uuid = const Uuid();
+  final _encryption = EncryptionService();
 
   /// Erlaubte Bild-MIME-Types
   static const allowedImageTypes = {
@@ -61,9 +63,9 @@ class UploadService {
     final relativePath = 'pets/$filename';
     final fullPath = '${_config.uploadPath}/$relativePath';
 
-    // Datei schreiben
+    // Datei verschlüsselt schreiben (M17.2)
     final file = File(fullPath);
-    await file.writeAsBytes(bytes);
+    await file.writeAsBytes(_encryption.encryptBytes(bytes));
 
     return relativePath;
   }
@@ -88,7 +90,7 @@ class UploadService {
     }
   }
 
-  /// Beliebige Datei unter relativem Pfad speichern
+  /// Beliebige Datei unter relativem Pfad verschlüsselt speichern (M17.2)
   Future<void> saveRaw(Uint8List bytes, String relativePath) async {
     if (bytes.length > _config.maxFileSize) {
       final maxMb = _config.maxFileSize / (1024 * 1024);
@@ -98,7 +100,7 @@ class UploadService {
     }
     final fullPath = '${_config.uploadPath}/$relativePath';
     final file = File(fullPath);
-    await file.writeAsBytes(bytes);
+    await file.writeAsBytes(_encryption.encryptBytes(bytes));
   }
 
   /// Vollständigen Dateipfad aus relativem Pfad erstellen
