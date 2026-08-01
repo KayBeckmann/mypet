@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MyPet - Animals</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#704800",
+                        "on-error-container": "#93000a",
+                        "background": "#f8faf8",
+                        "surface-container-highest": "#e1e3e1",
+                        "on-surface-variant": "#3f4a3c",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface": "#f8faf8",
+                        "tertiary": "#b81d27",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2e3130",
+                        "surface-container-low": "#f2f4f2",
+                        "secondary": "#835500",
+                        "primary-fixed-dim": "#78dc77",
+                        "inverse-on-surface": "#eff1ef",
+                        "on-background": "#191c1b",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#191c1b",
+                        "on-secondary-fixed": "#291800",
+                        "surface-variant": "#e1e3e1",
+                        "surface-tint": "#006e1c",
+                        "tertiary-fixed-dim": "#ffb3ae",
+                        "on-primary-container": "#003c0b",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#410004",
+                        "secondary-fixed": "#ffddb4",
+                        "primary-fixed": "#94f990",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#930015",
+                        "surface-container-high": "#e6e9e7",
+                        "secondary-container": "#feb64c",
+                        "outline": "#6f7a6b",
+                        "on-secondary-fixed-variant": "#633f00",
+                        "on-primary-fixed": "#002204",
+                        "secondary-fixed-dim": "#ffb954",
+                        "on-primary-fixed-variant": "#005313",
+                        "primary-container": "#4caf50",
+                        "surface-container": "#eceeec",
+                        "inverse-primary": "#78dc77",
+                        "primary": "#006e1c",
+                        "surface-dim": "#d8dad9",
+                        "on-tertiary-container": "#6d000d",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f8faf8",
+                        "outline-variant": "#becab9",
+                        "tertiary-container": "#ff6b67",
+                        "error": "#ba1a1a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-padding-mobile": "20px",
+                        "unit": "4px",
+                        "stack-md": "16px",
+                        "container-padding-desktop": "40px",
+                        "stack-lg": "32px",
+                        "gutter": "16px",
+                        "stack-sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "label-sm": ["Public Sans"],
+                        "label-md": ["Public Sans"],
+                        "headline-lg-mobile": ["Public Sans"],
+                        "headline-md": ["Public Sans"],
+                        "display": ["Public Sans"],
+                        "body-lg": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        body {
+            background-color: #f8faf8;
+            color: #191c1b;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex h-screen w-64 fixed left-0 top-0 bg-surface dark:bg-background shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex-col py-stack-lg px-gutter z-50">
+<div class="flex items-center gap-3 px-4 mb-stack-lg">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-md font-bold">
+                M
+            </div>
+<div>
+<h1 class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed">MyPet</h1>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Pet Care Companion</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-r-4 border-primary bg-primary-container/10 scale-[0.98] transition-transform" href="#">
+<span class="material-symbols-outlined fill" data-icon="pets">pets</span>
+<span class="text-label-md font-label-md">Animals</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+<span class="text-label-md font-label-md">Appointments</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="text-label-md font-label-md">Medications</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="text-label-md font-label-md">Records</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+<span class="text-label-md font-label-md">Feeding</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="monitor_weight">monitor_weight</span>
+<span class="text-label-md font-label-md">Weight</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+<span class="text-label-md font-label-md">Reminders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="text-label-md font-label-md">Families</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+<span class="text-label-md font-label-md">Marketplace</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 md:ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="hidden md:flex justify-between items-center h-16 px-container-padding-desktop w-full top-0 sticky bg-surface/80 dark:bg-background/80 backdrop-blur-md z-40">
+<div class="flex-1 flex items-center">
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-surface-variant rounded-full text-body-md font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="Search animals..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-highest/50 rounded-xl transition-all">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-highest/50 rounded-xl transition-all">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<button class="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-surface-container-highest/50 rounded-xl transition-all">
+<img alt="User Avatar" class="w-8 h-8 rounded-full object-cover border border-surface-variant" data-alt="A small, circular avatar portrait of a modern pet owner in a bright, natural setting. Soft lighting, friendly expression, natural colors. Modern light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD19XxCfkk8idNt6eOQUchGg7TA_bl2HYjrrGUB-O_m9LS9pD9_GO8fK-O4DzOj__2gTLWrQWe2XTOFH4XFhTNFgcyhUS8sgEc5BWIGc4O7tXd9JJ1CHdlvX2D2wvlaiirLuFgklwlTN0J5XuPWMl7fCW8jc5tu9bOtWzumIJBUMJOjT-oBYboFm7zFODtxVwS8mwrQVKEidyNIlLq7mfdGwfCXp6NklRYZIi_RlV-X0vVXA_LmYn6f"/>
+<span class="text-label-md font-label-md text-on-surface">Profile</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-container-padding-mobile md:p-container-padding-desktop">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-stack-lg gap-4">
+<div>
+<h2 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-on-background">Your Animals</h2>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">Manage and view profiles for all your pets.</p>
+</div>
+<button class="bg-primary text-on-primary px-6 py-3 rounded-xl text-label-md font-label-md hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-[0px_4px_10px_rgba(0,110,28,0.2)]">
+<span class="material-symbols-outlined">add</span>
+                    Add Pet
+                </button>
+</div>
+<!-- Mobile Search (Visible only on mobile) -->
+<div class="md:hidden mb-stack-lg relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-surface-variant rounded-xl text-body-md font-body-md focus:outline-none focus:border-primary shadow-sm" placeholder="Search animals..." type="text"/>
+</div>
+<!-- Bento Grid of Animals -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<!-- Pet Card 1 -->
+<div class="bg-surface-container-lowest rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] overflow-hidden hover:-translate-y-1 hover:shadow-[0px_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group cursor-pointer border border-surface-variant/30">
+<div class="relative h-48 w-full overflow-hidden">
+<img alt="Pet Photo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A high-quality, bright photograph of a happy Golden Retriever sitting in a sunlit grassy backyard. Soft focus background, vibrant natural colors, warm lighting, approachable modern pet care aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdiyLy2pgrP-PP4p15I8HZE4nEWmqeuw6m5Pp2WsuXjm4jmIjQCot_L7EQ6vMUnc3W6M8Jt4Hh3WN5MkbzLrl92NTYDoKYSPTPNGKQcTw-dgNKMbEWP-Kx519ucw5GKP29jaxAyJ6Mf-ZKzzcW4Ru5aOVrFs6zeLpH76eQAKWZrDWim6xSDYQm2kBMVOwKHaL6lk41OKZkk5XTnyKaw9G-RAcpR4X0t2jujJdZTytMtijv3Cs-_M1w"/>
+<div class="absolute top-3 right-3 bg-primary-container/90 backdrop-blur-sm text-on-primary-container px-3 py-1 rounded-full text-label-sm font-label-sm flex items-center gap-1 shadow-sm">
+<div class="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                            Healthy
+                        </div>
+</div>
+<div class="p-5">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-headline-md font-headline-md text-on-background">Buddy</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="space-y-1 mb-4">
+<p class="text-body-md font-body-md text-on-surface-variant">Golden Retriever</p>
+<p class="text-label-md font-label-md text-secondary">Dog • 3 Years Old</p>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="bg-primary/10 text-primary px-2 py-1 rounded-md text-label-sm font-label-sm">Neutered</span>
+<span class="bg-primary/10 text-primary px-2 py-1 rounded-md text-label-sm font-label-sm">Vaccinated</span>
+</div>
+</div>
+</div>
+<!-- Pet Card 2 -->
+<div class="bg-surface-container-lowest rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] overflow-hidden hover:-translate-y-1 hover:shadow-[0px_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group cursor-pointer border border-surface-variant/30">
+<div class="relative h-48 w-full overflow-hidden">
+<img alt="Pet Photo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A close-up portrait of a sleek Siamese cat resting on a modern grey armchair. Sunlight streaming through a window, soft shadows, pristine white and cream tones, elegant and clean aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHv1gS8-3PYtnjfJ4DVAvRoxjs-bvsHPZR9No10b1xURIvcb04vZ5f87N_emVYAvHzT330d4TVXPZ9Q9NS673w-Rj41sg6dWakDiSLsRRWvP6GzvVp_ULHF_tlsL6VfuCCupGHrISz8H5xzHZhFLv7lrDOIBzrKSM_LaNgSbMGAaZexCkjhPiSGuRIjWRTsQo0bRNESNHPa2ObUu3Q2RhgDcuxAp6aKDRmTPJIciBwzN44u1QlVxyR"/>
+<div class="absolute top-3 right-3 bg-secondary-container/90 backdrop-blur-sm text-on-secondary-container px-3 py-1 rounded-full text-label-sm font-label-sm flex items-center gap-1 shadow-sm">
+<div class="w-2 h-2 bg-secondary rounded-full"></div>
+                            Due for checkup
+                        </div>
+</div>
+<div class="p-5">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-headline-md font-headline-md text-on-background">Luna</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="space-y-1 mb-4">
+<p class="text-body-md font-body-md text-on-surface-variant">Siamese</p>
+<p class="text-label-md font-label-md text-secondary">Cat • 2 Years Old</p>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="bg-primary/10 text-primary px-2 py-1 rounded-md text-label-sm font-label-sm">Spayed</span>
+<span class="bg-surface-variant text-on-surface-variant px-2 py-1 rounded-md text-label-sm font-label-sm">Indoor</span>
+</div>
+</div>
+</div>
+<!-- Pet Card 3 -->
+<div class="bg-surface-container-lowest rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] overflow-hidden hover:-translate-y-1 hover:shadow-[0px_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group cursor-pointer border border-surface-variant/30">
+<div class="relative h-48 w-full overflow-hidden">
+<img alt="Pet Photo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A bright, clean photo of a green Iguana on a stylized natural branch in a well-lit terrarium environment. Crisp details, rich natural greens and earthy tones, modern light mode pet photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCn6hIXqxA4fpOIUIK6BT41LVuL4OKH7dXMXUrvdSfMyyB6dWQ8hrMZ2PlqvOdLKwyy5_IL9fDQA54oS-h0rKRMP6En2fRLZOJfix7brWytIX2M6jf3vPFxRX-vkHZh-Qayobi6onTWRaDS5u-6_yZAnWgJ4pJa69e66I8Vq-CgJ9szRWv036bbmDR-5wrCStL3WBcvoM6ob52TEFsiI8ZFMEwy_Buj4jY5oeNCZde9S0iJctGEsPvz"/>
+<div class="absolute top-3 right-3 bg-primary-container/90 backdrop-blur-sm text-on-primary-container px-3 py-1 rounded-full text-label-sm font-label-sm flex items-center gap-1 shadow-sm">
+<div class="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                            Healthy
+                        </div>
+</div>
+<div class="p-5">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-headline-md font-headline-md text-on-background">Iggy</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="space-y-1 mb-4">
+<p class="text-body-md font-body-md text-on-surface-variant">Green Iguana</p>
+<p class="text-label-md font-label-md text-secondary">Reptile • 5 Years Old</p>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="bg-tertiary-container/30 text-on-tertiary-container px-2 py-1 rounded-md text-label-sm font-label-sm">Requires Heat</span>
+</div>
+</div>
+</div>
+<!-- Add Pet Placeholder Card -->
+<div class="bg-surface-container-low rounded-2xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center h-full min-h-[350px] hover:bg-surface-container transition-colors duration-300 cursor-pointer group">
+<div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl">add</span>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-1">Add New Pet</h3>
+<p class="text-body-md font-body-md text-on-surface-variant text-center px-6">Create a new profile for another furry, scaly, or feathery friend.</p>
+</div>
+</div>
+</main>
+</div>
+<!-- Bottom Mobile Nav (Only visible on mobile) -->
+<nav class="md:hidden fixed bottom-0 w-full bg-surface-container-lowest border-t border-surface-variant z-50 px-4 py-2 flex justify-around items-center pb-safe">
+<a class="flex flex-col items-center p-2 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] mt-1 font-medium">Dashboard</span>
+</a>
+<a class="flex flex-col items-center p-2 text-primary" href="#">
+<div class="bg-primary-container/20 px-4 py-1 rounded-full mb-1">
+<span class="material-symbols-outlined fill" data-icon="pets">pets</span>
+</div>
+<span class="text-[10px] font-bold">Animals</span>
+</a>
+<a class="flex flex-col items-center p-2 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+<span class="text-[10px] mt-1 font-medium">Appointments</span>
+</a>
+<a class="flex flex-col items-center p-2 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-[10px] mt-1 font-medium">Settings</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Appointments - MyPet</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#704800",
+                        "on-error-container": "#93000a",
+                        "background": "#f8faf8",
+                        "surface-container-highest": "#e1e3e1",
+                        "on-surface-variant": "#3f4a3c",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface": "#f8faf8",
+                        "tertiary": "#b81d27",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2e3130",
+                        "surface-container-low": "#f2f4f2",
+                        "secondary": "#835500",
+                        "primary-fixed-dim": "#78dc77",
+                        "inverse-on-surface": "#eff1ef",
+                        "on-background": "#191c1b",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#191c1b",
+                        "on-secondary-fixed": "#291800",
+                        "surface-variant": "#e1e3e1",
+                        "surface-tint": "#006e1c",
+                        "tertiary-fixed-dim": "#ffb3ae",
+                        "on-primary-container": "#003c0b",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#410004",
+                        "secondary-fixed": "#ffddb4",
+                        "primary-fixed": "#94f990",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#930015",
+                        "surface-container-high": "#e6e9e7",
+                        "secondary-container": "#feb64c",
+                        "outline": "#6f7a6b",
+                        "on-secondary-fixed-variant": "#633f00",
+                        "on-primary-fixed": "#002204",
+                        "secondary-fixed-dim": "#ffb954",
+                        "on-primary-fixed-variant": "#005313",
+                        "primary-container": "#4caf50",
+                        "surface-container": "#eceeec",
+                        "inverse-primary": "#78dc77",
+                        "primary": "#006e1c",
+                        "surface-dim": "#d8dad9",
+                        "on-tertiary-container": "#6d000d",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f8faf8",
+                        "outline-variant": "#becab9",
+                        "tertiary-container": "#ff6b67",
+                        "error": "#ba1a1a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem"
+                    },
+                    "spacing": {
+                        "container-padding-mobile": "20px",
+                        "unit": "4px",
+                        "stack-md": "16px",
+                        "container-padding-desktop": "40px",
+                        "stack-lg": "32px",
+                        "gutter": "16px",
+                        "stack-sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "label-sm": ["Public Sans"],
+                        "label-md": ["Public Sans"],
+                        "headline-lg-mobile": ["Public Sans"],
+                        "headline-md": ["Public Sans"],
+                        "display": ["Public Sans"],
+                        "body-lg": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Public Sans', sans-serif; background-color: #f8faf8; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .material-symbols-outlined.fill { font-variation-settings: 'FILL' 1; }
+        .ambient-shadow { box-shadow: 0px 4px 20px rgba(0,0,0,0.04); }
+        .ambient-shadow-float { box-shadow: 0px 8px 30px rgba(0,0,0,0.08); }
+        .nav-active-bg { background-color: rgba(76, 175, 80, 0.1); }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased flex">
+<!-- SideNavBar (Hidden on Mobile) -->
+<nav class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] py-stack-lg px-gutter z-20">
+<div class="flex items-center gap-3 mb-8 px-4">
+<img alt="MyPet Logo" class="w-10 h-10 rounded-xl object-cover" data-alt="A minimalist logo for a pet care app called MyPet, featuring a subtle geometric silhouette of a dog and cat head merged, rendered in soft green tones on a clean white background, conveying trust and nurturing care in a modern flat design style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_xHVIEK4afP9uItKV9ShkI9cn1eOziamA0h4aaTw44c8W-wH0mH9dXSwOEslABJtZpXiZdaAS9pbxZ7Jw71Z6lCRsDVhfbqPW88QOqZDFfORIGLK8YcEZzob-KDscGlb4g3rbIjXQB0Yie7BnROzmvJnj58ZctU5bmx7MkTp0B2X4g7CjJBnFRenE8T6w0hVl-wIqsQGcjNh7gauUD4G2chWiwjkKlkUKTzIQisjwsET-Mz9MY3l6"/>
+<div>
+<h1 class="text-headline-md font-headline-md font-bold text-primary">MyPet</h1>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Pet Care Companion</p>
+</div>
+</div>
+<ul class="flex flex-col gap-2 flex-grow">
+<!-- Inactive -->
+<li><a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 text-label-md font-label-md" href="#"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
+<li><a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 text-label-md font-label-md" href="#"><span class="material-symbols-outlined">pets</span> Animals</a></li>
+<!-- Active -->
+<li><a class="flex items-center gap-3 px-4 py-3 rounded-xl text-primary font-bold border-r-4 border-primary nav-active-bg text-label-md font-label-md scale-[0.98] transition-transform" href="#"><span class="material-symbols-outlined fill">calendar_month</span> Appointments</a></li>
+<!-- Inactive -->
+<li><a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 text-label-md font-label-md" href="#"><span class="material-symbols-outlined">medical_services</span> Medications</a></li>
+<li><a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 text-label-md font-label-md" href="#"><span class="material-symbols-outlined">description</span> Records</a></li>
+<li><a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 text-label-md font-label-md" href="#"><span class="material-symbols-outlined">restaurant</span> Feeding</a></li>
+<li><a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 text-label-md font-label-md" href="#"><span class="material-symbols-outlined">monitor_weight</span> Weight</a></li>
+<li><a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 text-label-md font-label-md" href="#"><span class="material-symbols-outlined">notifications_active</span> Reminders</a></li>
+<li><a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 text-label-md font-label-md" href="#"><span class="material-symbols-outlined">groups</span> Families</a></li>
+<li><a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 text-label-md font-label-md" href="#"><span class="material-symbols-outlined">storefront</span> Marketplace</a></li>
+</ul>
+<div class="mt-auto pt-4 border-t border-surface-container">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 text-label-md font-label-md" href="#"><span class="material-symbols-outlined">settings</span> Settings</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 md:ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar (Hidden on Mobile, Docked Full Width) -->
+<header class="hidden md:flex justify-between items-center h-16 px-container-padding-desktop w-full top-0 sticky bg-surface/80 backdrop-blur-md z-10 flat no shadows border-b-0 border-t-0">
+<!-- Search Bar on Left -->
+<div class="flex items-center bg-surface-container-lowest rounded-full px-4 py-2 border border-surface-container focus-within:border-primary focus-within:ring-1 focus-within:ring-primary w-96 ambient-shadow transition-all">
+<span class="material-symbols-outlined text-on-surface-variant mr-2">search</span>
+<input class="bg-transparent border-none outline-none text-body-md font-body-md text-on-surface w-full focus:ring-0 placeholder:text-on-surface-variant/50" placeholder="Search appointments..." type="text"/>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest/50 transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest/50 transition-all">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-surface-container cursor-pointer hover:bg-surface-container-highest/50 p-1 pr-3 rounded-full transition-all">
+<img alt="User Avatar" class="w-8 h-8 rounded-full object-cover" data-alt="A smiling young woman with short brown hair, wearing a casual beige sweater, outdoors in soft morning light, serving as a user avatar profile picture, photorealistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_CWhcKi0LHgZNE6uXyoHNzy0XSG7lhUz1Y9tqtTXLDk23kRvPJ5h0cfYQ-BMDWUY-2O6tOg8riC1IEDtD7N56RlwYdyNL64-jdMh52NQbsI7WXlZsJvewU7Ni3tT9-hjT7IM3OQSkgJ0YsnJmwWEpv21CJxsY5M0bkb6-FfXadDDNLTxATXKZKpcKmGC9ZfkpJ93-WPqbF-M7IUJAYz4gclNepepuoPKamL0icilmU0Kd2O6G-h8r"/>
+<span class="text-label-md font-label-md text-on-surface-variant">Profile</span>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 p-container-padding-mobile md:p-container-padding-desktop w-full max-w-[1200px] mx-auto">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+<div>
+<h2 class="text-headline-lg font-headline-lg text-on-background">Appointments</h2>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">Manage your pet's upcoming visits and medical history.</p>
+</div>
+<div class="flex items-center gap-4">
+<!-- Toggle View -->
+<div class="flex bg-surface-container-lowest rounded-xl p-1 ambient-shadow">
+<button class="px-4 py-2 rounded-lg bg-surface-container-low text-primary font-label-md text-label-md flex items-center gap-2"><span class="material-symbols-outlined text-[20px]">view_list</span> List</button>
+<button class="px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest/30 font-label-md text-label-md flex items-center gap-2 transition-colors"><span class="material-symbols-outlined text-[20px]">calendar_view_month</span> Calendar</button>
+</div>
+<!-- Primary Action -->
+<button class="bg-primary text-on-primary h-12 px-6 rounded-xl font-label-md text-label-md flex items-center gap-2 hover:bg-primary/90 transition-all ambient-shadow-float active:scale-[0.98]">
+<span class="material-symbols-outlined">add</span> Book Appointment
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout for Appointments -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Upcoming Filter / Timeline Column -->
+<div class="md:col-span-4 flex flex-col gap-6">
+<!-- Pet Selector Card -->
+<div class="bg-surface-container-lowest rounded-3xl p-6 ambient-shadow">
+<h3 class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-4">Filter by Pet</h3>
+<div class="flex flex-wrap gap-3">
+<button class="px-4 py-2 rounded-full border border-primary bg-primary/5 text-primary text-label-md font-label-md flex items-center gap-2 transition-colors">
+<img class="w-6 h-6 rounded-full object-cover" data-alt="A close up headshot of a golden retriever puppy looking happily at the camera, soft lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9195fsSxejVk_5E5ZBpKl_FAq5merx5Mbf8U1T-6m9EUbZyykVxIkgpRq5W0QTx_S4Ql5ZQhqhJjdNoW-ZV3ELf4NCEvI-Jk-MK-QWD7VH8ph6ImAsXq5xy-UanTQEKX0qZZGPh387HJB6uuB3xfvgySLFwpZrnXjb3sFXs3BmMwWy4FJm-Kswe064FfXeepUzPH6NPbTuy0CxKILi_GfMcbGtDnIcAaqFjr5G0OqLk3OoQir-ssd"/> All Pets
+                            </button>
+<button class="px-4 py-2 rounded-full border border-surface-variant bg-surface text-on-surface-variant text-label-md font-label-md hover:border-primary/50 transition-colors">
+                                Max
+                            </button>
+<button class="px-4 py-2 rounded-full border border-surface-variant bg-surface text-on-surface-variant text-label-md font-label-md hover:border-primary/50 transition-colors">
+                                Luna
+                            </button>
+</div>
+</div>
+<!-- Quick Stats -->
+<div class="bg-surface-container-lowest rounded-3xl p-6 ambient-shadow flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-body-md text-on-surface-variant">Upcoming Visits</span>
+<span class="text-headline-md font-headline-md text-primary">3</span>
+</div>
+<div class="h-px w-full bg-surface-container"></div>
+<div class="flex items-center justify-between">
+<span class="text-body-md font-body-md text-on-surface-variant">Pending Approvals</span>
+<span class="text-headline-md font-headline-md text-secondary">1</span>
+</div>
+</div>
+</div>
+<!-- Appointment Cards Column -->
+<div class="md:col-span-8 flex flex-col gap-4">
+<!-- Section Header -->
+<div class="flex items-center gap-2 mb-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<h3 class="text-label-md font-label-md text-on-surface-variant">Upcoming</h3>
+</div>
+<!-- Card 1: Confirmed -->
+<div class="bg-surface-container-lowest rounded-3xl p-6 ambient-shadow flex flex-col md:flex-row gap-6 relative overflow-hidden group hover:ambient-shadow-float transition-shadow duration-300">
+<div class="absolute top-0 left-0 w-2 h-full bg-primary"></div>
+<div class="flex-shrink-0 flex flex-col items-center justify-center bg-surface-container-low rounded-2xl w-24 h-24">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Oct</span>
+<span class="text-headline-lg font-headline-lg text-primary">24</span>
+</div>
+<div class="flex-1 flex flex-col justify-center">
+<div class="flex items-center justify-between mb-2">
+<span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-label-sm font-label-sm inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Confirmed
+                                </span>
+<span class="text-label-sm font-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 10:00 AM - 11:00 AM
+                                </span>
+</div>
+<h4 class="text-headline-md font-headline-md text-on-background mb-1">Annual Checkup &amp; Vaccinations</h4>
+<div class="flex items-center gap-4 text-body-md font-body-md text-on-surface-variant">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">person</span> Dr. Sarah Smith
+                                </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">pets</span> Max
+                                </div>
+</div>
+</div>
+<div class="flex-shrink-0 flex md:flex-col items-center justify-end gap-2 mt-4 md:mt-0">
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-highest/50 transition-colors" title="Edit">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 rounded-full text-error hover:bg-error/10 transition-colors" title="Cancel">
+<span class="material-symbols-outlined">cancel</span>
+</button>
+</div>
+</div>
+<!-- Card 2: Pending -->
+<div class="bg-surface-container-lowest rounded-3xl p-6 ambient-shadow flex flex-col md:flex-row gap-6 relative overflow-hidden group hover:ambient-shadow-float transition-shadow duration-300 opacity-90">
+<div class="absolute top-0 left-0 w-2 h-full bg-secondary"></div>
+<div class="flex-shrink-0 flex flex-col items-center justify-center bg-surface-container-low rounded-2xl w-24 h-24">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Nov</span>
+<span class="text-headline-lg font-headline-lg text-secondary">05</span>
+</div>
+<div class="flex-1 flex flex-col justify-center">
+<div class="flex items-center justify-between mb-2">
+<span class="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-label-sm font-label-sm inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">hourglass_empty</span> Pending
+                                </span>
+<span class="text-label-sm font-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 2:30 PM - 3:00 PM
+                                </span>
+</div>
+<h4 class="text-headline-md font-headline-md text-on-background mb-1">Dental Cleaning Consultation</h4>
+<div class="flex items-center gap-4 text-body-md font-body-md text-on-surface-variant">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">person</span> Dr. James Wilson
+                                </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">pets</span> Luna
+                                </div>
+</div>
+</div>
+</div>
+<!-- Section Header -->
+<div class="flex items-center gap-2 mt-6 mb-2">
+<span class="w-2 h-2 rounded-full bg-surface-variant"></span>
+<h3 class="text-label-md font-label-md text-on-surface-variant">Past</h3>
+</div>
+<!-- Card 3: Completed -->
+<div class="bg-surface-container-lowest rounded-3xl p-6 ambient-shadow flex flex-col md:flex-row gap-6 relative overflow-hidden opacity-70 grayscale-[20%]">
+<div class="absolute top-0 left-0 w-2 h-full bg-surface-variant"></div>
+<div class="flex-shrink-0 flex flex-col items-center justify-center bg-surface-container-low rounded-2xl w-24 h-24">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Sep</span>
+<span class="text-headline-lg font-headline-lg text-on-surface-variant">12</span>
+</div>
+<div class="flex-1 flex flex-col justify-center">
+<div class="flex items-center justify-between mb-2">
+<span class="bg-surface-variant/30 text-on-surface-variant px-3 py-1 rounded-full text-label-sm font-label-sm inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">done_all</span> Completed
+                                </span>
+<span class="text-label-sm font-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 9:15 AM
+                                </span>
+</div>
+<h4 class="text-headline-md font-headline-md text-on-background mb-1 line-through decoration-surface-variant">Flea &amp; Tick Prevention Refill</h4>
+<div class="flex items-center gap-4 text-body-md font-body-md text-on-surface-variant">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">person</span> Tech. Amanda
+                                </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">pets</span> Max
+                                </div>
+</div>
+</div>
+<div class="flex-shrink-0 flex items-center justify-end">
+<button class="text-primary font-label-md text-label-md hover:underline">View Notes</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

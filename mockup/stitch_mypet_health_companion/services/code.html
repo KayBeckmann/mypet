@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Services Management - MyPet Provider</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#94f990",
+                      "surface-dim": "#dadada",
+                      "tertiary-fixed": "#d4e3ff",
+                      "on-error": "#ffffff",
+                      "outline": "#6f7a6b",
+                      "surface-tint": "#006e1c",
+                      "background": "#f9f9f9",
+                      "tertiary": "#005faf",
+                      "inverse-primary": "#78dc77",
+                      "surface-container-low": "#f3f3f3",
+                      "secondary-container": "#a0f399",
+                      "on-error-container": "#93000a",
+                      "error": "#ba1a1a",
+                      "on-secondary-fixed": "#002204",
+                      "tertiary-fixed-dim": "#a5c8ff",
+                      "error-container": "#ffdad6",
+                      "tertiary-container": "#519dfb",
+                      "on-background": "#1a1c1c",
+                      "secondary-fixed": "#a3f69c",
+                      "inverse-surface": "#2f3131",
+                      "on-primary-fixed-variant": "#005313",
+                      "inverse-on-surface": "#f1f1f1",
+                      "on-tertiary-container": "#003363",
+                      "primary": "#006e1c",
+                      "primary-fixed-dim": "#78dc77",
+                      "on-primary-container": "#003c0b",
+                      "outline-variant": "#becab9",
+                      "on-tertiary-fixed-variant": "#004786",
+                      "on-primary": "#ffffff",
+                      "on-surface-variant": "#3f4a3c",
+                      "surface-bright": "#f9f9f9",
+                      "surface": "#f9f9f9",
+                      "on-tertiary-fixed": "#001c3a",
+                      "surface-container-high": "#e8e8e8",
+                      "on-tertiary": "#ffffff",
+                      "surface-variant": "#e2e2e2",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-container": "#217128",
+                      "primary-container": "#4caf50",
+                      "on-primary-fixed": "#002204",
+                      "on-secondary": "#ffffff",
+                      "secondary": "#1b6d24",
+                      "secondary-fixed-dim": "#88d982",
+                      "on-surface": "#1a1c1c",
+                      "surface-container-highest": "#e2e2e2",
+                      "surface-container": "#eeeeee",
+                      "on-secondary-fixed-variant": "#005312"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "container-max": "1440px",
+                      "margin": "24px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "headline-sm": [
+                              "Work Sans"
+                      ],
+                      "body-md": [
+                              "Work Sans"
+                      ],
+                      "headline-md": [
+                              "Work Sans"
+                      ],
+                      "headline-lg": [
+                              "Work Sans"
+                      ],
+                      "body-lg": [
+                              "Work Sans"
+                      ],
+                      "label-md": [
+                              "JetBrains Mono"
+                      ],
+                      "label-sm": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-sm": [
+                              "10px",
+                              {
+                                      "lineHeight": "14px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background font-body-md h-screen w-screen overflow-hidden flex">
+<!-- Side Navigation -->
+<nav class="hidden md:flex flex-col h-screen w-[240px] left-0 top-0 fixed bg-surface border-r border-outline-variant py-6 shrink-0 z-50">
+<div class="px-margin mb-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary mb-1">MyPet Provider</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Management Portal</p>
+</div>
+<ul class="flex flex-col space-y-2 flex-grow overflow-y-auto w-full px-2">
+<li>
+<a class="flex items-center text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="dashboard">dashboard</span>
+<span class="font-headline-sm text-headline-sm">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="group">group</span>
+<span class="font-headline-sm text-headline-sm">Customers</span>
+</a>
+</li>
+<li>
+<a class="flex items-center text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="calendar_today">calendar_today</span>
+<span class="font-headline-sm text-headline-sm">Appointments</span>
+</a>
+</li>
+<li>
+<a class="flex items-center bg-secondary-container text-on-secondary-container rounded-lg px-4 py-3 hover:bg-surface-container-highest transition-colors duration-200 active-scale" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="pets">pets</span>
+<span class="font-headline-sm text-headline-sm">Services</span>
+</a>
+</li>
+<li>
+<a class="flex items-center text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="business">business</span>
+<span class="font-headline-sm text-headline-sm">Organization</span>
+</a>
+</li>
+<li>
+<a class="flex items-center text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="badge">badge</span>
+<span class="font-headline-sm text-headline-sm">Members</span>
+</a>
+</li>
+<li>
+<a class="flex items-center text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="settings">settings</span>
+<span class="font-headline-sm text-headline-sm">Settings</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto px-6 py-4 flex items-center">
+<img alt="Provider Profile Image" class="w-10 h-10 rounded-full border border-outline-variant object-cover mr-3" data-alt="A small, professional headshot of a friendly individual wearing modern casual business attire against a solid bright background, suitable for a user profile avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2hoxT-cVQWQjn10gHcX7c7oKWbN5mxOQc-r3T2TEqh14z0pjnpvDsBwYLiwDPn1HHgjyGuF-_O__1DKIEtT5J48w92-WuIrvZKM9TiTdXL5jxur7fUoflIc00FVtJASG9rGokbYQ1OeGJWYIEYnT24jOqJ05W1r4XLvak7O794-R3jgkl-Top7WIfZmfJMzvtQuasgQTNSX2B3IipEO3ubpXJnul3bavKzDUgaFfvLwrUeFAqFNEO"/>
+<div>
+<p class="font-body-md text-body-md font-bold">Jane Doe</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Admin</p>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 md:ml-[240px] flex flex-col h-screen overflow-hidden">
+<!-- Top App Bar -->
+<header class="flex justify-between items-center h-16 px-margin max-w-container-max bg-background border-b border-outline-variant z-40 shrink-0">
+<div class="flex items-center">
+<h2 class="font-headline-lg text-headline-lg md:hidden text-primary font-bold">MyPet Provider</h2>
+<div class="hidden md:flex relative focus-within:ring-2 focus-within:ring-primary rounded-lg">
+<span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-on-surface-variant pointer-events-none" data-icon="search">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg font-body-md text-body-md focus:outline-none focus:border-primary w-64 text-on-surface" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<button class="text-on-surface-variant hover:bg-surface-container p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container p-2 rounded-full transition-colors hidden md:block">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<button class="bg-primary-container text-on-primary hover:bg-primary transition-colors px-4 py-2 rounded-lg font-body-md text-body-md font-bold flex items-center shadow-sm">
+<span class="material-symbols-outlined mr-2 text-sm" data-icon="add">add</span>
+                    New Appointment
+                </button>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 overflow-y-auto p-margin bg-background">
+<div class="max-w-container-max mx-auto h-full flex flex-col">
+<!-- Page Header & Actions -->
+<div class="flex flex-col md:flex-row md:justify-between md:items-end mb-8 gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-1">Services Management</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Configure and manage your service offerings, pricing, and details.</p>
+</div>
+<button class="bg-primary-container text-on-primary hover:bg-primary transition-colors px-5 py-2.5 rounded-lg font-body-md text-body-md font-bold flex items-center self-start md:self-auto shadow-sm">
+<span class="material-symbols-outlined mr-2" data-icon="add_circle">add_circle</span>
+                        Add Service
+                    </button>
+</div>
+<!-- High-Density Data Table Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex-1 flex flex-col shadow-sm">
+<!-- Table Controls -->
+<div class="p-5 border-b border-outline-variant bg-surface-container-low flex flex-col sm:flex-row justify-between items-center gap-4">
+<div class="relative w-full sm:w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-on-surface-variant text-sm" data-icon="filter_list">filter_list</span>
+<input class="pl-9 pr-4 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md w-full focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-on-surface" placeholder="Filter services..." type="text"/>
+</div>
+<div class="flex gap-2 w-full sm:w-auto">
+<button class="px-3 py-1.5 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high transition-colors flex items-center bg-surface-container-lowest">
+<span class="material-symbols-outlined mr-1 text-sm" data-icon="sort">sort</span> Sort
+                            </button>
+<button class="px-3 py-1.5 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high transition-colors flex items-center bg-surface-container-lowest">
+<span class="material-symbols-outlined mr-1 text-sm" data-icon="view_column">view_column</span> Columns
+                            </button>
+</div>
+</div>
+<!-- Table Wrapper for Scroll -->
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead class="bg-surface-container-lowest sticky top-0 z-10 border-b border-outline-variant shadow-[0_1px_0_rgba(0,0,0,0.05)]">
+<tr>
+<th class="py-3 px-5 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider w-1/4">Service Name</th>
+<th class="py-3 px-5 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider w-1/12">Status</th>
+<th class="py-3 px-5 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider w-1/6">Price</th>
+<th class="py-3 px-5 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider w-1/6">Unit</th>
+<th class="py-3 px-5 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider w-auto">Description</th>
+<th class="py-3 px-5 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider w-24 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-background divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-[#F1F8E9] transition-colors group cursor-default">
+<td class="py-3 px-5 font-bold">Standard Dog Walk</td>
+<td class="py-3 px-5">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">Active</span>
+</td>
+<td class="py-3 px-5 text-on-surface-variant">$25.00</td>
+<td class="py-3 px-5 text-on-surface-variant">Per 30 min</td>
+<td class="py-3 px-5 text-on-surface-variant truncate max-w-xs">A regular neighborhood walk for standard energy breeds.</td>
+<td class="py-3 px-5 text-right space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary p-1 rounded hover:bg-surface-container transition-colors" title="Edit">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-1 rounded hover:bg-surface-container transition-colors" title="Duplicate">
+<span class="material-symbols-outlined text-sm" data-icon="content_copy">content_copy</span>
+</button>
+<button class="text-on-surface-variant hover:text-error p-1 rounded hover:bg-error-container transition-colors" title="Delete">
+<span class="material-symbols-outlined text-sm" data-icon="delete">delete</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-[#F1F8E9] transition-colors group cursor-default">
+<td class="py-3 px-5 font-bold">Extended Hike</td>
+<td class="py-3 px-5">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">Active</span>
+</td>
+<td class="py-3 px-5 text-on-surface-variant">$45.00</td>
+<td class="py-3 px-5 text-on-surface-variant">Per 60 min</td>
+<td class="py-3 px-5 text-on-surface-variant truncate max-w-xs">Intense trail walking for high-energy dogs. Includes water break.</td>
+<td class="py-3 px-5 text-right space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary p-1 rounded hover:bg-surface-container transition-colors" title="Edit">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-1 rounded hover:bg-surface-container transition-colors" title="Duplicate">
+<span class="material-symbols-outlined text-sm" data-icon="content_copy">content_copy</span>
+</button>
+<button class="text-on-surface-variant hover:text-error p-1 rounded hover:bg-error-container transition-colors" title="Delete">
+<span class="material-symbols-outlined text-sm" data-icon="delete">delete</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-[#F1F8E9] transition-colors group cursor-default">
+<td class="py-3 px-5 font-bold">Puppy Visit</td>
+<td class="py-3 px-5">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">Active</span>
+</td>
+<td class="py-3 px-5 text-on-surface-variant">$20.00</td>
+<td class="py-3 px-5 text-on-surface-variant">Per 20 min</td>
+<td class="py-3 px-5 text-on-surface-variant truncate max-w-xs">Potty break, feeding, and light playtime for puppies.</td>
+<td class="py-3 px-5 text-right space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary p-1 rounded hover:bg-surface-container transition-colors" title="Edit">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-1 rounded hover:bg-surface-container transition-colors" title="Duplicate">
+<span class="material-symbols-outlined text-sm" data-icon="content_copy">content_copy</span>
+</button>
+<button class="text-on-surface-variant hover:text-error p-1 rounded hover:bg-error-container transition-colors" title="Delete">
+<span class="material-symbols-outlined text-sm" data-icon="delete">delete</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-[#F1F8E9] transition-colors group cursor-default">
+<td class="py-3 px-5 font-bold text-on-surface-variant">Overnight Sitting</td>
+<td class="py-3 px-5">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-outline-variant/30 text-on-surface-variant">Draft</span>
+</td>
+<td class="py-3 px-5 text-on-surface-variant">$120.00</td>
+<td class="py-3 px-5 text-on-surface-variant">Per Night</td>
+<td class="py-3 px-5 text-on-surface-variant truncate max-w-xs">In-home pet care from 8 PM to 8 AM.</td>
+<td class="py-3 px-5 text-right space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary p-1 rounded hover:bg-surface-container transition-colors" title="Edit">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-1 rounded hover:bg-surface-container transition-colors" title="Duplicate">
+<span class="material-symbols-outlined text-sm" data-icon="content_copy">content_copy</span>
+</button>
+<button class="text-on-surface-variant hover:text-error p-1 rounded hover:bg-error-container transition-colors" title="Delete">
+<span class="material-symbols-outlined text-sm" data-icon="delete">delete</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-4 border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between">
+<p class="font-body-md text-body-md text-on-surface-variant">Showing 1 to 4 of 4 services</p>
+<div class="flex space-x-2">
+<button class="p-1 border border-outline-variant rounded text-on-surface-variant opacity-50 cursor-not-allowed">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="p-1 border border-outline-variant rounded text-on-surface-variant opacity-50 cursor-not-allowed">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

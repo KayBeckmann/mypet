@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MyPet Admin - Audit Log</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600&amp;family=Inter:wght@400;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#3f4a3c",
+                        "surface": "#f8f9ff",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#003c0b",
+                        "on-primary-fixed-variant": "#005313",
+                        "on-tertiary-container": "#690034",
+                        "primary": "#006e1c",
+                        "on-secondary-container": "#636262",
+                        "secondary-fixed": "#e5e2e1",
+                        "surface-tint": "#006e1c",
+                        "on-surface": "#0b1c30",
+                        "on-primary-fixed": "#002204",
+                        "tertiary-fixed-dim": "#ffb1c7",
+                        "inverse-surface": "#213145",
+                        "primary-fixed-dim": "#78dc77",
+                        "on-secondary-fixed-variant": "#474746",
+                        "primary-container": "#4caf50",
+                        "surface-container-high": "#dce9ff",
+                        "inverse-primary": "#78dc77",
+                        "on-background": "#0b1c30",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-tertiary-fixed-variant": "#861948",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#a63360",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "surface-dim": "#cbdbf5",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#eff4ff",
+                        "outline": "#6f7a6b",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#94f990",
+                        "on-tertiary-fixed": "#3e001c",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#e2dfde",
+                        "tertiary-fixed": "#ffd9e2",
+                        "secondary": "#5f5e5e",
+                        "tertiary-container": "#f26f9d",
+                        "inverse-on-surface": "#eaf1ff",
+                        "outline-variant": "#becab9",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "background": "#f8f9ff",
+                        "surface-bright": "#f8f9ff",
+                        "surface-container": "#e5eeff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "xs": "4px",
+                        "edge-margin": "24px",
+                        "sidebar-width": "240px",
+                        "container-max": "1600px",
+                        "unit": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Hanken Grotesk"],
+                        "display-sm": ["Hanken Grotesk"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "data-mono": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "display-sm": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "data-mono": ["13px", { "lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "450" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Minimalist scrollbar for a clean functional look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F8FAFC; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md h-screen w-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-[240px] bg-[#1A1A1A] text-secondary-fixed-dim border-r border-outline-variant flex flex-col py-md z-20">
+<div class="px-lg mb-xl">
+<h1 class="font-headline-sm text-headline-sm text-on-primary font-bold">MyPet Admin</h1>
+<p class="font-body-sm text-body-sm text-secondary-fixed-dim mt-xs">System Superadmin</p>
+</div>
+<div class="flex flex-col gap-sm flex-grow">
+<!-- Dashboard -->
+<a class="flex items-center px-lg py-sm gap-md hover:bg-on-surface-variant/20 hover:text-on-primary transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<!-- Users -->
+<a class="flex items-center px-lg py-sm gap-md hover:bg-on-surface-variant/20 hover:text-on-primary transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-body-md text-body-md">Users</span>
+</a>
+<!-- Organizations -->
+<a class="flex items-center px-lg py-sm gap-md hover:bg-on-surface-variant/20 hover:text-on-primary transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="business">business</span>
+<span class="font-body-md text-body-md">Organizations</span>
+</a>
+<!-- Audit Log (Active) -->
+<a class="flex items-center px-lg py-sm gap-md text-on-primary border-l-2 border-primary bg-on-surface-variant/10 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span class="font-body-md text-body-md">Audit Log</span>
+</a>
+</div>
+<div class="mt-auto px-lg flex items-center gap-md">
+<img alt="Admin Avatar" class="w-8 h-8 rounded-full object-cover bg-surface-container" data-alt="A small, professional headshot of an administrative user in a brightly lit office setting, sharp focus, clear lighting, professional attire, plain background, conveying trust and authority, 50x50 pixels equivalent." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEYsQYOmYngVgkwXltsi1IntKPgUAqKkXznWoIV8H3nuo2QPaIk8kr5f9QXx-nvD57qEd04lvOqLAUscWS4zEOJf72eOzwqG6cfTTZxyINoTO-HuZ_fCgss8OI0QG4Q-S9GFJw9y_m609KiPeILKU1dBLUZ0D4aTrm7B6BMn4FySixRVuSVViaFvQLVebK9z4nTXYIsCj0Ubypl3qk3qk3Mi8INXx_Z4h1NStOmx9SihaDtb0vw03y"/>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="ml-[240px] flex-grow flex flex-col h-full w-[calc(100%-240px)]">
+<!-- TopAppBar -->
+<header class="flex items-center justify-between px-lg h-16 w-full bg-surface border-b border-outline-variant shrink-0 z-10">
+<div class="flex items-center gap-md w-1/3">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-3 py-1.5 bg-surface-container-low border border-outline-variant rounded focus:outline-none focus:border-primary font-body-sm text-body-sm transition-colors duration-150" placeholder="Search logs..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<img alt="Admin Profile" class="w-8 h-8 rounded-full object-cover ml-sm border border-outline-variant" data-alt="A small, professional headshot of an administrative user in a brightly lit office setting, sharp focus, clear lighting, professional attire, plain background, conveying trust and authority, 50x50 pixels equivalent." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBO7FTnwSVsZuM2cT_mTjRnZlATVE3Kaj3UIbN7wY8eHxAh6mUH5oAcDBbT__khLtuJc1ghdNNv_qafWEc6srkbINiQ9vpZnbrr71QcSiMKlylN7Y4FTRjSte-fUov5ChlajZl_jPZzwADN-56vlYqaij2sK3c7kNdqwzGQOk8XIkril1tyGQFKRdvnw0Bs8ckslBgc-wxGVP4cYofeRBHl_dHVYBW1_XmX824lFz9OuTag8EhvsZJQ"/>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-grow overflow-auto p-lg bg-background">
+<div class="max-w-container-max mx-auto h-full flex flex-col">
+<!-- Page Header & Actions -->
+<div class="flex items-center justify-between mb-lg shrink-0">
+<div>
+<h2 class="font-display-sm text-display-sm text-on-background">System Audit Log</h2>
+<p class="font-body-md text-body-md text-secondary mt-xs">Chronological record of administrative and critical system events.</p>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-xs px-md py-sm bg-[#FFFFFF] border border-[#E2E8F0] text-[#1A1A1A] rounded font-body-sm text-body-sm font-medium hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                            Export CSV
+                        </button>
+</div>
+</div>
+<!-- Filters Bar -->
+<div class="bg-[#FFFFFF] border border-[#E2E8F0] rounded p-md mb-md flex gap-md items-end shrink-0 shadow-sm">
+<div class="flex-1">
+<label class="block font-body-sm text-body-sm font-bold text-on-surface mb-xs">Action Type</label>
+<select class="w-full border border-[#E2E8F0] rounded px-sm py-1.5 font-body-sm text-body-sm focus:border-primary focus:ring-0">
+<option value="">All Actions</option>
+<option value="create">Created</option>
+<option value="update">Modified</option>
+<option value="delete">Deleted</option>
+<option value="auth">Authentication</option>
+</select>
+</div>
+<div class="flex-1">
+<label class="block font-body-sm text-body-sm font-bold text-on-surface mb-xs">Actor (User)</label>
+<input class="w-full border border-[#E2E8F0] rounded px-sm py-1.5 font-body-sm text-body-sm focus:border-primary focus:ring-0" placeholder="Search by email or ID" type="text"/>
+</div>
+<div class="flex-1">
+<label class="block font-body-sm text-body-sm font-bold text-on-surface mb-xs">Date Range</label>
+<div class="flex items-center gap-xs">
+<input class="w-full border border-[#E2E8F0] rounded px-sm py-1.5 font-body-sm text-body-sm focus:border-primary focus:ring-0 text-secondary" type="date"/>
+<span class="text-secondary">-</span>
+<input class="w-full border border-[#E2E8F0] rounded px-sm py-1.5 font-body-sm text-body-sm focus:border-primary focus:ring-0 text-secondary" type="date"/>
+</div>
+</div>
+<div>
+<button class="px-md py-1.5 bg-primary text-on-primary rounded font-body-sm text-body-sm hover:bg-primary/90 transition-colors h-[34px]">
+                            Apply Filters
+                        </button>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="bg-[#FFFFFF] border border-[#E2E8F0] rounded flex-grow flex flex-col overflow-hidden shadow-sm">
+<div class="overflow-auto flex-grow">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-[#F8FAFC] z-10 border-b border-[#F1F5F9]">
+<tr>
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary w-[180px]">Timestamp (UTC)</th>
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary w-[200px]">Actor</th>
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary w-[120px]">Event Type</th>
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary">Action Details</th>
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary w-[180px]">Target</th>
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary w-[100px]">IP Address</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm">
+<!-- Row 1 -->
+<tr class="border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group">
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">2023-10-27 14:32:01</td>
+<td class="px-md py-3">
+<div class="flex items-center gap-xs">
+<span class="font-medium text-on-surface">admin@mypet.com</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-error-container/50 text-on-error-container">DELETE</span>
+</td>
+<td class="px-md py-3 text-on-surface">Deleted Organization profile and associated data.</td>
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">Org ID: 9021</td>
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">192.168.1.45</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group">
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">2023-10-27 14:28:15</td>
+<td class="px-md py-3">
+<div class="flex items-center gap-xs">
+<span class="font-medium text-on-surface">system_automated</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-surface-container-high text-on-surface">UPDATE</span>
+</td>
+<td class="px-md py-3 text-on-surface">Modified Global Settings: Rate limit increased.</td>
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">Config: API_LIMIT</td>
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">10.0.0.1</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group">
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">2023-10-27 13:15:44</td>
+<td class="px-md py-3">
+<div class="flex items-center gap-xs">
+<span class="font-medium text-on-surface">j.doe@mypet.com</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-primary-container/20 text-on-primary-container">CREATE</span>
+</td>
+<td class="px-md py-3 text-on-surface">Created new Support Agent user account.</td>
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">User ID: 8842</td>
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">203.0.113.8</td>
+</tr>
+<!-- Row 4 -->
+<tr class="border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group">
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">2023-10-27 12:05:11</td>
+<td class="px-md py-3">
+<div class="flex items-center gap-xs">
+<span class="font-medium text-on-surface">admin@mypet.com</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-surface-variant text-on-surface">AUTH</span>
+</td>
+<td class="px-md py-3 text-on-surface">Successful Superadmin login.</td>
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">Session ID: abc...</td>
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">192.168.1.45</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-[#F8FAFC] transition-colors group">
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">2023-10-27 11:42:09</td>
+<td class="px-md py-3">
+<div class="flex items-center gap-xs">
+<span class="font-medium text-on-surface">unknown</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-error-container/20 text-error">AUTH_FAIL</span>
+</td>
+<td class="px-md py-3 text-on-surface">Failed login attempt (Invalid credentials).</td>
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">Target: admin@mypet.com</td>
+<td class="px-md py-3 font-data-mono text-data-mono text-secondary">45.33.22.11</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="px-md py-sm border-t border-[#F1F5F9] bg-[#FFFFFF] flex items-center justify-between shrink-0">
+<span class="font-body-sm text-body-sm text-secondary">Showing 1 to 5 of 1,248 entries</span>
+<div class="flex items-center gap-sm">
+<button class="px-sm py-1 border border-[#E2E8F0] rounded text-secondary hover:bg-surface-container-low disabled:opacity-50" disabled="">Previous</button>
+<button class="px-sm py-1 border border-[#E2E8F0] rounded text-secondary hover:bg-surface-container-low">Next</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

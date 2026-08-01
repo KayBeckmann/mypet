@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MyPet Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-secondary-container": "#704800",
+                        "on-error-container": "#93000a",
+                        "background": "#f8faf8",
+                        "surface-container-highest": "#e1e3e1",
+                        "on-surface-variant": "#3f4a3c",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface": "#f8faf8",
+                        "tertiary": "#b81d27",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2e3130",
+                        "surface-container-low": "#f2f4f2",
+                        "secondary": "#835500",
+                        "primary-fixed-dim": "#78dc77",
+                        "inverse-on-surface": "#eff1ef",
+                        "on-background": "#191c1b",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#191c1b",
+                        "on-secondary-fixed": "#291800",
+                        "surface-variant": "#e1e3e1",
+                        "surface-tint": "#006e1c",
+                        "tertiary-fixed-dim": "#ffb3ae",
+                        "on-primary-container": "#003c0b",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#410004",
+                        "secondary-fixed": "#ffddb4",
+                        "primary-fixed": "#94f990",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#930015",
+                        "surface-container-high": "#e6e9e7",
+                        "secondary-container": "#feb64c",
+                        "outline": "#6f7a6b",
+                        "on-secondary-fixed-variant": "#633f00",
+                        "on-primary-fixed": "#002204",
+                        "secondary-fixed-dim": "#ffb954",
+                        "on-primary-fixed-variant": "#005313",
+                        "primary-container": "#4caf50",
+                        "surface-container": "#eceeec",
+                        "inverse-primary": "#78dc77",
+                        "primary": "#006e1c",
+                        "surface-dim": "#d8dad9",
+                        "on-tertiary-container": "#6d000d",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f8faf8",
+                        "outline-variant": "#becab9",
+                        "tertiary-container": "#ff6b67",
+                        "error": "#ba1a1a"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "container-padding-mobile": "20px",
+                        "unit": "4px",
+                        "stack-md": "16px",
+                        "container-padding-desktop": "40px",
+                        "stack-lg": "32px",
+                        "gutter": "16px",
+                        "stack-sm": "8px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "label-sm": ["Public Sans"],
+                        "label-md": ["Public Sans"],
+                        "headline-lg-mobile": ["Public Sans"],
+                        "headline-md": ["Public Sans"],
+                        "display": ["Public Sans"],
+                        "body-lg": ["Public Sans"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar (Shared Component) -->
+<nav class="bg-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] h-screen w-64 fixed left-0 top-0 flex flex-col py-stack-lg px-gutter hidden md:flex z-40">
+<div class="mb-stack-lg px-stack-sm flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">pets</span>
+</div>
+<div>
+<h1 class="text-headline-md font-headline-md font-bold text-primary">MyPet</h1>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Pet Care Companion</p>
+</div>
+</div>
+<ul class="flex flex-col gap-unit flex-1 overflow-y-auto">
+<li>
+<a class="text-primary font-bold border-r-4 border-primary bg-primary-container/10 flex items-center gap-3 px-stack-sm py-3 rounded-l-lg hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-primary">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center gap-3 px-stack-sm py-3 rounded-lg hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">pets</span>
+<span class="text-label-md font-label-md">Animals</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center gap-3 px-stack-sm py-3 rounded-lg hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-label-md font-label-md">Appointments</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center gap-3 px-stack-sm py-3 rounded-lg hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="text-label-md font-label-md">Medications</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center gap-3 px-stack-sm py-3 rounded-lg hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="text-label-md font-label-md">Records</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center gap-3 px-stack-sm py-3 rounded-lg hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">restaurant</span>
+<span class="text-label-md font-label-md">Feeding</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center gap-3 px-stack-sm py-3 rounded-lg hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">monitor_weight</span>
+<span class="text-label-md font-label-md">Weight</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center gap-3 px-stack-sm py-3 rounded-lg hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">notifications_active</span>
+<span class="text-label-md font-label-md">Reminders</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center gap-3 px-stack-sm py-3 rounded-lg hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="text-label-md font-label-md">Families</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center gap-3 px-stack-sm py-3 rounded-lg hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">storefront</span>
+<span class="text-label-md font-label-md">Marketplace</span>
+</a>
+</li>
+<li class="mt-auto">
+<a class="text-on-surface-variant hover:text-primary flex items-center gap-3 px-stack-sm py-3 rounded-lg hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col min-h-screen md:ml-64 relative w-full">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-surface/80 backdrop-blur-md flex justify-between items-center h-16 px-container-padding-desktop sticky top-0 z-30 w-full transition-all border-b border-outline-variant/30 hidden md:flex">
+<div class="flex items-center gap-4">
+<!-- Search (on_left) -->
+<div class="relative hidden sm:block w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant/50 rounded-full py-2 pl-10 pr-4 text-body-md font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-container-highest/50 rounded-full p-2 transition-all hover:text-primary">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-highest/50 rounded-full p-2 transition-all hover:text-primary">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="flex items-center gap-3 ml-2 border-l border-outline-variant/30 pl-4 cursor-pointer hover:bg-surface-container-highest/50 rounded-xl transition-all p-1 pr-3">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A small circular avatar showing a professional looking person in a well lit modern room. The style is clear, bright, and suitable for a health tech application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4f8bl3ik5zt7Lb7wKgScqd5Rd-qyHzYjfwiO991M2pTp2D4OYy9ozq0HgU5jCB5_Ei0whYnDuhdLk83g_rwtbeu9NxrwiYcrKUmIysGoKorYQaVaVUnjksPBfPRmUy5_cP-PU5oXz_i4ngccx_1uXub4rhs84sAlUBcNWf6mdOYGqJhLSPk9b4Tn8d11mE5RimZUNAePs7z_SDx9hz2SVDyo3suGifmYPSU_G-uh9JDcMlo6akBKk"/>
+<span class="text-label-md font-label-md font-bold text-on-surface">Profile</span>
+</div>
+</div>
+</header>
+<!-- Main Dashboard Content -->
+<main class="flex-1 p-container-padding-mobile md:p-container-padding-desktop max-w-[1200px] mx-auto w-full flex flex-col gap-stack-lg">
+<!-- Welcome & Health Score -->
+<section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-stack-md">
+<div>
+<h2 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg text-on-background">Good Morning, Alex</h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant mt-1">Here is the latest on your furry family.</p>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex items-center gap-4 min-w-[250px]">
+<div class="w-14 h-14 rounded-full bg-primary-container/20 flex items-center justify-center border-4 border-primary/30 relative">
+<span class="text-headline-md font-headline-md font-bold text-primary">92</span>
+<svg class="absolute inset-0 w-full h-full -rotate-90" viewbox="0 0 100 100">
+<circle class="text-primary-container/20" cx="50" cy="50" fill="none" r="46" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary stroke-current" cx="50" cy="50" fill="none" r="46" stroke="currentColor" stroke-dasharray="289" stroke-dashoffset="23" stroke-width="8"></circle>
+</svg>
+</div>
+<div>
+<p class="text-label-md font-label-md text-on-surface-variant">Overall Health Score</p>
+<p class="text-label-sm font-label-sm text-primary font-medium flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-sm">trending_up</span> +3 pts this month
+                        </p>
+</div>
+</div>
+</section>
+<!-- Quick Action Chips -->
+<section class="flex flex-nowrap overflow-x-auto gap-3 pb-2 -mx-container-padding-mobile px-container-padding-mobile md:mx-0 md:px-0 hide-scrollbar">
+<button class="shrink-0 bg-primary/10 hover:bg-primary/20 text-primary-fixed-variant rounded-full py-2.5 px-5 flex items-center gap-2 transition-colors border border-primary/20 shadow-sm">
+<span class="material-symbols-outlined text-lg">medication</span>
+<span class="text-label-md font-label-md">Give Medication</span>
+</button>
+<button class="shrink-0 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface rounded-full py-2.5 px-5 flex items-center gap-2 transition-colors border border-outline-variant/40 shadow-sm">
+<span class="material-symbols-outlined text-lg">monitor_weight</span>
+<span class="text-label-md font-label-md">Log Weight</span>
+</button>
+<button class="shrink-0 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface rounded-full py-2.5 px-5 flex items-center gap-2 transition-colors border border-outline-variant/40 shadow-sm">
+<span class="material-symbols-outlined text-lg">calendar_add_on</span>
+<span class="text-label-md font-label-md">Book Appointment</span>
+</button>
+<button class="shrink-0 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface rounded-full py-2.5 px-5 flex items-center gap-2 transition-colors border border-outline-variant/40 shadow-sm">
+<span class="material-symbols-outlined text-lg">add_alert</span>
+<span class="text-label-md font-label-md">Add Reminder</span>
+</button>
+<button class="shrink-0 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface rounded-full py-2.5 px-5 flex items-center gap-2 transition-colors border border-outline-variant/40 shadow-sm">
+<span class="material-symbols-outlined text-lg">restaurant</span>
+<span class="text-label-md font-label-md">Log Feeding</span>
+</button>
+<button class="shrink-0 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface rounded-full py-2.5 px-5 flex items-center gap-2 transition-colors border border-outline-variant/40 shadow-sm">
+<span class="material-symbols-outlined text-lg">vaccines</span>
+<span class="text-label-md font-label-md">View Vaccinations</span>
+</button>
+<button class="shrink-0 bg-error/10 hover:bg-error/20 text-error rounded-full py-2.5 px-5 flex items-center gap-2 transition-colors border border-error/20 shadow-sm">
+<span class="material-symbols-outlined text-lg">emergency</span>
+<span class="text-label-md font-label-md">Emergency Contacts</span>
+</button>
+</section>
+<!-- Main Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-stack-md lg:gap-stack-lg">
+<!-- Left Column (Wider on Desktop) -->
+<div class="lg:col-span-8 flex flex-col gap-stack-md lg:gap-stack-lg">
+<!-- Active Medications -->
+<div class="bg-surface-container-lowest rounded-xl p-stack-md lg:p-6 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-headline-md font-headline-md text-on-surface">Active Medications</h3>
+<button class="text-primary text-label-md font-label-md hover:underline">View All</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Med Card 1 -->
+<div class="border border-outline-variant/30 rounded-xl p-4 flex gap-4 hover:border-primary/50 transition-colors bg-surface/50">
+<div class="w-12 h-12 rounded-lg bg-secondary-container/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-secondary text-2xl">pill</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="text-label-md font-label-md text-on-surface font-bold">Apoquel 16mg</h4>
+<span class="bg-surface-container-highest px-2 py-0.5 rounded-full text-[10px] font-label-sm text-on-surface-variant">Bella (Dog)</span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-1">1 tablet daily</p>
+<div class="mt-3 flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 8:00 AM
+                                        </span>
+<button class="bg-primary hover:bg-primary/90 text-on-primary rounded-lg px-4 py-1.5 text-label-sm font-label-sm transition-colors">Mark Given</button>
+</div>
+</div>
+</div>
+<!-- Med Card 2 -->
+<div class="border border-outline-variant/30 rounded-xl p-4 flex gap-4 hover:border-primary/50 transition-colors bg-surface/50">
+<div class="w-12 h-12 rounded-lg bg-tertiary-container/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-tertiary text-2xl">water_drop</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="text-label-md font-label-md text-on-surface font-bold">Ear Drops</h4>
+<span class="bg-surface-container-highest px-2 py-0.5 rounded-full text-[10px] font-label-sm text-on-surface-variant">Luna (Cat)</span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-1">3 drops per ear</p>
+<div class="mt-3 flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 8:00 PM
+                                        </span>
+<button class="border border-outline hover:bg-surface-container-highest text-on-surface rounded-lg px-4 py-1.5 text-label-sm font-label-sm transition-colors">Mark Given</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Vaccinations Traffic Light Panel -->
+<div class="bg-surface-container-lowest rounded-xl p-stack-md lg:p-6 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-headline-md font-headline-md text-on-surface">Vaccination Status</h3>
+<span class="material-symbols-outlined text-on-surface-variant">info</span>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Red / Expired -->
+<div class="flex items-center gap-4 p-4 rounded-xl bg-error-container/30 border border-error/20">
+<div class="w-10 h-10 rounded-full bg-error flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-on-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div class="flex-1">
+<h4 class="text-label-md font-label-md text-on-error-container font-bold">Rabies (1 Yr)</h4>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Bella • Expired 2 days ago</p>
+</div>
+<button class="text-error font-label-md text-label-md hover:underline shrink-0">Book Now</button>
+</div>
+<!-- Yellow / Expiring Soon -->
+<div class="flex items-center gap-4 p-4 rounded-xl bg-secondary-container/20 border border-secondary/20">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">error</span>
+</div>
+<div class="flex-1">
+<h4 class="text-label-md font-label-md text-on-secondary-container font-bold">FVRCP</h4>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Luna • Expiring in 14 days</p>
+</div>
+<button class="text-secondary font-label-md text-label-md hover:underline shrink-0">Schedule</button>
+</div>
+<!-- Green / Up to date (collapsed style) -->
+<div class="flex items-center gap-4 p-3 rounded-xl border border-outline-variant/30">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<p class="text-label-md font-label-md text-on-surface flex-1">All other vaccinations are up to date.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column (Narrower on Desktop) -->
+<div class="lg:col-span-4 flex flex-col gap-stack-md lg:gap-stack-lg">
+<!-- Overdue Reminders -->
+<div class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0px_4px_20px_rgba(0,0,0,0.04)] h-full border-t-4 border-t-tertiary">
+<div class="flex items-center gap-2 mb-6 text-tertiary">
+<span class="material-symbols-outlined">notifications_active</span>
+<h3 class="text-headline-md font-headline-md font-bold">Needs Attention</h3>
+</div>
+<div class="flex flex-col gap-3 relative before:absolute before:left-3.5 before:top-4 before:bottom-4 before:w-[2px] before:bg-outline-variant/30">
+<!-- Reminder Item 1 -->
+<div class="relative pl-10">
+<div class="absolute left-1 top-1.5 w-5 h-5 rounded-full bg-surface border-2 border-tertiary flex items-center justify-center z-10">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+</div>
+<div class="bg-tertiary-container/10 p-3 rounded-lg border border-tertiary/20">
+<h4 class="text-label-md font-label-md text-on-surface font-bold">Order Dog Food</h4>
+<p class="text-label-sm font-label-sm text-tertiary mt-0.5">Overdue by 1 day</p>
+</div>
+</div>
+<!-- Reminder Item 2 -->
+<div class="relative pl-10">
+<div class="absolute left-1 top-1.5 w-5 h-5 rounded-full bg-surface border-2 border-secondary flex items-center justify-center z-10">
+</div>
+<div class="bg-surface/50 p-3 rounded-lg border border-outline-variant/30 hover:border-secondary/50 transition-colors">
+<h4 class="text-label-md font-label-md text-on-surface font-bold">Brush Luna's Teeth</h4>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-0.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">event</span> Today
+                                    </p>
+</div>
+</div>
+<!-- Reminder Item 3 -->
+<div class="relative pl-10">
+<div class="absolute left-1 top-1.5 w-5 h-5 rounded-full bg-surface border-2 border-outline flex items-center justify-center z-10">
+</div>
+<div class="bg-surface/50 p-3 rounded-lg border border-outline-variant/30 hover:border-outline/50 transition-colors opacity-70">
+<h4 class="text-label-md font-label-md text-on-surface font-bold">Monthly Flea Meds</h4>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-0.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">event</span> Tomorrow
+                                    </p>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-2 border border-outline text-on-surface rounded-lg text-label-md font-label-md hover:bg-surface-container-highest transition-colors">
+                            Manage Reminders
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Mobile Bottom Navigation Shell (if implemented based on rules, though instructions primarily asked for Side/Top. I'll omit to keep focus on requested components unless strictly needed for responsive intent, but the instructions say responsive pivot mandates bottom nav on mobile). -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-outline-variant/30 shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] z-50 flex justify-around pb-safe">
+<a class="flex flex-col items-center justify-center p-3 text-primary" href="#">
+<div class="w-16 h-8 rounded-full bg-primary-container/20 flex items-center justify-center mb-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+</div>
+<span class="text-[10px] font-label-sm font-bold">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center p-3 text-on-surface-variant hover:text-primary" href="#">
+<span class="material-symbols-outlined mb-1">pets</span>
+<span class="text-[10px] font-label-sm">Animals</span>
+</a>
+<a class="flex flex-col items-center justify-center p-3 text-on-surface-variant hover:text-primary" href="#">
+<span class="material-symbols-outlined mb-1">calendar_month</span>
+<span class="text-[10px] font-label-sm">Appointments</span>
+</a>
+<a class="flex flex-col items-center justify-center p-3 text-on-surface-variant hover:text-primary" href="#">
+<span class="material-symbols-outlined mb-1">medical_services</span>
+<span class="text-[10px] font-label-sm">Medications</span>
+</a>
+</nav>
+<style>
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</body></html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MyPet Admin - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600&amp;family=Inter:wght@400;700&amp;family=JetBrains+Mono:wght@450&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#3f4a3c",
+                      "surface": "#f8f9ff",
+                      "on-primary": "#ffffff",
+                      "on-primary-container": "#003c0b",
+                      "on-primary-fixed-variant": "#005313",
+                      "on-tertiary-container": "#690034",
+                      "primary": "#006e1c",
+                      "on-secondary-container": "#636262",
+                      "secondary-fixed": "#e5e2e1",
+                      "surface-tint": "#006e1c",
+                      "on-surface": "#0b1c30",
+                      "on-primary-fixed": "#002204",
+                      "tertiary-fixed-dim": "#ffb1c7",
+                      "inverse-surface": "#213145",
+                      "primary-fixed-dim": "#78dc77",
+                      "on-secondary-fixed-variant": "#474746",
+                      "primary-container": "#4caf50",
+                      "surface-container-high": "#dce9ff",
+                      "inverse-primary": "#78dc77",
+                      "on-background": "#0b1c30",
+                      "surface-container-highest": "#d3e4fe",
+                      "on-tertiary-fixed-variant": "#861948",
+                      "on-error-container": "#93000a",
+                      "tertiary": "#a63360",
+                      "secondary-fixed-dim": "#c8c6c5",
+                      "surface-dim": "#cbdbf5",
+                      "error-container": "#ffdad6",
+                      "surface-container-low": "#eff4ff",
+                      "outline": "#6f7a6b",
+                      "on-error": "#ffffff",
+                      "surface-variant": "#d3e4fe",
+                      "on-secondary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "primary-fixed": "#94f990",
+                      "on-tertiary-fixed": "#3e001c",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "secondary-container": "#e2dfde",
+                      "tertiary-fixed": "#ffd9e2",
+                      "secondary": "#5f5e5e",
+                      "tertiary-container": "#f26f9d",
+                      "inverse-on-surface": "#eaf1ff",
+                      "outline-variant": "#becab9",
+                      "on-secondary-fixed": "#1c1b1b",
+                      "background": "#f8f9ff",
+                      "surface-bright": "#f8f9ff",
+                      "surface-container": "#e5eeff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "xs": "4px",
+                      "edge-margin": "24px",
+                      "sidebar-width": "240px",
+                      "container-max": "1600px",
+                      "unit": "4px",
+                      "lg": "24px",
+                      "md": "16px",
+                      "xl": "32px"
+              },
+              "fontFamily": {
+                      "headline-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "Inter"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "headline-sm": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-sm": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "11px",
+                              {
+                                      "lineHeight": "12px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-mono": [
+                              "13px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "450"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+      </style>
+</head>
+<body class="bg-surface text-on-surface h-full font-body-sm flex">
+<!-- SideNavBar -->
+<nav class="bg-[#1A1A1A] text-primary font-body-md text-body-md fixed left-0 top-0 h-full w-[240px] border-r border-outline-variant transition-colors duration-200 flex flex-col h-full py-md z-20">
+<div class="px-md mb-xl flex items-center gap-sm">
+<img alt="Admin Avatar" class="w-8 h-8 rounded-full" data-alt="A small, professional avatar icon for an admin user in a clean, minimalist style. White background, simple geometric forms." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAiBhVS18goyOAPrFfgjS5JijKMd6RBHs3T1BBJVDUxkWt7J-gfKhbC3L-a_RP76TiCd85BoisDXUPeEDxCrNN5gd6kRGXdxQFQpODHvSPisPx5UpA_uhJZWwccUWDcZiBzW4oVBesmrdqRw44P3lzdUUWc8UbFfe26u_Kn0xpjkMeMSKemom94LLSZiTpiYJujVsIJcObm1mGogaLmhyRDCqLsULhqps7DO7idc6aoh5s9bOg29bx"/>
+<div>
+<div class="font-headline-sm text-headline-sm text-on-primary font-bold">MyPet Admin</div>
+<div class="font-body-sm text-body-sm text-secondary-fixed-dim">System Superadmin</div>
+</div>
+</div>
+<ul class="flex flex-col w-full">
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-primary border-l-2 border-primary bg-on-surface-variant/10 hover:bg-on-surface-variant/20 hover:text-on-primary" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary-fixed-dim hover:bg-on-surface-variant/20 hover:text-on-primary border-l-2 border-transparent" href="#">
+<span class="material-symbols-outlined">group</span>
+                    Users
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary-fixed-dim hover:bg-on-surface-variant/20 hover:text-on-primary border-l-2 border-transparent" href="#">
+<span class="material-symbols-outlined">business</span>
+                    Organizations
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary-fixed-dim hover:bg-on-surface-variant/20 hover:text-on-primary border-l-2 border-transparent" href="#">
+<span class="material-symbols-outlined">assignment</span>
+                    Audit Log
+                </a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<div class="ml-[240px] flex-1 flex flex-col h-full min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-background text-primary font-body-sm text-body-sm border-b border-outline-variant transition-all duration-150 flex items-center justify-between px-lg h-16 w-full z-10 sticky top-0">
+<div class="font-headline-sm text-headline-sm text-on-surface">MyPet Admin</div>
+<div class="flex items-center gap-md">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-xl pr-sm py-xs border border-outline-variant rounded-DEFAULT focus:outline-none focus:border-primary bg-surface-container-lowest" placeholder="Search..." type="text"/>
+</div>
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-DEFAULT"><span class="material-symbols-outlined">notifications</span></button>
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-DEFAULT"><span class="material-symbols-outlined">settings</span></button>
+<img alt="Admin Profile" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A small, professional avatar icon for an admin user in a clean, minimalist style. White background, simple geometric forms." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB716nVP8JfHnFaeop65iUkoyekvzNNToG1LnTDY8B9sTXr8f7Kap-0j895Qpa3vOfWW0zVZ0SvuHbuS1pBqlvTvH9R8FrggIY3X05SW60fnoBU35VMWpFR5RXB0AcMuZQTPrKNPlx67DEGSQwT_iG3PuqR26z8f3KbFEnd97qZERAAFTpkZ0nmNo8SfHAYOK37L13NnigF4jgEdrcNhcO6FaZiroCySG20dbLQWPb3RDfy8WLJyJg8"/>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-edge-margin overflow-y-auto w-full max-w-container-max mx-auto">
+<h1 class="font-display-sm text-display-sm mb-lg">Platform Overview</h1>
+<!-- Stats Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-sm mb-lg">
+<!-- Stat Tile 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-md flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Users</span>
+<div class="flex items-end justify-between">
+<span class="font-data-mono text-data-mono text-lg font-bold">1.2M</span>
+<span class="font-data-mono text-[10px] text-primary flex items-center"><span class="material-symbols-outlined text-[12px]">trending_up</span>+2.1%</span>
+</div>
+</div>
+<!-- Stat Tile 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-md flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Pet Owners</span>
+<div class="flex items-end justify-between">
+<span class="font-data-mono text-data-mono text-lg font-bold">850K</span>
+<span class="font-data-mono text-[10px] text-primary flex items-center"><span class="material-symbols-outlined text-[12px]">trending_up</span>+1.8%</span>
+</div>
+</div>
+<!-- Stat Tile 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-md flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Vets</span>
+<div class="flex items-end justify-between">
+<span class="font-data-mono text-data-mono text-lg font-bold">45K</span>
+<span class="font-data-mono text-[10px] text-primary flex items-center"><span class="material-symbols-outlined text-[12px]">trending_up</span>+0.5%</span>
+</div>
+</div>
+<!-- Stat Tile 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-md flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Providers</span>
+<div class="flex items-end justify-between">
+<span class="font-data-mono text-data-mono text-lg font-bold">305K</span>
+<span class="font-data-mono text-[10px] text-error flex items-center"><span class="material-symbols-outlined text-[12px]">trending_down</span>-0.2%</span>
+</div>
+</div>
+<!-- Stat Tile 5 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-md flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Pets</span>
+<div class="flex items-end justify-between">
+<span class="font-data-mono text-data-mono text-lg font-bold">2.1M</span>
+<span class="font-data-mono text-[10px] text-primary flex items-center"><span class="material-symbols-outlined text-[12px]">trending_up</span>+3.4%</span>
+</div>
+</div>
+<!-- Stat Tile 6 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-md flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Organizations</span>
+<div class="flex items-end justify-between">
+<span class="font-data-mono text-data-mono text-lg font-bold">12K</span>
+<span class="font-data-mono text-[10px] text-on-surface-variant flex items-center"><span class="material-symbols-outlined text-[12px]">trending_flat</span>0.0%</span>
+</div>
+</div>
+<!-- Stat Tile 7 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-md flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Appointments</span>
+<div class="flex items-end justify-between">
+<span class="font-data-mono text-data-mono text-lg font-bold">5.6M</span>
+<span class="font-data-mono text-[10px] text-primary flex items-center"><span class="material-symbols-outlined text-[12px]">trending_up</span>+5.2%</span>
+</div>
+</div>
+<!-- Stat Tile 8 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-md flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">New Signups (30d)</span>
+<div class="flex items-end justify-between">
+<span class="font-data-mono text-data-mono text-lg font-bold">+12.4K</span>
+<span class="font-data-mono text-[10px] text-primary flex items-center"><span class="material-symbols-outlined text-[12px]">trending_up</span>+12%</span>
+</div>
+</div>
+</div>
+<!-- Chart Section -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-md">
+<div class="flex justify-between items-center mb-md">
+<h2 class="font-headline-sm text-headline-sm">Monthly New User Signups</h2>
+<span class="font-label-caps text-label-caps text-on-surface-variant bg-surface-container-low px-sm py-xs rounded-DEFAULT">Last 6 Months</span>
+</div>
+<!-- Simplified Bar Chart Representation -->
+<div class="h-64 flex items-end justify-between gap-sm border-b border-outline-variant pb-xs">
+<div class="flex flex-col items-center w-full group">
+<div class="w-full bg-primary/20 hover:bg-primary transition-colors duration-200 h-[40%] rounded-t-sm relative">
+<span class="absolute -top-6 left-1/2 -translate-x-1/2 font-data-mono text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-inverse-surface text-inverse-on-surface px-1 rounded-DEFAULT">8.2K</span>
+</div>
+<span class="font-data-mono text-data-mono mt-xs text-on-surface-variant">Oct</span>
+</div>
+<div class="flex flex-col items-center w-full group">
+<div class="w-full bg-primary/20 hover:bg-primary transition-colors duration-200 h-[45%] rounded-t-sm relative">
+<span class="absolute -top-6 left-1/2 -translate-x-1/2 font-data-mono text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-inverse-surface text-inverse-on-surface px-1 rounded-DEFAULT">9.1K</span>
+</div>
+<span class="font-data-mono text-data-mono mt-xs text-on-surface-variant">Nov</span>
+</div>
+<div class="flex flex-col items-center w-full group">
+<div class="w-full bg-primary/20 hover:bg-primary transition-colors duration-200 h-[60%] rounded-t-sm relative">
+<span class="absolute -top-6 left-1/2 -translate-x-1/2 font-data-mono text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-inverse-surface text-inverse-on-surface px-1 rounded-DEFAULT">11.5K</span>
+</div>
+<span class="font-data-mono text-data-mono mt-xs text-on-surface-variant">Dec</span>
+</div>
+<div class="flex flex-col items-center w-full group">
+<div class="w-full bg-primary/20 hover:bg-primary transition-colors duration-200 h-[55%] rounded-t-sm relative">
+<span class="absolute -top-6 left-1/2 -translate-x-1/2 font-data-mono text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-inverse-surface text-inverse-on-surface px-1 rounded-DEFAULT">10.8K</span>
+</div>
+<span class="font-data-mono text-data-mono mt-xs text-on-surface-variant">Jan</span>
+</div>
+<div class="flex flex-col items-center w-full group">
+<div class="w-full bg-primary/20 hover:bg-primary transition-colors duration-200 h-[75%] rounded-t-sm relative">
+<span class="absolute -top-6 left-1/2 -translate-x-1/2 font-data-mono text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-inverse-surface text-inverse-on-surface px-1 rounded-DEFAULT">14.2K</span>
+</div>
+<span class="font-data-mono text-data-mono mt-xs text-on-surface-variant">Feb</span>
+</div>
+<div class="flex flex-col items-center w-full group">
+<div class="w-full bg-primary transition-colors duration-200 h-[90%] rounded-t-sm relative shadow-[0_-4px_10px_rgba(76,175,80,0.2)]">
+<span class="absolute -top-6 left-1/2 -translate-x-1/2 font-data-mono text-[10px] opacity-100 bg-inverse-surface text-inverse-on-surface px-1 rounded-DEFAULT">18.5K</span>
+</div>
+<span class="font-data-mono text-data-mono mt-xs font-bold text-on-surface">Mar</span>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

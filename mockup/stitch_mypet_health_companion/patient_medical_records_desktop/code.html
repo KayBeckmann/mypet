@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Patient Detail - MyPet Vet</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed-dim": "#78dc77",
+                      "tertiary": "#556158",
+                      "surface-container-lowest": "#ffffff",
+                      "outline-variant": "#becab9",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed-dim": "#bdcabe",
+                      "inverse-primary": "#78dc77",
+                      "secondary-container": "#d7e4ec",
+                      "on-secondary-fixed": "#111d23",
+                      "primary": "#006e1c",
+                      "secondary": "#546067",
+                      "primary-fixed": "#94f990",
+                      "error": "#ba1a1a",
+                      "secondary-fixed-dim": "#bbc8d0",
+                      "on-error": "#ffffff",
+                      "outline": "#6f7a6b",
+                      "on-tertiary-fixed": "#131e17",
+                      "on-tertiary-fixed-variant": "#3e4a41",
+                      "inverse-on-surface": "#f1f1f1",
+                      "surface-tint": "#006e1c",
+                      "on-surface-variant": "#3f4a3c",
+                      "surface-bright": "#f9f9f9",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-container": "#2a352d",
+                      "on-primary-container": "#003c0b",
+                      "surface-container-high": "#e8e8e8",
+                      "on-error-container": "#93000a",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed": "#d7e4ec",
+                      "on-secondary-fixed-variant": "#3c494f",
+                      "tertiary-fixed": "#d9e6da",
+                      "tertiary-container": "#929e94",
+                      "surface-variant": "#e2e2e2",
+                      "surface-dim": "#dadada",
+                      "background": "#f9f9f9",
+                      "surface-container-low": "#f3f3f3",
+                      "on-secondary-container": "#5a666d",
+                      "inverse-surface": "#2f3131",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-highest": "#e2e2e2",
+                      "primary-container": "#4caf50",
+                      "on-primary-fixed-variant": "#005313",
+                      "on-surface": "#1a1c1c",
+                      "on-primary-fixed": "#002204",
+                      "surface": "#ffffff",
+                      "on-background": "#1a1c1c",
+                      "surface-container": "#eeeeee"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "gutter": "16px",
+                      "sm": "8px",
+                      "xs": "4px",
+                      "xl": "40px",
+                      "max-width": "1440px",
+                      "margin": "24px",
+                      "lg": "24px",
+                      "md": "16px"
+              },
+              "fontFamily": {
+                      "h3": ["Public Sans"],
+                      "h2": ["Public Sans"],
+                      "body-md": ["Public Sans"],
+                      "h1": ["Public Sans"],
+                      "label-bold": ["Public Sans"],
+                      "body-sm": ["Public Sans"],
+                      "body-lg": ["Public Sans"],
+                      "code": ["Public Sans"],
+                      "h1-mobile": ["Public Sans"]
+              },
+              "fontSize": {
+                      "h3": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "h2": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "code": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                      "h1-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        /* Hide scrollbar for horizontal tabs */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased min-h-screen">
+<!-- SideNavBar -->
+<nav class="bg-secondary h-screen w-64 fixed left-0 top-0 flex flex-col py-lg px-md z-40">
+<div class="mb-xl px-sm">
+<span class="font-h2 text-h2 text-surface-container-lowest">MyPet Vet</span>
+<div class="font-label-bold text-label-bold text-secondary-fixed-dim uppercase tracking-widest mt-1">Practice Mgmt</div>
+</div>
+<ul class="flex flex-col gap-sm flex-grow">
+<!-- Dashboard -->
+<li>
+<a class="flex items-center gap-md px-sm py-2 rounded text-secondary-fixed-dim hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span>Dashboard</span>
+</a>
+</li>
+<!-- Patients (Active) -->
+<li>
+<a class="flex items-center gap-md px-sm py-2 rounded bg-on-secondary-fixed-variant text-primary-fixed font-bold border-l-4 border-primary-fixed cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">pets</span>
+<span>Patients</span>
+</a>
+</li>
+<!-- Appointments -->
+<li>
+<a class="flex items-center gap-md px-sm py-2 rounded text-secondary-fixed-dim hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+<span>Appointments</span>
+</a>
+</li>
+<!-- Organization -->
+<li>
+<a class="flex items-center gap-md px-sm py-2 rounded text-secondary-fixed-dim hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">corporate_fare</span>
+<span>Organization</span>
+</a>
+</li>
+<!-- Members -->
+<li>
+<a class="flex items-center gap-md px-sm py-2 rounded text-secondary-fixed-dim hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span>Members</span>
+</a>
+</li>
+<!-- Settings -->
+<li>
+<a class="flex items-center gap-md px-sm py-2 rounded text-secondary-fixed-dim hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant transition-colors cursor-pointer duration-150 mt-auto" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span>Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- TopAppBar -->
+<header class="bg-surface fixed top-0 right-0 w-[calc(100%-16rem)] h-16 border-b border-outline-variant flex justify-between items-center px-lg z-30 transition-all duration-200">
+<!-- Search placeholder (if search_bar was full, currently on_left implies it might exist, but leaving empty structure for minimalism) -->
+<div class="flex-1"></div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-md">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-6 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-sm cursor-pointer hover:bg-surface-container-low p-1 pr-3 rounded-full transition-colors">
+<img alt="Dr. Smith Avatar" class="w-8 h-8 rounded-full object-cover border border-outline-variant" data-alt="A professional headshot of a veterinarian, Dr. Smith, wearing clinical scrubs in a brightly lit, modern office setting. High-key lighting, corporate clinical aesthetic, crisp and professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYEt5h3RvQZH55m5NPr6Co08oxTpQsbvNDOpIZqAR_QV__9Dd1CVgiXMzMyujbVtN9IYWqA49iyS8aJ68TnB5Bvr_6rnD4S4jVphikY7KBHXTEiu7WdMpDp25SNQO36o6Lw7etUDeYbAF5xnqS6a_Kltu6Ssskxtlk5NjNf0zW4PDYt_UfouVGMxSiGK0YKAZ1WWlpXyR3rzZR2Eu8TeOnfJyQLFapA8GujHWeF8CVQQ-1TD-0u-wJ"/>
+<span class="font-body-md text-body-md font-medium text-on-surface">Dr. Smith</span>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 mt-16 p-margin min-h-[calc(100vh-4rem)]">
+<!-- Patient Header Card (Layer 1) -->
+<div class="bg-surface border border-surface-variant rounded-lg p-lg mb-lg flex flex-col md:flex-row gap-lg items-start md:items-center">
+<!-- Photo -->
+<div class="flex-shrink-0">
+<img alt="Patient Photo" class="w-24 h-24 rounded-full object-cover border-4 border-surface-container-lowest shadow-sm" data-alt="A close-up, high-quality photograph of a Golden Retriever dog's face, looking attentively forward. The background is a clean, minimal white or light grey studio backdrop, highlighting the subject's features clearly. Bright, clinical lighting, modern clean aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAq4WN0mdo7xR68Qis6Wezs1K3w_PyauAEWGhcailGOLSLMPcnEvWAw-rN6IsBIZqd43CePYUrhDxV98aOOt9NYu131YWLwCKwYbFi43GmDMhJ4FuOyjgFn66iNw9aL0zSQJbUmTb1qC-84cjw2M2ojAtRldtrskSUq0Tzd-6Khp-fHax7SG9X0SIfG8_FD-Ycp76xcaer6IjChce5RMPSx8LQ8uPs4UzfzJlnRBKCnhRl9A-WIKQ4F"/>
+</div>
+<!-- Core Details -->
+<div class="flex-grow">
+<div class="flex items-center gap-sm mb-1">
+<h1 class="font-h1 text-h1 text-on-surface">Barnaby</h1>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-bold text-label-bold border border-surface-variant">Canine</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-bold text-label-bold border border-surface-variant">M (Neutered)</span>
+</div>
+<div class="grid grid-cols-2 md:flex gap-x-xl gap-y-sm text-on-surface-variant mt-sm">
+<div>
+<div class="font-label-bold text-label-bold text-secondary uppercase tracking-wider mb-xs">Owner</div>
+<div class="font-body-md text-body-md font-medium text-on-surface">Eleanor Vance</div>
+</div>
+<div>
+<div class="font-label-bold text-label-bold text-secondary uppercase tracking-wider mb-xs">Breed</div>
+<div class="font-body-md text-body-md">Golden Retriever</div>
+</div>
+<div>
+<div class="font-label-bold text-label-bold text-secondary uppercase tracking-wider mb-xs">Age / DOB</div>
+<div class="font-body-md text-body-md">4y 2m (12 Oct 2019)</div>
+</div>
+<div>
+<div class="font-label-bold text-label-bold text-secondary uppercase tracking-wider mb-xs">Microchip</div>
+<div class="font-code text-code text-primary tracking-tight">985141002938475</div>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex-shrink-0 self-start md:self-center w-full md:w-auto">
+<button class="w-full md:w-auto flex items-center justify-center gap-sm h-10 px-md rounded bg-surface border border-outline text-on-surface hover:bg-surface-container-low transition-colors font-body-md text-body-md font-medium">
+<span class="material-symbols-outlined text-[18px]">print</span>
+                    Print Dossier
+                </button>
+</div>
+</div>
+<!-- Horizontal Tab Navigation -->
+<div class="border-b border-surface-variant mb-lg">
+<nav class="flex gap-lg overflow-x-auto hide-scrollbar pb-xs">
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors" href="#">Overview</a>
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-primary font-semibold border-b-2 border-primary transition-colors" href="#">Records</a>
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors" href="#">Vaccinations</a>
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors" href="#">Medications</a>
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors" href="#">Prescriptions</a>
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors" href="#">Weight</a>
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors" href="#">Feeding</a>
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors" href="#">Media</a>
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors" href="#">Notes</a>
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors" href="#">Allergies</a>
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors" href="#">Appointments</a>
+<a class="whitespace-nowrap pb-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors" href="#">Lab Results</a>
+</nav>
+</div>
+<!-- Tab Content: Records Timeline -->
+<div class="max-w-4xl">
+<!-- Content Header -->
+<div class="flex justify-between items-center mb-md">
+<h2 class="font-h2 text-h2 text-on-surface">Clinical Timeline</h2>
+<button class="flex items-center gap-sm h-10 px-md rounded bg-primary-container text-on-primary-container hover:bg-[#3d8c40] transition-colors font-body-md text-body-md font-medium">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                    Add Entry
+                </button>
+</div>
+<!-- Timeline Structure -->
+<div class="relative pl-6 border-l-2 border-surface-variant ml-3 flex flex-col gap-xl">
+<!-- Entry 1 -->
+<div class="relative">
+<!-- Timeline Dot -->
+<div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-surface border-2 border-primary z-10"></div>
+<div class="bg-surface border border-surface-variant rounded-lg p-md hover:bg-surface-bright transition-colors">
+<!-- Entry Header -->
+<div class="flex justify-between items-start mb-sm">
+<div>
+<div class="font-label-bold text-label-bold text-secondary uppercase tracking-widest mb-xs">Today • 10:30 AM</div>
+<h3 class="font-h3 text-h3 text-on-surface">Routine Examination</h3>
+</div>
+<!-- Diagnosis Chip -->
+<span class="px-2 py-1 rounded bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-bold text-label-bold flex items-center gap-xs border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                Healthy
+                            </span>
+</div>
+<!-- Entry Content -->
+<div class="text-on-surface-variant font-body-md text-body-md leading-relaxed mb-md">
+                            Patient presented for annual checkup. Bright, alert, and responsive. Heart and lungs auscultate normally. Abdomen soft, non-painful. Dentition shows mild tartar buildup, discussed dental cleaning for next year. Weight is stable.
+                        </div>
+<!-- Provider Info & Metadata footer -->
+<div class="flex items-center gap-md pt-sm border-t border-surface-variant text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">person</span>
+                                Dr. Smith
+                            </div>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">vaccines</span>
+                                Boosters Administered
+                            </div>
+</div>
+</div>
+</div>
+<!-- Entry 2 -->
+<div class="relative">
+<div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-surface border-2 border-surface-variant z-10"></div>
+<div class="bg-surface border border-surface-variant rounded-lg p-md hover:bg-surface-bright transition-colors">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<div class="font-label-bold text-label-bold text-secondary uppercase tracking-widest mb-xs">14 Aug 2023 • 2:15 PM</div>
+<h3 class="font-h3 text-h3 text-on-surface">Dermatology Consult</h3>
+</div>
+<span class="px-2 py-1 rounded bg-error-container text-on-error-container font-label-bold text-label-bold flex items-center gap-xs border border-[#ffb4ab]">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                                Hot Spot (Acute)
+                            </span>
+</div>
+<div class="text-on-surface-variant font-body-md text-body-md leading-relaxed mb-md">
+                            Owner reports excessive licking of right hind leg over past 48 hours. Examination reveals a 4cm circular erythematous, moist lesion on lateral aspect of R hind thigh. Clipped and cleaned area with chlorhexidine. Prescribed topical steroid/antibiotic spray and oral cephalexin for 7 days. E-collar recommended.
+                        </div>
+<div class="flex items-center gap-md pt-sm border-t border-surface-variant text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">person</span>
+                                Dr. Chen
+                            </div>
+<div class="flex items-center gap-xs text-primary">
+<span class="material-symbols-outlined text-[16px]">prescriptions</span>
+                                2 Prescriptions Issued
+                            </div>
+</div>
+</div>
+</div>
+<!-- Entry 3 -->
+<div class="relative">
+<div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-surface border-2 border-surface-variant z-10"></div>
+<div class="bg-surface border border-surface-variant rounded-lg p-md hover:bg-surface-bright transition-colors">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<div class="font-label-bold text-label-bold text-secondary uppercase tracking-widest mb-xs">02 Feb 2023 • 09:00 AM</div>
+<h3 class="font-h3 text-h3 text-on-surface">Pre-Surgical Bloodwork</h3>
+</div>
+<span class="px-2 py-1 rounded bg-secondary-container text-on-secondary-container font-label-bold text-label-bold flex items-center gap-xs border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]">science</span>
+                                Lab Panel
+                            </span>
+</div>
+<div class="text-on-surface-variant font-body-md text-body-md leading-relaxed mb-md">
+                            Comprehensive blood panel drawn prior to scheduled dental procedure. All values within normal limits. Cleared for anesthesia.
+                        </div>
+<div class="bg-surface-container-low p-sm rounded border border-surface-variant mb-md flex gap-sm items-center cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-primary text-[24px]">description</span>
+<div class="flex-grow">
+<div class="font-body-md text-body-md font-medium text-on-surface">CBC_Chem_Results_Feb02.pdf</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">1.2 MB</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">download</span>
+</div>
+<div class="flex items-center gap-md pt-sm border-t border-surface-variant text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">person</span>
+                                Tech. Ramirez
+                            </div>
+</div>
+</div>
+</div>
+<!-- Load More / End of records -->
+<div class="flex justify-center mt-sm">
+<button class="px-md py-2 rounded text-secondary hover:bg-surface-container-low transition-colors font-body-sm text-body-sm flex items-center gap-xs">
+                        Load Older Records
+                        <span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

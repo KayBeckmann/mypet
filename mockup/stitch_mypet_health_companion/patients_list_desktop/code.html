@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Patients - MyPet Vet</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed-dim": "#78dc77",
+                      "tertiary": "#556158",
+                      "surface-container-lowest": "#ffffff",
+                      "outline-variant": "#becab9",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed-dim": "#bdcabe",
+                      "inverse-primary": "#78dc77",
+                      "secondary-container": "#d7e4ec",
+                      "on-secondary-fixed": "#111d23",
+                      "primary": "#006e1c",
+                      "secondary": "#546067",
+                      "primary-fixed": "#94f990",
+                      "error": "#ba1a1a",
+                      "secondary-fixed-dim": "#bbc8d0",
+                      "on-error": "#ffffff",
+                      "outline": "#6f7a6b",
+                      "on-tertiary-fixed": "#131e17",
+                      "on-tertiary-fixed-variant": "#3e4a41",
+                      "inverse-on-surface": "#f1f1f1",
+                      "surface-tint": "#006e1c",
+                      "on-surface-variant": "#3f4a3c",
+                      "surface-bright": "#f9f9f9",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-container": "#2a352d",
+                      "on-primary-container": "#003c0b",
+                      "surface-container-high": "#e8e8e8",
+                      "on-error-container": "#93000a",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed": "#d7e4ec",
+                      "on-secondary-fixed-variant": "#3c494f",
+                      "tertiary-fixed": "#d9e6da",
+                      "tertiary-container": "#929e94",
+                      "surface-variant": "#e2e2e2",
+                      "surface-dim": "#dadada",
+                      "background": "#f9f9f9",
+                      "surface-container-low": "#f3f3f3",
+                      "on-secondary-container": "#5a666d",
+                      "inverse-surface": "#2f3131",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-highest": "#e2e2e2",
+                      "primary-container": "#4caf50",
+                      "on-primary-fixed-variant": "#005313",
+                      "on-surface": "#1a1c1c",
+                      "on-primary-fixed": "#002204",
+                      "surface": "#f9f9f9",
+                      "on-background": "#1a1c1c",
+                      "surface-container": "#eeeeee"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "gutter": "16px",
+                      "sm": "8px",
+                      "xs": "4px",
+                      "xl": "40px",
+                      "max-width": "1440px",
+                      "margin": "24px",
+                      "lg": "24px",
+                      "md": "16px"
+              },
+              "fontFamily": {
+                      "h3": [
+                              "Public Sans"
+                      ],
+                      "h2": [
+                              "Public Sans"
+                      ],
+                      "body-md": [
+                              "Public Sans"
+                      ],
+                      "h1": [
+                              "Public Sans"
+                      ],
+                      "label-bold": [
+                              "Public Sans"
+                      ],
+                      "body-sm": [
+                              "Public Sans"
+                      ],
+                      "body-lg": [
+                              "Public Sans"
+                      ],
+                      "code": [
+                              "Public Sans"
+                      ],
+                      "h1-mobile": [
+                              "Public Sans"
+                      ]
+              },
+              "fontSize": {
+                      "h3": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "h2": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "h1": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-bold": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "code": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "h1-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body { font-family: 'Public Sans', sans-serif; background-color: #F5F5F5; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .fill-icon { font-variation-settings: 'FILL' 1; }
+        
+        /* Thin scrollbar for density */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #E0E0E0; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #BDBDBD; }
+    </style>
+</head>
+<body class="bg-background text-on-surface antialiased overflow-hidden flex h-screen">
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-full py-lg px-md w-64 fixed left-0 top-0 bg-secondary dark:bg-inverse-surface z-50">
+<div class="flex items-center gap-sm mb-xl">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center shrink-0">
+<img alt="Vet Clinic Logo" class="w-6 h-6 object-contain rounded-full" data-alt="A minimalist and professional vector logo for a veterinary clinic. Clean lines, simple geometric forms. High-contrast monochromatic palette with a subtle accent color. White background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlWX7eVoRRyzO-siLERb_UwGixHEjYsRmIRB4Vmkmgm_eqGnwqiyDPWPL6uPF4PzvW-1snaCiM7XmjLO7EXdDA5CbiqFPzLlRBVprVleV3-PFGf4KrQemRhFA0Ig1MUmHtQjjzGLxBXYlK6nLv9grIj6hgXTn9DWN0B08B9XhMtNnx46ma2IvTj-6LMrMq_s67QHpB2LVO_ZJTeRIG7EIsfUngqOIUreW7AcRT9JyYBtqmpL8zN3jE"/>
+</div>
+<div>
+<h1 class="font-h2 text-h2 text-surface-container-lowest dark:text-surface-bright tracking-tight">MyPet Vet</h1>
+<p class="font-body-sm text-body-sm text-secondary-fixed-dim">Practice Mgmt</p>
+</div>
+</div>
+<ul class="flex flex-col gap-sm flex-1">
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary-fixed-dim dark:text-outline-variant hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant dark:hover:bg-surface-container-highest transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-primary-fixed dark:text-primary-fixed-dim font-bold border-l-4 border-primary-fixed bg-on-secondary-fixed-variant/50 cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined text-[20px] fill-icon" data-icon="pets">pets</span>
+<span class="font-body-md text-body-md">Patients</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary-fixed-dim dark:text-outline-variant hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant dark:hover:bg-surface-container-highest transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_today">calendar_today</span>
+<span class="font-body-md text-body-md">Appointments</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary-fixed-dim dark:text-outline-variant hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant dark:hover:bg-surface-container-highest transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="corporate_fare">corporate_fare</span>
+<span class="font-body-md text-body-md">Organization</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary-fixed-dim dark:text-outline-variant hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant dark:hover:bg-surface-container-highest transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="group">group</span>
+<span class="font-body-md text-body-md">Members</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary-fixed-dim dark:text-outline-variant hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant dark:hover:bg-surface-container-highest transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-0 md:ml-64 flex flex-col h-screen">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center px-lg h-16 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline shrink-0 transition-all duration-200 z-40">
+<!-- Mobile Menu & Brand -->
+<div class="flex md:hidden items-center gap-md">
+<button class="p-sm rounded hover:bg-surface-container-low text-on-surface">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-h3 text-h3 text-on-surface dark:text-inverse-on-surface font-bold tracking-tight">MyPet Vet</span>
+</div>
+<!-- Global Search -->
+<div class="hidden md:flex flex-1 max-w-md ml-lg">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+<input class="w-full h-10 pl-xl pr-sm bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" placeholder="Search patients, owners, chips..." type="text"/>
+</div>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-md ml-auto">
+<button class="p-sm rounded-full text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors relative">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="flex items-center gap-sm pl-md border-l border-outline-variant cursor-pointer hover:bg-surface-container-low py-xs px-sm rounded transition-colors">
+<div class="flex flex-col items-end hidden sm:flex">
+<span class="font-body-md text-body-md font-medium text-on-surface">Dr. Smith</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Veterinarian</span>
+</div>
+<img alt="Dr. Smith Avatar" class="w-8 h-8 rounded-full object-cover border border-outline-variant" data-alt="Professional headshot of a middle-aged male veterinarian with a friendly, reassuring smile, wearing clinical scrubs. Bright, clean clinical lighting. Soft background blur." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBr3wdO2360JjcnUM-nsXaAbS6btPkxov_kQVl5WaMajHh9UiztdkTUhcPad-PpdGSJIxIrnEgi3mfFoY9xU2cgG9RMEmN29fzD_HTfTYkLqfUCy4SbiMAEdGEznol-0umbVm4Cxjw0JHZoBnQnfuokt1rj20VSijF8_D51TO2HVh764ndAbwpd341QWUmIzu1uJ-EeYPBv_uLukqcEUYFIueg-aXeSfUlnXimgGW5S4mDcuL_6lhY"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-auto p-md md:p-lg">
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-lg gap-md">
+<div>
+<h2 class="font-h1 text-h1 text-on-surface mb-xs">Patients</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage and view all registered patients.</p>
+</div>
+<div class="flex gap-sm">
+<button class="h-10 px-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface font-body-md text-body-md flex items-center gap-sm hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filter
+                    </button>
+<button class="h-10 px-md bg-primary-container text-on-primary rounded-lg font-body-md text-body-md font-medium flex items-center gap-sm hover:bg-primary transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Patient
+                    </button>
+</div>
+</div>
+<!-- Data Table Card -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden flex flex-col h-[calc(100vh-220px)] shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+<!-- Table Header / Tools -->
+<div class="flex items-center justify-between p-sm border-b border-surface-container">
+<div class="flex items-center gap-sm px-sm">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Showing 1-50 of 1,248</span>
+</div>
+<div class="flex items-center gap-xs">
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-low rounded"><span class="material-symbols-outlined text-[18px]">view_list</span></button>
+<button class="p-xs text-outline hover:bg-surface-container-low rounded"><span class="material-symbols-outlined text-[18px]">grid_view</span></button>
+</div>
+</div>
+<!-- Table -->
+<div class="flex-1 overflow-auto">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface-bright z-10 shadow-[0_1px_0_#EEEEEE]">
+<tr>
+<th class="p-sm pl-md font-label-bold text-label-bold text-on-surface-variant uppercase w-12"></th>
+<th class="p-sm font-label-bold text-label-bold text-on-surface-variant uppercase cursor-pointer hover:text-on-surface">Patient <span class="material-symbols-outlined text-[14px] align-middle">arrow_downward</span></th>
+<th class="p-sm font-label-bold text-label-bold text-on-surface-variant uppercase cursor-pointer hover:text-on-surface">Species/Breed</th>
+<th class="p-sm font-label-bold text-label-bold text-on-surface-variant uppercase cursor-pointer hover:text-on-surface">Owner</th>
+<th class="p-sm font-label-bold text-label-bold text-on-surface-variant uppercase hidden md:table-cell">Chip No.</th>
+<th class="p-sm font-label-bold text-label-bold text-on-surface-variant uppercase hidden lg:table-cell">Status</th>
+<th class="p-sm pr-md font-label-bold text-label-bold text-on-surface-variant uppercase text-right w-32">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-md text-body-md">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-bright transition-colors group h-12">
+<td class="p-xs pl-md align-middle">
+<img class="w-8 h-8 rounded-full object-cover border border-outline-variant" data-alt="Close up portrait of a Golden Retriever dog looking alert and happy in a bright, clean clinical setting. High resolution, sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTZd1MTKQ6_xtxQAlSWKqQ2RWEdT2phaoCe1K-6IpLOmrI4BZl1v60vlseCS9Uz4E_yjYxADP9CBA-EJ0bzeF4vPqsewOUxxRZmDJCvyx9p-rsiPhcNuPgC-9aQHNKEIPIPt6mdaPQvRud3XKqrA5SufqIMT9aX60pcA-WWcRGYm5LuoiEfeMLUoccoE-40olbI7dEq5Wjp0qMJJ4nhT9FB0UwrPlCX3zCHHJaaCQ6YdaexKhqt0w6"/>
+</td>
+<td class="p-sm align-middle font-medium text-on-surface">Bella</td>
+<td class="p-sm align-middle">
+<div class="flex flex-col">
+<span>Canine</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Golden Retriever</span>
+</div>
+</td>
+<td class="p-sm align-middle">Sarah Jenkins</td>
+<td class="p-sm align-middle text-on-surface-variant font-code text-code hidden md:table-cell">981020002134</td>
+<td class="p-sm align-middle hidden lg:table-cell">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#E8F5E9] text-[#2E7D32]">Healthy</span>
+</td>
+<td class="p-sm pr-md align-middle text-right">
+<div class="flex items-center justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs text-outline hover:text-primary hover:bg-surface-container-low rounded tooltip-trigger" title="Quick Note">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+</button>
+<button class="p-xs text-outline hover:text-on-surface hover:bg-surface-container-low rounded">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-bright transition-colors group h-12">
+<td class="p-xs pl-md align-middle">
+<img class="w-8 h-8 rounded-full object-cover border border-outline-variant" data-alt="Close up portrait of a black domestic shorthair cat with striking yellow eyes in a bright, clean clinical setting. High resolution, sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXX2n-KQa-OnKAdX63AdN8utcDFVo1atGUxQfI3ihmm8TUmUJZLyxP8H41S3x7YLBqYvram5aw3WeigmapjVTAcQA1LCl0UGyUjpIlUOmnFhHzkygNm6Ki1K-8H9mpALMLgg_-FUnVRSf0JBYy-qwuzUJpnTuKmcCs3ovZV_emnpatFMccj3D5BrAkobLQx35Bewc9ZrphNL_4vDQ54ZhMTawLYn6Sryy5LHzaYXMTgL7k2v1CTsPR"/>
+</td>
+<td class="p-sm align-middle font-medium text-on-surface">Shadow</td>
+<td class="p-sm align-middle">
+<div class="flex flex-col">
+<span>Feline</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Domestic Shorthair</span>
+</div>
+</td>
+<td class="p-sm align-middle">Marcus Cole</td>
+<td class="p-sm align-middle text-on-surface-variant font-code text-code hidden md:table-cell">981020004591</td>
+<td class="p-sm align-middle hidden lg:table-cell">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#FFF3E0] text-[#E65100]">Checkup Due</span>
+</td>
+<td class="p-sm pr-md align-middle text-right">
+<div class="flex items-center justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs text-outline hover:text-primary hover:bg-surface-container-low rounded" title="Quick Note">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+</button>
+<button class="p-xs text-outline hover:text-on-surface hover:bg-surface-container-low rounded">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-bright transition-colors group h-12">
+<td class="p-xs pl-md align-middle">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-outline">
+<span class="material-symbols-outlined text-[16px]">pets</span>
+</div>
+</td>
+<td class="p-sm align-middle font-medium text-on-surface">Max</td>
+<td class="p-sm align-middle">
+<div class="flex flex-col">
+<span>Canine</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">German Shepherd</span>
+</div>
+</td>
+<td class="p-sm align-middle">Elena Rodriguez</td>
+<td class="p-sm align-middle text-on-surface-variant font-code text-code hidden md:table-cell">--</td>
+<td class="p-sm align-middle hidden lg:table-cell">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#FFEBEE] text-[#C62828]">Surgery Pending</span>
+</td>
+<td class="p-sm pr-md align-middle text-right">
+<div class="flex items-center justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs text-outline hover:text-primary hover:bg-surface-container-low rounded" title="Quick Note">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+</button>
+<button class="p-xs text-outline hover:text-on-surface hover:bg-surface-container-low rounded">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+</body></html>

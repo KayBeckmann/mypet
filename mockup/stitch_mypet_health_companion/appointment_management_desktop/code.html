@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-background dark:bg-background" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MyPet Vet - Appointments</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#78dc77",
+                        "tertiary": "#556158",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#becab9",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#bdcabe",
+                        "inverse-primary": "#78dc77",
+                        "secondary-container": "#d7e4ec",
+                        "on-secondary-fixed": "#111d23",
+                        "primary": "#006e1c",
+                        "secondary": "#546067",
+                        "primary-fixed": "#94f990",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#bbc8d0",
+                        "on-error": "#ffffff",
+                        "outline": "#6f7a6b",
+                        "on-tertiary-fixed": "#131e17",
+                        "on-tertiary-fixed-variant": "#3e4a41",
+                        "inverse-on-surface": "#f1f1f1",
+                        "surface-tint": "#006e1c",
+                        "on-surface-variant": "#3f4a3c",
+                        "surface-bright": "#f9f9f9",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#2a352d",
+                        "on-primary-container": "#003c0b",
+                        "surface-container-high": "#e8e8e8",
+                        "on-error-container": "#93000a",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#d7e4ec",
+                        "on-secondary-fixed-variant": "#3c494f",
+                        "tertiary-fixed": "#d9e6da",
+                        "tertiary-container": "#929e94",
+                        "surface-variant": "#e2e2e2",
+                        "surface-dim": "#dadada",
+                        "background": "#f9f9f9",
+                        "surface-container-low": "#f3f3f3",
+                        "on-secondary-container": "#5a666d",
+                        "inverse-surface": "#2f3131",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#e2e2e2",
+                        "primary-container": "#4caf50",
+                        "on-primary-fixed-variant": "#005313",
+                        "on-surface": "#1a1c1c",
+                        "on-primary-fixed": "#002204",
+                        "surface": "#f9f9f9",
+                        "on-background": "#1a1c1c",
+                        "surface-container": "#eeeeee"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "xl": "40px",
+                        "max-width": "1440px",
+                        "margin": "24px",
+                        "lg": "24px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "h3": ["Public Sans"],
+                        "h2": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "h1": ["Public Sans"],
+                        "label-bold": ["Public Sans"],
+                        "body-sm": ["Public Sans"],
+                        "body-lg": ["Public Sans"],
+                        "code": ["Public Sans"],
+                        "h1-mobile": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "h3": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "h2": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "h1": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-bold": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "code": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "h1-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="h-full flex font-body-md text-on-surface antialiased bg-background">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-secondary dark:bg-inverse-surface flat no shadows flex flex-col py-lg px-md z-50">
+<div class="mb-xl flex items-center gap-sm">
+<div class="h-10 w-10 rounded bg-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-primary-container">pets</span>
+</div>
+<div>
+<h1 class="font-h2 text-h2 text-surface-container-lowest dark:text-surface-bright">MyPet Vet</h1>
+<p class="font-body-sm text-body-sm text-secondary-fixed-dim">Practice Mgmt</p>
+</div>
+</div>
+<ul class="flex flex-col gap-sm flex-grow font-body-md text-body-md">
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded text-secondary-fixed-dim dark:text-outline-variant hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant dark:hover:bg-surface-container-highest transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded text-secondary-fixed-dim dark:text-outline-variant hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant dark:hover:bg-surface-container-highest transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="pets">pets</span>
+<span>Patients</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded text-primary-fixed dark:text-primary-fixed-dim font-bold border-l-4 border-primary-fixed bg-on-secondary-fixed-variant dark:bg-surface-container-highest cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span>Appointments</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded text-secondary-fixed-dim dark:text-outline-variant hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant dark:hover:bg-surface-container-highest transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="corporate_fare">corporate_fare</span>
+<span>Organization</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded text-secondary-fixed-dim dark:text-outline-variant hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant dark:hover:bg-surface-container-highest transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Members</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded text-secondary-fixed-dim dark:text-outline-variant hover:text-surface-container-lowest hover:bg-on-secondary-fixed-variant dark:hover:bg-surface-container-highest transition-colors cursor-pointer duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col ml-64 min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline flat no shadows flex justify-between items-center px-lg z-40">
+<div class="flex items-center">
+<!-- Search on left -->
+<div class="relative w-64 hidden md:block">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full h-[40px] pl-[36px] pr-sm rounded border border-outline-variant focus:border-primary focus:ring-0 bg-surface-container-lowest text-body-md font-body-md placeholder-on-surface-variant transition-colors" placeholder="Search patients or owners..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="h-10 w-10 flex items-center justify-center rounded-full text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="flex items-center gap-sm pl-sm border-l border-outline-variant h-8">
+<span class="font-h3 text-h3 text-primary dark:text-primary-fixed-dim">Dr. Smith</span>
+<img alt="Dr. Smith Avatar" class="h-8 w-8 rounded-full object-cover border border-outline-variant" data-alt="Professional headshot of a veterinarian, Dr. Smith, wearing a clean white lab coat over scrubs, smiling warmly in a brightly lit, modern clinical setting with white walls and subtle green accents, shallow depth of field, high quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjZiVVEDvtb_C24ioHSfgDUzUbN07PX9u3KfNVi53ip3qgy1elugdRDUD8KS6V7wD0D6CAv0voegr3H2hBsJhCkVG4fYBI9H11r3acJ--6olUMAbhSws2ZSAba3y4JhoJZpit3HtyDQpuVQ2tqFFxnpsV9lohxm-1Au2Dx9N6TsyEdELt9IlEQbr8VsCf5-5TnsFnTtsaRe0oA3h6G85DocoZnhkS2oiAp7uIscvQG54PHtKN6iM1u"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 pt-24 px-margin pb-xl overflow-x-auto bg-background">
+<!-- Header Controls -->
+<div class="flex justify-between items-end mb-lg">
+<div>
+<h2 class="font-h1 text-h1 text-on-surface mb-xs">Appointments Board</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage daily clinical workflow and patient status.</p>
+</div>
+<div class="flex gap-sm">
+<div class="flex items-center border border-outline-variant rounded bg-surface-container-lowest h-[40px] px-sm">
+<span class="material-symbols-outlined text-on-surface-variant mr-xs text-[20px]">calendar_today</span>
+<input class="border-0 bg-transparent text-body-md font-body-md focus:ring-0 p-0 text-on-surface cursor-pointer" type="date" value="2023-10-24"/>
+</div>
+<button class="h-[40px] px-md rounded bg-primary-container text-on-primary font-label-bold flex items-center gap-xs hover:bg-surface-tint transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Appointment
+                    </button>
+</div>
+</div>
+<!-- Kanban Board -->
+<div class="flex gap-gutter h-[calc(100vh-220px)] min-w-[1000px] overflow-hidden">
+<!-- Column: Scheduled -->
+<div class="flex-1 flex flex-col bg-surface-container-low rounded-lg border border-outline-variant p-sm">
+<div class="flex justify-between items-center mb-sm px-xs pt-xs">
+<h3 class="font-label-bold text-label-bold text-on-surface uppercase text-secondary">Scheduled <span class="bg-surface-variant px-2 py-0.5 rounded-full text-on-surface-variant ml-1">3</span></h3>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<div class="flex-1 overflow-y-auto pr-xs flex flex-col gap-sm custom-scrollbar">
+<!-- Card -->
+<div class="bg-surface-container-lowest rounded border border-outline-variant p-md hover:bg-surface-bright hover:border-primary transition-colors cursor-pointer shadow-sm">
+<div class="flex justify-between items-start mb-sm">
+<span class="bg-secondary-container text-on-secondary-container font-label-bold px-2 py-1 rounded text-[10px] uppercase">09:00 AM</span>
+<span class="material-symbols-outlined text-outline-variant text-[18px]">vaccines</span>
+</div>
+<div class="flex items-center gap-sm mb-sm border-b border-surface-container pb-sm">
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="A close up photo of a happy Golden Retriever dog looking alert in a clean veterinary clinic, high key lighting, minimal background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkE0W1PbHNIPP4xZ435B08Y_FVpRr6f9hs7OnsHCTqv6aF1PU-Injs12C_oP8p1imT63tI-8KuIFAUNKW1-DsBrof6bhBMFL8Jb4Mhsgpw2lgaAxQmf9sLLWzvdrhntR7yW5LPLJ2Fk3lJh-zTWyyym6-VwNifpTR87_8yWBzaxAmEvJ541AdEifWw3CTXPusGfRstcWItHjM2dJNrpVYkDNrf89f1RISZ3Ir1NITD14096dKQwtCT"/>
+<div>
+<h4 class="font-h3 text-h3 text-on-surface text-[14px] leading-tight">Max (Golden Retriever)</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sarah Jenkins</p>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">person</span> Dr. Smith
+                                </div>
+<span class="text-body-sm text-on-surface-variant">Annual Checkup</span>
+</div>
+</div>
+<!-- Card -->
+<div class="bg-surface-container-lowest rounded border border-outline-variant p-md hover:bg-surface-bright hover:border-primary transition-colors cursor-pointer shadow-sm">
+<div class="flex justify-between items-start mb-sm">
+<span class="bg-secondary-container text-on-secondary-container font-label-bold px-2 py-1 rounded text-[10px] uppercase">10:30 AM</span>
+<span class="material-symbols-outlined text-outline-variant text-[18px]">medical_services</span>
+</div>
+<div class="flex items-center gap-sm mb-sm border-b border-surface-container pb-sm">
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="A close up photo of a small grey tabby cat sitting calmly on a stainless steel examination table, brightly lit clinical setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7ffQzNn-uodgzEHxx66cYrYYkZi0mIhf_0ZGdFbEIQx9h1PFFWrvrcw1FWiXsm4LGeLyRmzqJRtVgmLlljEn0wKNbudKBc43VNIicgSZRs9z0xH1R-Jy1uLCwNMmxKIMyuAswsBDY0WzKFUZCkGXmROLnu46uXrumQ6ySZkGbnG48Q98Im0w31hA_zWUO_hHN5lPmGL89rC_DX-OFU9igjOMxrRs3EhX5Dl8sFjMEsWGj8dV2R6Az"/>
+<div>
+<h4 class="font-h3 text-h3 text-on-surface text-[14px] leading-tight">Luna (Tabby)</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tom Baker</p>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">person</span> Dr. Allen
+                                </div>
+<span class="text-body-sm text-on-surface-variant">Dental Eval</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Confirmed -->
+<div class="flex-1 flex flex-col bg-surface-container-low rounded-lg border border-outline-variant p-sm">
+<div class="flex justify-between items-center mb-sm px-xs pt-xs">
+<h3 class="font-label-bold text-label-bold text-on-surface uppercase text-primary">Confirmed <span class="bg-surface-variant px-2 py-0.5 rounded-full text-on-surface-variant ml-1">2</span></h3>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<div class="flex-1 overflow-y-auto pr-xs flex flex-col gap-sm custom-scrollbar">
+<!-- Card -->
+<div class="bg-surface-container-lowest rounded border border-outline-variant p-md hover:bg-surface-bright hover:border-primary transition-colors cursor-pointer shadow-sm relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary-container"></div>
+<div class="flex justify-between items-start mb-sm">
+<span class="bg-primary-fixed text-on-primary-fixed-variant font-label-bold px-2 py-1 rounded text-[10px] uppercase">11:00 AM</span>
+<span class="material-symbols-outlined text-outline-variant text-[18px]">healing</span>
+</div>
+<div class="flex items-center gap-sm mb-sm border-b border-surface-container pb-sm">
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="A photo of a brown Dachshund dog looking slightly nervous in a bright veterinary clinic, soft lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUtSEVeaJ2Sx8C7-X9oXp4VNxy92_AsQDOYv-ha15v-MIAqjXA_eGHTQlpjSrN7YZ8oAHH3F1aGLC7ingXzIfYNY0oNTSiNLKqN6iPo94IBGwp4_eOwWFqtMTTXX2GsfwAaXnAYsae8V7ts4lzVy_zY7IaaH0fDSTIFL7A1NPj61j3LiAFNrewACm34rpqYpJv6-u8HuoAQbbA0r7g0-LFzdHe__yxoh_IzBoUu362dpmY5-2x5qy0"/>
+<div>
+<h4 class="font-h3 text-h3 text-on-surface text-[14px] leading-tight">Oscar (Dachshund)</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Emily Chen</p>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">person</span> Dr. Smith
+                                </div>
+<span class="text-body-sm text-on-surface-variant">Post-Op Check</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: In Progress -->
+<div class="flex-1 flex flex-col bg-surface-container-low rounded-lg border border-outline-variant p-sm">
+<div class="flex justify-between items-center mb-sm px-xs pt-xs">
+<h3 class="font-label-bold text-label-bold text-on-surface uppercase text-tertiary">In Progress <span class="bg-surface-variant px-2 py-0.5 rounded-full text-on-surface-variant ml-1">1</span></h3>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<div class="flex-1 overflow-y-auto pr-xs flex flex-col gap-sm custom-scrollbar">
+<!-- Card -->
+<div class="bg-surface-container-lowest rounded border border-outline-variant p-md hover:bg-surface-bright hover:border-primary transition-colors cursor-pointer shadow-sm relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-tertiary"></div>
+<div class="flex justify-between items-start mb-sm">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed font-label-bold px-2 py-1 rounded text-[10px] uppercase flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>08:30 AM</span>
+<span class="material-symbols-outlined text-outline-variant text-[18px]">content_cut</span>
+</div>
+<div class="flex items-center gap-sm mb-sm border-b border-surface-container pb-sm">
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="Photo of a fluffy white Persian cat wrapped gently in a towel in a veterinary setting, bright modern clinic, clinical white and gray tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNX0rkjrencwgfIrGAsxZKwq49mxEEbXwMPDdG2s8jcn0OnXCipZNX0LfwFr0USi7EylbTOD-BPdtLB6uY_AAGu3PflwtZx5kpIAH_q3pyrJUsfZ6e1U2ysHQd7c_kY06_3zQGrbLGgsrJ2K6xPCO_1mKJDX6QMWYfOkUOLD61k_PY7su0aLemiXC-IbVz6E9_LKh2svp5hNrrLGaUel1uY38Ctbz0dLbUa1HbGk9czQjtIuF2PDUu"/>
+<div>
+<h4 class="font-h3 text-h3 text-on-surface text-[14px] leading-tight">Snowball (Persian)</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Mark Davis</p>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<div class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">person</span> Dr. Allen
+                                </div>
+<span class="text-body-sm text-on-surface-variant">Grooming/Exam</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Completed -->
+<div class="flex-1 flex flex-col bg-surface-container-low rounded-lg border border-outline-variant p-sm opacity-70">
+<div class="flex justify-between items-center mb-sm px-xs pt-xs">
+<h3 class="font-label-bold text-label-bold text-on-surface uppercase text-secondary">Completed <span class="bg-surface-variant px-2 py-0.5 rounded-full text-on-surface-variant ml-1">4</span></h3>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<div class="flex-1 overflow-y-auto pr-xs flex flex-col gap-sm custom-scrollbar">
+<!-- Card -->
+<div class="bg-surface-container-lowest rounded border border-outline-variant p-md">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-on-surface-variant font-label-bold text-[10px] uppercase">08:00 AM</span>
+<span class="material-symbols-outlined text-primary-fixed-dim text-[18px]">check_circle</span>
+</div>
+<div class="flex items-center gap-sm mb-sm border-b border-surface-container pb-sm">
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant grayscale" data-alt="Photo of a large Black Lab mix dog looking happy, leaving a veterinary clinic, bright daylight setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOtZXrWsQ0FIryuM0ou9nLP9OObVSg-VW_TTAzIAIxW-rj6oFLCRPgwlooHcJHkpFF1OoFYo8_SzxD2ULuExzATNGbvb_DLrAvLZOjewh3-xZGhrwPp32wMu8P7OlvM7Dj8HJSDZpaW3ZgGnUjT4mFroV4-kfjRSfSgOQS5tNauhKGFyZilf9bQ66iBF3njk04IgPPxMaRQHEXScTcvfb_MNYpSoXHi5YpeKDN0uI6crIEgvPalqoi"/>
+<div>
+<h4 class="font-h3 text-h3 text-on-surface text-[14px] leading-tight line-through text-on-surface-variant">Buster (Lab Mix)</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">John Smith</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<style>
+        /* Custom subtle scrollbar for kanban columns */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e2e2; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #becab9; 
+        }
+    </style>
+</body></html>

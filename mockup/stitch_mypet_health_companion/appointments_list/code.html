@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Appointments - MyPet Provider</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#94f990",
+                        "surface-dim": "#dadada",
+                        "tertiary-fixed": "#d4e3ff",
+                        "on-error": "#ffffff",
+                        "outline": "#6f7a6b",
+                        "surface-tint": "#006e1c",
+                        "background": "#f9f9f9",
+                        "tertiary": "#005faf",
+                        "inverse-primary": "#78dc77",
+                        "surface-container-low": "#f3f3f3",
+                        "secondary-container": "#a0f399",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed": "#002204",
+                        "tertiary-fixed-dim": "#a5c8ff",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#519dfb",
+                        "on-background": "#1a1c1c",
+                        "secondary-fixed": "#a3f69c",
+                        "inverse-surface": "#2f3131",
+                        "on-primary-fixed-variant": "#005313",
+                        "inverse-on-surface": "#f1f1f1",
+                        "on-tertiary-container": "#003363",
+                        "primary": "#006e1c",
+                        "primary-fixed-dim": "#78dc77",
+                        "on-primary-container": "#003c0b",
+                        "outline-variant": "#becab9",
+                        "on-tertiary-fixed-variant": "#004786",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#3f4a3c",
+                        "surface-bright": "#f9f9f9",
+                        "surface": "#f9f9f9",
+                        "on-tertiary-fixed": "#001c3a",
+                        "surface-container-high": "#e8e8e8",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e2e2e2",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#217128",
+                        "primary-container": "#4caf50",
+                        "on-primary-fixed": "#002204",
+                        "on-secondary": "#ffffff",
+                        "secondary": "#1b6d24",
+                        "secondary-fixed-dim": "#88d982",
+                        "on-surface": "#1a1c1c",
+                        "surface-container-highest": "#e2e2e2",
+                        "surface-container": "#eeeeee",
+                        "on-secondary-fixed-variant": "#005312"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "container-max": "1440px",
+                        "margin": "24px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Work Sans"],
+                        "body-md": ["Work Sans"],
+                        "headline-md": ["Work Sans"],
+                        "headline-lg": ["Work Sans"],
+                        "body-lg": ["Work Sans"],
+                        "label-md": ["JetBrains Mono"],
+                        "label-sm": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Work Sans', sans-serif; background-color: #f9f9f9; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #dadada; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #becab9; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-surface fixed h-screen w-[240px] left-0 top-0 border-r border-outline-variant flex-col h-full py-6 z-50">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-sm font-bold shrink-0">
+                MP
+            </div>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary truncate">MyPet Provider</h1>
+<p class="font-body-md text-body-md text-on-surface-variant truncate text-xs">Management Portal</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto space-y-1 px-2">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg mx-2 px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg mx-2 px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-body-md text-body-md font-medium">Customers</span>
+</a>
+<a class="flex items-center gap-3 bg-secondary-container text-on-secondary-container rounded-lg mx-2 px-4 py-3 transition-transform hover:scale-[0.98]" href="#">
+<span class="material-symbols-outlined icon-fill" data-icon="calendar_today">calendar_today</span>
+<span class="font-body-md text-body-md font-bold">Appointments</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg mx-2 px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="pets">pets</span>
+<span class="font-body-md text-body-md font-medium">Services</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg mx-2 px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="business">business</span>
+<span class="font-body-md text-body-md font-medium">Organization</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg mx-2 px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="badge">badge</span>
+<span class="font-body-md text-body-md font-medium">Members</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg mx-2 px-4 py-3 transition-colors duration-200 mt-auto" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md font-medium">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-0 md:ml-[240px] flex flex-col h-screen overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-background fixed top-0 right-0 w-full md:w-[calc(100%-240px)] z-40 border-b border-outline-variant flex justify-between items-center h-16 px-margin">
+<div class="flex items-center gap-4 flex-1">
+<button class="md:hidden p-2 text-on-surface-variant rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="relative w-full max-w-md hidden sm:block focus-within:ring-2 focus-within:ring-primary rounded-lg">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-background focus:outline-none focus:border-primary" placeholder="Search appointments, customers..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full relative transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full hidden sm:block transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-body-md text-body-md font-medium hover:bg-surface-tint hover:shadow-md transition-all duration-200 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span class="hidden sm:inline">New Appointment</span>
+</button>
+<img class="w-8 h-8 rounded-full object-cover border border-outline-variant ml-2 cursor-pointer hover:ring-2 hover:ring-primary transition-all" data-alt="A professional headshot of a confident veterinarian or pet care provider in a modern clinic setting, bright lighting, soft blurred background, approachable expression, highly detailed." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwR1LIp5big-SZk_xDQofZp4XRoeELJWhtCjNI4WsavLkbBUJQo7aY4gDOnks-3UnkFDMncxvs7GaumCLeTEZJeLQ-gjRWDiqUINwqBp6lzTfJc7IiKGjpwb0uhNuDBQ-bF60qWsSNgyN-AyrjDmprEBXdN_kCAFm3wGQ8NOJwRUpTo-EpRi7i3ajjaWwbZadGiN5LdmZAMd_RBQ9L7fAHACd3NDkpPwDVDLozw6dZ0kmR_aB8o20l"/>
+</div>
+</header>
+<!-- Main Scrollable Canvas -->
+<main class="flex-1 overflow-y-auto mt-16 p-margin bg-background">
+<div class="max-w-container-max mx-auto h-full flex flex-col">
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-1">Appointments</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage your daily schedule and upcoming bookings.</p>
+</div>
+<!-- Filters/Controls -->
+<div class="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+<div class="flex bg-surface-container-low rounded-lg p-1 border border-outline-variant shrink-0">
+<button class="px-4 py-1.5 bg-surface-container-lowest rounded-md shadow-sm font-body-md text-body-md font-medium text-on-background">Today</button>
+<button class="px-4 py-1.5 rounded-md font-body-md text-body-md font-medium text-on-surface-variant hover:bg-surface-container">Upcoming</button>
+<button class="px-4 py-1.5 rounded-md font-body-md text-body-md font-medium text-on-surface-variant hover:bg-surface-container">Past</button>
+</div>
+<button class="p-2 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container shrink-0 flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+<span class="font-body-md text-body-md hidden sm:inline">Filters</span>
+</button>
+</div>
+</div>
+<!-- Appointments Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+<!-- Appointment Card 1 - Active/Confirmed -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-[20px] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.05)] transition-shadow duration-200 flex flex-col h-full group relative overflow-hidden">
+<!-- Top Row: Time & Status -->
+<div class="flex justify-between items-start mb-4 pb-3 border-b border-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="schedule">schedule</span>
+<div>
+<span class="font-headline-sm text-headline-sm text-on-background block">09:00 AM</span>
+<span class="font-body-md text-body-md text-on-surface-variant block text-xs">Today, Oct 24</span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-secondary-container/20 text-on-secondary-container font-label-md text-label-md border border-secondary-container/30 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span>
+                                Confirmed
+                            </span>
+</div>
+<!-- Middle Row: Customer/Pet Info -->
+<div class="flex items-center gap-3 mb-4">
+<img class="w-12 h-12 rounded-lg object-cover border border-outline-variant shrink-0" data-alt="A cute golden retriever dog looking happy and panting slightly, bright outdoor lighting, shallow depth of field, high resolution, professional pet photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNjt7bTzH3ohdGatPBcECkJrlc7iPN7qXMEQzJeTREJY6MdJuNutUBHZ_27Yl-hYRTVRbg-v2kK6TMkzchNQFEIqBP9ISqCwrOtJrrDECDMpc_011f1O-VK2OR5_821UK5iq2m5nsh_sPoBVnSsVJkvyDKXvnls14oFUmuwEh8GS5oBxf989_iTCcj8FwMfNg35YQoD-PDx9CUlCJv0Yw7ZF8IaaPwUcD0HSzUk30fJf-PzAQwj0Dm"/>
+<div class="flex-1 min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-background truncate">Max &amp; Sarah Jenkins</h3>
+<p class="font-body-md text-body-md text-on-surface-variant truncate">Golden Retriever • 3 yrs</p>
+</div>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container rounded-md self-start">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<!-- Service Details -->
+<div class="mb-5 flex-1">
+<div class="flex items-center gap-2 text-on-surface mb-1">
+<span class="material-symbols-outlined text-[18px] text-tertiary" data-icon="content_cut">content_cut</span>
+<span class="font-body-md text-body-md font-medium">Full Grooming Package</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm ml-6 line-clamp-2">Includes bath, haircut, nail trim, and ear cleaning. Customer requested organic shampoo.</p>
+</div>
+<!-- Actions Row -->
+<div class="grid grid-cols-2 gap-2 mt-auto pt-4 border-t border-surface-variant">
+<button class="px-3 py-2 bg-primary-container text-on-primary font-body-md text-body-md font-medium rounded-lg hover:bg-surface-tint transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                Complete
+                            </button>
+<button class="px-3 py-2 border border-outline text-on-surface font-body-md text-body-md font-medium rounded-lg hover:bg-surface-container transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">block</span>
+                                No-show
+                            </button>
+</div>
+</div>
+<!-- Appointment Card 2 - Pending -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-[20px] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.05)] transition-shadow duration-200 flex flex-col h-full group relative overflow-hidden">
+<!-- Top Row: Time & Status -->
+<div class="flex justify-between items-start mb-4 pb-3 border-b border-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary" data-icon="schedule">schedule</span>
+<div>
+<span class="font-headline-sm text-headline-sm text-on-background block">11:30 AM</span>
+<span class="font-body-md text-body-md text-on-surface-variant block text-xs">Today, Oct 24</span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-tertiary-container/10 text-on-tertiary-container font-label-md text-label-md border border-tertiary-container/30 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary inline-block animate-pulse"></span>
+                                Pending
+                            </span>
+</div>
+<!-- Middle Row: Customer/Pet Info -->
+<div class="flex items-center gap-3 mb-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant shrink-0 text-on-surface-variant">
+<span class="material-symbols-outlined text-[24px]">pets</span>
+</div>
+<div class="flex-1 min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-background truncate">Luna &amp; Michael Chen</h3>
+<p class="font-body-md text-body-md text-on-surface-variant truncate">Siamese Cat • 1 yr</p>
+</div>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container rounded-md self-start">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<!-- Service Details -->
+<div class="mb-5 flex-1">
+<div class="flex items-center gap-2 text-on-surface mb-1">
+<span class="material-symbols-outlined text-[18px] text-tertiary" data-icon="local_hospital">local_hospital</span>
+<span class="font-body-md text-body-md font-medium">Annual Checkup</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm ml-6 line-clamp-2">First visit. Please check vaccination records sent via email.</p>
+</div>
+<!-- Actions Row -->
+<div class="grid grid-cols-2 gap-2 mt-auto pt-4 border-t border-surface-variant">
+<button class="px-3 py-2 border border-primary text-primary font-body-md text-body-md font-medium rounded-lg hover:bg-secondary-container/20 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">done</span>
+                                Confirm
+                            </button>
+<button class="px-3 py-2 border border-error/50 text-error font-body-md text-body-md font-medium rounded-lg hover:bg-error-container/20 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">close</span>
+                                Cancel
+                            </button>
+</div>
+</div>
+<!-- Appointment Card 3 - In Progress -->
+<div class="bg-surface-container-lowest border border-primary/30 shadow-[0_0_0_1px_rgba(76,175,80,0.2)] rounded-xl p-[20px] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.05)] transition-shadow duration-200 flex flex-col h-full group relative overflow-hidden">
+<!-- Top Row: Time & Status -->
+<div class="flex justify-between items-start mb-4 pb-3 border-b border-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="schedule">schedule</span>
+<div>
+<span class="font-headline-sm text-headline-sm text-on-background block">01:00 PM</span>
+<span class="font-body-md text-body-md text-on-surface-variant block text-xs">Today, Oct 24</span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-primary-container/20 text-on-primary-container font-label-md text-label-md border border-primary-container/30 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">sync</span>
+                                In Progress
+                            </span>
+</div>
+<!-- Middle Row: Customer/Pet Info -->
+<div class="flex items-center gap-3 mb-4">
+<img class="w-12 h-12 rounded-lg object-cover border border-outline-variant shrink-0" data-alt="A fluffy white Bichon Frise dog sitting politely on a grooming table, bright clean modern grooming salon background, sharp focus, professional lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbOJE0K0CO1DHxLNUEsfIjJe6OYS_B5qKccaNR8Rwik1iyCq5_zxPiCDqlEfDU-Vn6BbNRQawQ6TlRjxoESu8fb_xFT6PJVZiyUalMp2tIF1zy7b3M5OABh2JBfQUhPEpq0g_Ah-mlKQWM6vKm8LPBrGXnU31aBu9CetuMiDX7N8S3tJu9J4K8xKSCx1oAsx9LLyVGRTykL-zgLp4AYVJrGBmbXIH-yOUa92yzCEICYO9pamvv1N72"/>
+<div class="flex-1 min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-background truncate">Bella &amp; Robert Smith</h3>
+<p class="font-body-md text-body-md text-on-surface-variant truncate">Bichon Frise • 5 yrs</p>
+</div>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container rounded-md self-start">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<!-- Service Details -->
+<div class="mb-5 flex-1">
+<div class="flex items-center gap-2 text-on-surface mb-1">
+<span class="material-symbols-outlined text-[18px] text-tertiary" data-icon="water_drop">water_drop</span>
+<span class="font-body-md text-body-md font-medium">Wash &amp; Dry Only</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm ml-6 line-clamp-2">Quick wash before weekend trip. Owner waiting in lobby.</p>
+</div>
+<!-- Actions Row -->
+<div class="flex gap-2 mt-auto pt-4 border-t border-surface-variant">
+<button class="w-full px-3 py-2 bg-primary-container text-on-primary font-body-md text-body-md font-medium rounded-lg hover:bg-surface-tint transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">task_alt</span>
+                                Mark Complete
+                            </button>
+</div>
+</div>
+<!-- Appointment Card 4 - Upcoming -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-[20px] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.05)] transition-shadow duration-200 flex flex-col h-full group relative overflow-hidden opacity-80">
+<!-- Top Row: Time & Status -->
+<div class="flex justify-between items-start mb-4 pb-3 border-b border-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="schedule">schedule</span>
+<div>
+<span class="font-headline-sm text-headline-sm text-on-background block">03:30 PM</span>
+<span class="font-body-md text-body-md text-on-surface-variant block text-xs">Today, Oct 24</span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface font-label-md text-label-md border border-outline-variant flex items-center gap-1">
+                                Confirmed
+                            </span>
+</div>
+<!-- Middle Row: Customer/Pet Info -->
+<div class="flex items-center gap-3 mb-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant shrink-0 text-on-surface-variant">
+<span class="material-symbols-outlined text-[24px]">pets</span>
+</div>
+<div class="flex-1 min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-background truncate">Charlie &amp; Emily Davis</h3>
+<p class="font-body-md text-body-md text-on-surface-variant truncate">Mixed Breed • 2 yrs</p>
+</div>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container rounded-md self-start">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<!-- Service Details -->
+<div class="mb-5 flex-1">
+<div class="flex items-center gap-2 text-on-surface mb-1">
+<span class="material-symbols-outlined text-[18px] text-tertiary" data-icon="directions_walk">directions_walk</span>
+<span class="font-body-md text-body-md font-medium">30 Min Walk</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm ml-6 line-clamp-2">Key under the mat. Please text when finished.</p>
+</div>
+<!-- Actions Row -->
+<div class="grid grid-cols-2 gap-2 mt-auto pt-4 border-t border-surface-variant">
+<button class="col-span-2 px-3 py-2 border border-outline-variant text-on-surface font-body-md text-body-md font-medium rounded-lg hover:bg-surface-container transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+                                Edit Details
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

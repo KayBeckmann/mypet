@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Pets - MyPet</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#ffdad7",
+                        "on-secondary-container": "#704800",
+                        "surface-container-high": "#e6e9e7",
+                        "secondary": "#835500",
+                        "secondary-fixed-dim": "#ffb954",
+                        "on-primary-container": "#003c0b",
+                        "on-secondary-fixed": "#291800",
+                        "surface-dim": "#d8dad9",
+                        "surface-container-low": "#f2f4f2",
+                        "outline-variant": "#becab9",
+                        "surface-bright": "#f8faf8",
+                        "on-tertiary-fixed": "#410004",
+                        "surface-tint": "#006e1c",
+                        "outline": "#6f7a6b",
+                        "inverse-primary": "#78dc77",
+                        "background": "#f8faf8",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb3ae",
+                        "tertiary-container": "#ff6b67",
+                        "on-tertiary-container": "#6d000d",
+                        "on-tertiary-fixed-variant": "#930015",
+                        "surface-container-highest": "#e1e3e1",
+                        "on-secondary-fixed-variant": "#633f00",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#4caf50",
+                        "on-error-container": "#93000a",
+                        "on-background": "#191c1b",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#f8faf8",
+                        "on-surface-variant": "#3f4a3c",
+                        "surface-container": "#eceeec",
+                        "primary": "#006e1c",
+                        "on-primary-fixed": "#002204",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#005313",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#ffddb4",
+                        "surface-variant": "#e1e3e1",
+                        "tertiary": "#b81d27",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#94f990",
+                        "on-surface": "#191c1b",
+                        "primary-fixed-dim": "#78dc77",
+                        "inverse-surface": "#2e3130",
+                        "secondary-container": "#feb64c",
+                        "inverse-on-surface": "#eff1ef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "unit": "4px",
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "container-padding-mobile": "20px",
+                        "container-padding-desktop": "40px",
+                        "stack-lg": "32px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Public Sans"],
+                        "headline-lg": ["Public Sans"],
+                        "label-md": ["Public Sans"],
+                        "display": ["Public Sans"],
+                        "headline-md": ["Public Sans"],
+                        "headline-lg-mobile": ["Public Sans"],
+                        "body-lg": ["Public Sans"],
+                        "label-sm": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "display": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[style*="'FILL' 1"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Hide scrollbar for horizontal scrolling tabs */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased h-screen flex flex-col md:flex-row overflow-hidden">
+<!-- TopAppBar for Mobile / Header for Desktop -->
+<header class="fixed top-0 w-full z-50 bg-surface dark:bg-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] hidden md:block">
+<div class="flex justify-between items-center px-container-padding-desktop h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-2 text-primary dark:text-primary-fixed-dim font-headline-md text-headline-md tracking-tight">
+<span class="material-symbols-outlined text-[28px]" data-icon="pets">pets</span>
+<span>MyPet</span>
+</div>
+<div class="flex items-center gap-8">
+<!-- Desktop Navigation Links -->
+<nav class="flex gap-6">
+<a class="text-on-surface-variant font-label-md text-label-md hover:opacity-80 transition-all" href="#">Dashboard</a>
+<a class="text-primary font-label-md text-label-md hover:opacity-80 transition-all border-b-2 border-primary pb-1" href="#">Pets</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:opacity-80 transition-all" href="#">Meds</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:opacity-80 transition-all" href="#">Reminders</a>
+</nav>
+<button class="text-primary dark:text-primary-fixed-dim hover:opacity-80 transition-all active:scale-95 duration-200 p-2">
+<span class="material-symbols-outlined text-[28px]" data-icon="notifications">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="person">person</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Mobile Top Header -->
+<div class="fixed top-0 w-full z-50 bg-surface dark:bg-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] transition-all active:scale-95 duration-200 flex justify-between items-center px-container-padding-mobile h-16 w-full max-w-7xl mx-auto md:hidden">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim text-[24px]" data-icon="pets">pets</span>
+<h1 class="font-headline-md text-headline-md-mobile text-primary dark:text-primary-fixed-dim tracking-tight">MyPet</h1>
+</div>
+<button class="text-primary dark:text-primary-fixed-dim hover:opacity-80 p-2">
+<span class="material-symbols-outlined text-[24px]" data-icon="notifications">notifications</span>
+</button>
+</div>
+<!-- Sidebar for Desktop -->
+<aside class="hidden md:flex w-64 bg-surface border-r border-surface-container h-full pt-24 flex-col fixed left-0 z-40">
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl bg-primary-container text-on-primary-container font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="pets" style="font-variation-settings: 'FILL' 1;">pets</span>
+<span>Pets</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="font-label-md text-label-md">Meds</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+<span class="font-label-md text-label-md">Reminders</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto pt-20 pb-24 md:pt-24 md:pl-64 w-full max-w-7xl mx-auto px-container-padding-mobile md:px-container-padding-desktop">
+<!-- Pets List State (Default) -->
+<div class="block" id="pets-list-view">
+<div class="flex justify-between items-center mb-stack-lg">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background mb-1">Your Companions</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage health and records for your furry family.</p>
+</div>
+</div>
+<!-- Bento Grid for Pets -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-md">
+<!-- Pet Card 1 -->
+<div class="bg-surface-container-lowest rounded-[24px] shadow-[0px_4px_20px_rgba(0,0,0,0.04)] overflow-hidden cursor-pointer hover:-translate-y-1 transition-transform duration-300 flex flex-col h-[320px]" onclick="toggleView('pet-detail-view')">
+<div class="h-[180px] w-full relative">
+<img class="w-full h-full object-cover" data-alt="A high-quality, professional photograph of a beautiful Golden Retriever dog looking playfully at the camera. The dog has soft, golden fur and bright, intelligent eyes. The lighting is bright and airy, typical of a modern light-mode UI design, emphasizing warmth and companionship. The background is a slightly blurred, light neutral tone, keeping the focus entirely on the pet." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBg3zj39iot0w0PMglPcHjJUvM7e_Rno5bd9H7XBzQzXTEO6-YecMOLghswiKppgzMMs6S3ZPkybW8K_MlHVlF9xkbNIwsWp-ih56PWPYQhFpxgBMnG4VJG0Yfv4kKL72f7wJ1RinoBo0URyUXulqLWYpCqgMWTFdUxtZ1jorsP5IPAH25wycEK7puLZiPWSSuWcXPEc88pTS1OXKwbKenypS_s0aTjBt1zFaXwz8redQIyvK8NauW1"/>
+<div class="absolute top-4 right-4 bg-surface/80 backdrop-blur-md rounded-full px-3 py-1 flex items-center gap-1 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-primary">Feeling Great</span>
+</div>
+</div>
+<div class="p-5 flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-headline-md text-headline-md text-on-surface">Bella</h3>
+<span class="font-body-md text-body-md text-on-surface-variant">3 yrs</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Golden Retriever • Dog</p>
+</div>
+<div class="flex gap-2 mt-3">
+<span class="px-2.5 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm">High Energy</span>
+<span class="px-2.5 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm">Vaccinated</span>
+</div>
+</div>
+</div>
+<!-- Pet Card 2 -->
+<div class="bg-surface-container-lowest rounded-[24px] shadow-[0px_4px_20px_rgba(0,0,0,0.04)] overflow-hidden cursor-pointer hover:-translate-y-1 transition-transform duration-300 flex flex-col h-[320px]" onclick="toggleView('pet-detail-view')">
+<div class="h-[180px] w-full relative">
+<img class="w-full h-full object-cover" data-alt="A stunning, sharp portrait of a sleek Siamese cat sitting elegantly on a soft surface. The cat features striking blue eyes and beautifully contrasted seal point coloring. The environment is lit with soft, diffused white light, aligning with a clean, modern aesthetic. The mood is calm and refined, evoking a sense of gentle care." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRTuPx7t1ESPQlceAACJNasBCoAiwWdGRlDzBQXmeMrkPGXNmtk1c0KmHdNSqnvIXz3XhT1qh_vAj318-Lkc854Q2W66CyezrLSEXmukAMJ4Lny1oN1zfCkQ02QENaDuIWSjOChMJn5efyhC625KT0jwlf-kF1HGz2NIQgTxCPjMHfTgXkKYkvfyuchPRwhUzrnB3QJOCX6or3ezeoEBLrt2mhxieP8UJsixGihAQ7ALEqaT5YyiG8"/>
+<div class="absolute top-4 right-4 bg-surface/80 backdrop-blur-md rounded-full px-3 py-1 flex items-center gap-1 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-secondary-container">Needs Checkup</span>
+</div>
+</div>
+<div class="p-5 flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-headline-md text-headline-md text-on-surface">Luna</h3>
+<span class="font-body-md text-body-md text-on-surface-variant">5 yrs</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Siamese • Cat</p>
+</div>
+<div class="flex gap-2 mt-3">
+<span class="px-2.5 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm">Indoor</span>
+</div>
+</div>
+</div>
+</div>
+<!-- FAB -->
+<button class="fixed bottom-24 right-container-padding-mobile md:bottom-10 md:right-10 bg-primary text-on-primary w-14 h-14 rounded-[16px] shadow-[0px_8px_30px_rgba(0,0,0,0.08)] flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-40">
+<span class="material-symbols-outlined text-[32px]" data-icon="add">add</span>
+</button>
+</div>
+<!-- Pet Detail View (Initially Hidden) -->
+<div class="hidden" id="pet-detail-view">
+<!-- Back Button -->
+<button class="mb-4 flex items-center gap-2 text-primary font-label-md text-label-md hover:opacity-80 transition-opacity" onclick="toggleView('pets-list-view')">
+<span class="material-symbols-outlined text-[20px]" data-icon="arrow_back">arrow_back</span>
+                Back to Pets
+            </button>
+<!-- Hero Header -->
+<div class="bg-surface-container-lowest rounded-[24px] shadow-[0px_4px_20px_rgba(0,0,0,0.04)] overflow-hidden mb-stack-md relative h-64 md:h-80">
+<img class="w-full h-full object-cover" data-alt="A wide, landscape-oriented, highly detailed photo of a Golden Retriever dog lying peacefully in a sunlit room. The lighting is soft and golden, casting warm highlights on the dog's fur. The setting is a cozy, modern home environment with a light, neutral color palette, emphasizing a nurturing, safe, and clean aesthetic suitable for a premium pet care app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBU4olDjH_T8DXQ-a6nA3kJxCtkkXqD--gsxoQOG-1Qeik5crZ6foTa_LOJOaRyhN179ekot3-yNKKjv2ktyq48nQo6WVFSxOYwHfiAkeYouwCKkv65HAU7jAzw_aBF2a-Cdqq2lg8G9-MFCUzFSmnvql3ECAaL1NRMGdBfOxfIOZ_6e5-BXCC46b0nTHhcldw5eCMExqtA09uoSfR2l_iuCDIMTTaruPsI6QwGuwGAb7-v8CF3IUv3"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+<div>
+<h2 class="font-display text-display text-white mb-1 drop-shadow-md">Bella</h2>
+<p class="font-body-lg text-body-lg text-white/90">Golden Retriever • 3 yrs • Female (Spayed)</p>
+</div>
+<button class="bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-xl font-label-md text-label-md hover:bg-white/30 transition-colors border border-white/30">
+                         Edit Profile
+                     </button>
+</div>
+</div>
+<!-- Scrollable Tabs -->
+<div class="mb-stack-md border-b border-surface-container overflow-hidden">
+<div class="flex overflow-x-auto no-scrollbar gap-2 pb-2">
+<button class="px-4 py-2 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md whitespace-nowrap transition-colors">Vaccinations</button>
+<button class="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container font-label-md text-label-md whitespace-nowrap transition-colors">Medications</button>
+<button class="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container font-label-md text-label-md whitespace-nowrap transition-colors">Medical Records</button>
+<button class="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container font-label-md text-label-md whitespace-nowrap transition-colors">Allergies</button>
+<button class="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container font-label-md text-label-md whitespace-nowrap transition-colors">Lab Results</button>
+<button class="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container font-label-md text-label-md whitespace-nowrap transition-colors">Weight</button>
+<button class="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container font-label-md text-label-md whitespace-nowrap transition-colors">Notes</button>
+</div>
+</div>
+<!-- Tab Content (Vaccinations Example) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-stack-md">
+<!-- Timeline Column -->
+<div class="md:col-span-2 space-y-4">
+<h3 class="font-headline-md text-headline-md text-on-background mb-4">Immunization History</h3>
+<!-- Timeline Item -->
+<div class="flex gap-4">
+<div class="flex flex-col items-center">
+<div class="w-4 h-4 rounded-full bg-primary z-10"></div>
+<div class="w-0.5 h-full bg-primary/20 my-1"></div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] p-4 flex-1 mb-4 hover:shadow-[0px_8px_30px_rgba(0,0,0,0.08)] transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-label-md text-label-md text-on-surface">Rabies (1-year)</h4>
+<span class="font-label-sm text-label-sm text-primary bg-primary/10 px-2 py-1 rounded-md">Valid</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Administered: Oct 12, 2023</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Due: Oct 12, 2024</p>
+<div class="mt-3 flex items-center gap-2 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+                                Dr. Smith, Happy Paws Clinic
+                            </div>
+</div>
+</div>
+<!-- Timeline Item -->
+<div class="flex gap-4">
+<div class="flex flex-col items-center">
+<div class="w-4 h-4 rounded-full bg-outline-variant z-10"></div>
+<div class="w-0.5 h-full bg-outline-variant/30 my-1"></div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] p-4 flex-1 mb-4 opacity-70">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-label-md text-label-md text-on-surface">Bordetella</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded-md">Expired</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Administered: Mar 05, 2023</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-error">Due: Sep 05, 2023</p>
+</div>
+</div>
+</div>
+<!-- Info Column -->
+<div class="space-y-4">
+<div class="bg-primary/5 rounded-[24px] p-6 border border-primary/10">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface">Next Appointment</h3>
+</div>
+<p class="font-headline-md text-headline-md text-on-background mb-1">Oct 10, 2024</p>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Annual Checkup &amp; Boosters</p>
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md h-12 rounded-xl hover:opacity-90 transition-opacity">
+                            Manage Appointment
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar for Mobile -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-2 pt-1 bg-surface dark:bg-surface-container shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-transform active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-sm text-label-sm mt-1">Dashboard</span>
+</a>
+<!-- Active Tab -->
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary-fixed text-on-primary-container dark:text-on-primary-fixed rounded-xl px-3 py-1 transition-transform active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="pets" style="font-variation-settings: 'FILL' 1;">pets</span>
+<span class="font-label-sm text-label-sm mt-1">Pets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-transform active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="font-label-sm text-label-sm mt-1">Meds</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-transform active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+<span class="font-label-sm text-label-sm mt-1">Reminders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-transform active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm mt-1">Profile</span>
+</a>
+</nav>
+<script>
+        function toggleView(viewId) {
+            const list = document.getElementById('pets-list-view');
+            const detail = document.getElementById('pet-detail-view');
+            
+            if (viewId === 'pet-detail-view') {
+                list.style.display = 'none';
+                detail.style.display = 'block';
+                window.scrollTo(0, 0);
+            } else {
+                detail.style.display = 'none';
+                list.style.display = 'block';
+            }
+        }
+    </script>
+</body></html>
