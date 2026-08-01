@@ -1,0 +1,46 @@
+# Optionales Override für TLS via Let's Encrypt/Certbot — NICHT Teil des
+# Standard-Deployments, da dafür eine echte Domain mit DNS-Einträgen nötig
+# ist (aktuell läuft MyPet nur per LAN-IP ohne Domain, siehe TODO.md).
+#
+# Sobald eine Domain vorhanden ist:
+#   1. DNS A-Records für alle Subdomains auf die Server-IP zeigen lassen
+#   2. .env um DOMAIN_OWNER / DOMAIN_VET / DOMAIN_PROVIDER / DOMAIN_ADMIN /
+#      DOMAIN_API ergänzen (siehe .env.example)
+#   3. ./scripts/setup-ssl.sh ausführen (rendert die nginx-Config, holt die
+#      Zertifikate per Certbot, aktiviert die HTTPS-Server-Blöcke)
+#
+# Danach normal weiterbetreiben mit:
+#   docker compose -f docker-compose.yml -f docker-compose.ssl.yml up -d
+
+services:
+  reverse-proxy:
+    image: nginx:alpine
+    container_name: mypet-reverse-proxy
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - web-owner
+      - web-vet
+      - web-provider
+      - web-admin
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/reverse-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot-webroot:/var/www/certbot:ro
+      - certbot-certs:/etc/letsencrypt:ro
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: mypet-certbot
+    volumes:
+      - certbot-webroot:/var/www/certbot
+      - certbot-certs:/etc/letsencrypt
+    # Erneuert bestehende Zertifikate automatisch alle 12h (certbot prüft
+    # selbst, ob eine Erneuerung nötig ist — no-op meistens).
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+
+volumes:
+  certbot-webroot:
+  certbot-certs:
