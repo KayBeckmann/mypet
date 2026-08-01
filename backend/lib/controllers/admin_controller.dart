@@ -82,19 +82,24 @@ class AdminController {
       final offset = (page - 1) * limit;
 
       final conditions = <String>[];
-      final parameters = <String, dynamic>{
-        'limit': limit,
-        'offset': offset,
-      };
+      // Eigene Parameter-Map für die COUNT-Query (siehe Kommentar bei
+      // _listOrganizations weiter unten für den Hintergrund).
+      final countParameters = <String, dynamic>{};
 
       if (role != null && role.isNotEmpty) {
         conditions.add("role = @role::user_role");
-        parameters['role'] = role;
+        countParameters['role'] = role;
       }
       if (search != null && search.isNotEmpty) {
         conditions.add("(name ILIKE @search OR email ILIKE @search)");
-        parameters['search'] = '%$search%';
+        countParameters['search'] = '%$search%';
       }
+
+      final parameters = <String, dynamic>{
+        ...countParameters,
+        'limit': limit,
+        'offset': offset,
+      };
 
       final where = conditions.isEmpty ? '' : 'WHERE ${conditions.join(' AND ')}';
 
@@ -111,7 +116,7 @@ class AdminController {
 
       final countResult = await _db.queryOne(
         'SELECT COUNT(*) AS total FROM users $where',
-        parameters: parameters,
+        parameters: countParameters,
       );
       final total = int.tryParse(countResult?['total']?.toString() ?? '0') ?? 0;
 
@@ -370,16 +375,25 @@ class AdminController {
       final offset = (page - 1) * limit;
 
       final conditions = <String>[];
-      final parameters = <String, dynamic>{'limit': limit, 'offset': offset};
+      // Eigene Parameter-Map für die COUNT-Query: sie referenziert kein
+      // @limit/@offset, und postgres lehnt "superflous variables" ab, wenn
+      // eine Query Parameter erhält, die im SQL-Text gar nicht vorkommen.
+      final countParameters = <String, dynamic>{};
 
       if (search != null && search.isNotEmpty) {
         conditions.add('(o.name ILIKE @search OR o.email ILIKE @search)');
-        parameters['search'] = '%$search%';
+        countParameters['search'] = '%$search%';
       }
       if (type != null && type.isNotEmpty) {
         conditions.add('o.type::text = @type');
-        parameters['type'] = type;
+        countParameters['type'] = type;
       }
+
+      final parameters = <String, dynamic>{
+        ...countParameters,
+        'limit': limit,
+        'offset': offset,
+      };
 
       final where = conditions.isEmpty ? '' : 'WHERE ${conditions.join(' AND ')}';
 
@@ -400,7 +414,7 @@ class AdminController {
 
       final countResult = await _db.queryOne(
         'SELECT COUNT(*) AS total FROM organizations o $where',
-        parameters: parameters,
+        parameters: countParameters,
       );
       final total = int.tryParse(countResult?['total']?.toString() ?? '0') ?? 0;
 
