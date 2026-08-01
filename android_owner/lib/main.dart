@@ -43,24 +43,42 @@ class _MyPetAppState extends State<MyPetApp> {
       child: MaterialApp(
         title: 'MyPet',
         debugShowCheckedModeBanner: false,
+        // "Warm Care Narrative"-Designsystem (Google-Stitch-Mockup), dieselbe
+        // Markensprache wie web_owner: Public Sans statt Inter, extra-weiche
+        // 24px-Rundungen für Karten, sanfte statt harte Schatten.
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF4CAF50),
-            brightness: Brightness.light,
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFF4CAF50),
+            onPrimary: Colors.white,
+            primaryContainer: Color(0xFF94F990),
+            onPrimaryContainer: Color(0xFF002204),
+            secondary: Color(0xFFFFB74D),
+            onSecondary: Color(0xFF704800),
+            tertiary: Color(0xFFFF5252),
+            onTertiary: Colors.white,
+            surface: Color(0xFFF7F9F7),
+            onSurface: Color(0xFF2D3436),
+            onSurfaceVariant: Color(0xFF3F4A3C),
+            outline: Color(0xFF6F7A6B),
+            outlineVariant: Color(0xFFBECAB9),
+            error: Color(0xFFBA1A1A),
           ),
-          textTheme: GoogleFonts.interTextTheme(),
+          scaffoldBackgroundColor: const Color(0xFFF7F9F7),
+          textTheme: GoogleFonts.publicSansTextTheme(),
           useMaterial3: true,
           cardTheme: CardThemeData(
-            elevation: 2,
+            elevation: 0,
+            color: Colors.white,
+            shadowColor: Colors.black.withValues(alpha: 0.04),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(24),
             ),
           ),
           appBarTheme: AppBarTheme(
             backgroundColor: const Color(0xFF4CAF50),
             foregroundColor: Colors.white,
             elevation: 0,
-            titleTextStyle: GoogleFonts.inter(
+            titleTextStyle: GoogleFonts.publicSans(
               color: Colors.white,
               fontWeight: FontWeight.w700,
               fontSize: 20,
