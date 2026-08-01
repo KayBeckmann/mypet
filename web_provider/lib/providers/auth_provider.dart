@@ -49,38 +49,6 @@ class ProviderAuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> register(String name, String email, String password) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final response = await _api.post('/auth/register', body: {
-        'name': name,
-        'email': email,
-        'password': password,
-        'role': 'provider',
-      });
-      _api.setAuthToken(response['token'] as String);
-      _refreshToken = response['refresh_token'] as String?;
-      _user = User.fromJson(response['user'] as Map<String, dynamic>);
-      await _loadOrganizations();
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } on ApiException catch (e) {
-      _error = e.message;
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    } catch (_) {
-      _error = 'Verbindung zum Server fehlgeschlagen';
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
-  }
-
   Future<void> _loadOrganizations() async {
     try {
       final response = await _api.get('/organizations');

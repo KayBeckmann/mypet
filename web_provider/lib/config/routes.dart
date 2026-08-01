@@ -8,7 +8,6 @@ import '../screens/customers_screen.dart';
 import '../screens/customer_detail_screen.dart';
 import '../screens/services_screen.dart';
 import '../screens/appointments_screen.dart';
-import '../screens/register_screen.dart';
 import '../screens/settings_screen.dart';
 import '../widgets/app_shell.dart';
 
@@ -25,7 +24,6 @@ GoRouter createRouter(ProviderAuthProvider authProvider) {
     },
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       ShellRoute(
         builder: (context, state, child) =>
             ProviderAppShell(child: child),

@@ -97,9 +97,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         : const Text('Anmelden'),
                   ),
                   const SizedBox(height: VetTheme.spacingMd),
-                  TextButton(
-                    onPressed: () => context.go('/register'),
-                    child: const Text('Noch kein Konto? Registrieren'),
+                  Text(
+                    'Praxis-Konten werden ausschließlich vom Administrator '
+                    'angelegt — keine offene Registrierung.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: VetTheme.onSurfaceVariant,
+                        ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

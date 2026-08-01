@@ -95,9 +95,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         : const Text('Anmelden'),
                   ),
                   const SizedBox(height: ProviderTheme.spacingMd),
-                  TextButton(
-                    onPressed: () => context.go('/register'),
-                    child: const Text('Noch kein Konto? Registrieren'),
+                  Text(
+                    'Firmen-Konten werden ausschließlich vom Administrator '
+                    'angelegt — keine offene Registrierung.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: ProviderTheme.onSurfaceVariant,
+                        ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

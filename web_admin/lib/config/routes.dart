@@ -6,6 +6,7 @@ import '../screens/users_screen.dart';
 import '../screens/create_user_screen.dart';
 import '../screens/user_detail_screen.dart';
 import '../screens/organizations_screen.dart';
+import '../screens/organization_detail_screen.dart';
 import '../screens/audit_log_screen.dart';
 
 GoRouter createRouter(AdminAuthProvider authProvider) {
@@ -32,6 +33,11 @@ GoRouter createRouter(AdminAuthProvider authProvider) {
       GoRoute(
           path: '/organizations',
           builder: (_, __) => const AdminOrganizationsScreen()),
+      GoRoute(
+        path: '/organizations/:id',
+        builder: (_, state) => OrganizationDetailScreen(
+            orgId: state.pathParameters['id']!),
+      ),
       GoRoute(
           path: '/audit-log',
           builder: (_, __) => const AuditLogScreen()),

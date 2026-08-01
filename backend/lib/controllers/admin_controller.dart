@@ -21,6 +21,8 @@ class AdminController {
     router.put('/users/<id>/reset-password', _resetPassword);
     router.delete('/users/<id>', _deactivateUser);
     router.get('/organizations', _listOrganizations);
+    router.get('/organizations/<id>', _getOrganization);
+    router.put('/organizations/<id>', _setOrganizationActive);
     router.get('/audit-log', _getAuditLog);
     router.get('/growth', _getGrowth);
 
@@ -425,6 +427,108 @@ class AdminController {
       );
     } catch (e) {
       print('❌ Admin listOrganizations Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// GET /admin/organizations/:id — Organisation inkl. Mitgliedern
+  Future<Response> _getOrganization(Request request, String id) async {
+    try {
+      final results = await Future.wait([
+        _db.queryOne(
+          '''
+          SELECT id, name, type::text AS type, provider_type, description,
+                 address, phone, mobile, email, website, is_active,
+                 created_by, created_at, updated_at
+          FROM organizations WHERE id = @id::uuid
+          ''',
+          parameters: {'id': id},
+        ),
+        _db.queryAll(
+          '''
+          SELECT om.role, u.id AS user_id, u.name, u.email
+          FROM organization_members om
+          JOIN users u ON u.id = om.user_id
+          WHERE om.organization_id = @id::uuid AND om.is_active = true
+          ORDER BY om.role, u.name
+          ''',
+          parameters: {'id': id},
+        ),
+      ]);
+
+      final org = results[0] as Map<String, dynamic>?;
+      if (org == null) return _error(404, 'Organisation nicht gefunden');
+
+      final members = (results[1] as List<Map<String, dynamic>>)
+          .map((m) => {
+                'user_id': m['user_id'].toString(),
+                'name': m['name'],
+                'email': m['email'],
+                'role': m['role'],
+              })
+          .toList();
+
+      return Response.ok(
+        jsonEncode({
+          'organization': {
+            'id': org['id'].toString(),
+            'name': org['name'],
+            'type': org['type'],
+            'provider_type': org['provider_type'],
+            'description': org['description'],
+            'address': org['address'],
+            'phone': org['phone'],
+            'mobile': org['mobile'],
+            'email': org['email'],
+            'website': org['website'],
+            'is_active': org['is_active'],
+            'created_by': org['created_by']?.toString(),
+            'created_at': (org['created_at'] as DateTime).toIso8601String(),
+            'members': members,
+          },
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Admin getOrganization Fehler: $e');
+      return _error(500, 'Interner Serverfehler');
+    }
+  }
+
+  /// PUT /admin/organizations/:id — Aktiv-Status setzen
+  /// (Deaktivieren/Reaktivieren durch den Superadmin, unabhängig von der
+  /// Mitgliedschaft — normale Org-Admins können das nur für die eigene
+  /// Organisation und nicht reaktivieren, siehe OrganizationController).
+  Future<Response> _setOrganizationActive(Request request, String id) async {
+    try {
+      final body =
+          jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+      final isActive = body['is_active'] as bool?;
+      if (isActive == null) {
+        return _error(400, 'is_active (bool) ist erforderlich');
+      }
+
+      final result = await _db.queryOne(
+        '''
+        UPDATE organizations SET is_active = @is_active
+        WHERE id = @id::uuid
+        RETURNING id
+        ''',
+        parameters: {'id': id, 'is_active': isActive},
+      );
+
+      if (result == null) return _error(404, 'Organisation nicht gefunden');
+
+      return Response.ok(
+        jsonEncode({
+          'message': isActive
+              ? 'Organisation reaktiviert'
+              : 'Organisation deaktiviert',
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } catch (e) {
+      print('❌ Admin setOrganizationActive Fehler: $e');
       return _error(500, 'Interner Serverfehler');
     }
   }

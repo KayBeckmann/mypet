@@ -183,8 +183,11 @@ class _AdminOrganizationsScreenState extends State<AdminOrganizationsScreen> {
                             itemCount: _orgs.length,
                             separatorBuilder: (_, __) =>
                                 const SizedBox(height: 4),
-                            itemBuilder: (_, i) =>
-                                _OrgTile(org: _orgs[i]),
+                            itemBuilder: (_, i) => _OrgTile(
+                              org: _orgs[i],
+                              onTap: () => context
+                                  .go('/organizations/${_orgs[i]['id']}'),
+                            ),
                           ),
           ),
 
@@ -223,12 +226,14 @@ class _AdminOrganizationsScreenState extends State<AdminOrganizationsScreen> {
 
 class _OrgTile extends StatelessWidget {
   final Map<String, dynamic> org;
-  const _OrgTile({required this.org});
+  final VoidCallback onTap;
+  const _OrgTile({required this.org, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final type = org['type'] as String? ?? '';
     final memberCount = org['member_count'] as int? ?? 0;
+    final isActive = org['is_active'] as bool? ?? true;
 
     return Container(
       decoration: BoxDecoration(
@@ -237,6 +242,7 @@ class _OrgTile extends StatelessWidget {
         border: Border.all(color: AdminTheme.outlineVariant),
       ),
       child: ListTile(
+        onTap: onTap,
         leading: CircleAvatar(
           backgroundColor: AdminTheme.primary.withValues(alpha: 0.1),
           child: Icon(
@@ -257,6 +263,20 @@ class _OrgTile extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (!isActive) ...[
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AdminTheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(AdminTheme.radiusFull),
+                ),
+                child: const Text('Deaktiviert',
+                    style:
+                        TextStyle(fontSize: 10, color: AdminTheme.outline)),
+              ),
+              const SizedBox(width: 8),
+            ],
             _TypeChip(type: type),
             const SizedBox(width: 8),
             Text(
