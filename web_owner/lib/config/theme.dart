@@ -2,46 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Living Ledger Design System
-/// Based on the "Organic Editorialism" concept - no rigid grids,
-/// intentional asymmetry, layered surfaces, premium digital journal feel.
+/// Now aligned to the "Warm Care Narrative" design system from the
+/// Google-Stitch mockups (mockup/stitch_mypet_health_companion/warm_care_narrative/DESIGN.md):
+/// nurturing-companion aesthetic, warm green brand color, Public Sans,
+/// extra-soft rounded shapes, ambient shadows instead of hard borders.
 class LivingLedgerTheme {
   LivingLedgerTheme._();
 
-  // ── Primary Palette (Deep Greens) ──
-  static const Color primary = Color(0xFF204E2B);
-  static const Color primaryContainer = Color(0xFF386641);
+  // ── Primary Palette (Warm Green) ──
+  static const Color primary = Color(0xFF4CAF50);
+  static const Color primaryContainer = Color(0xFF94F990);
   static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color onPrimaryContainer = Color(0xFFE8F5E9);
+  static const Color onPrimaryContainer = Color(0xFF002204);
 
-  // ── Secondary Palette (Professional Blues) ──
-  static const Color secondary = Color(0xFF2C5F7C);
-  static const Color secondaryContainer = Color(0xFFD4E8F4);
-  static const Color onSecondary = Color(0xFFFFFFFF);
-  static const Color onSecondaryContainer = Color(0xFF1A3A4F);
+  // ── Secondary Palette (Soft Amber — reminders, non-critical) ──
+  static const Color secondary = Color(0xFFFFB74D);
+  static const Color secondaryContainer = Color(0xFFFFDDB4);
+  static const Color onSecondary = Color(0xFF704800);
+  static const Color onSecondaryContainer = Color(0xFF633F00);
 
-  // ── Tertiary Palette (High-Vitality Oranges) ──
-  static const Color tertiary = Color(0xFFD4782F);
-  static const Color tertiaryContainer = Color(0xFFFDE8D0);
+  // ── Tertiary Palette (Urgent alerts, missed medication, delete) ──
+  static const Color tertiary = Color(0xFFFF5252);
+  static const Color tertiaryContainer = Color(0xFFFFDAD7);
   static const Color onTertiary = Color(0xFFFFFFFF);
-  static const Color onTertiaryContainer = Color(0xFF5C3415);
+  static const Color onTertiaryContainer = Color(0xFF930015);
 
   // ── Surface Architecture ──
-  static const Color surface = Color(0xFFF9FAF4);
-  static const Color surfaceContainerLow = Color(0xFFF3F4EE);
+  static const Color surface = Color(0xFFF7F9F7);
+  static const Color surfaceContainerLow = Color(0xFFF2F4F2);
   static const Color surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const Color surfaceContainerHigh = Color(0xFFE7E9E3);
-  static const Color surfaceVariant = Color(0xFFDDE5DB);
+  static const Color surfaceContainerHigh = Color(0xFFE6E9E7);
+  static const Color surfaceVariant = Color(0xFFE1E3E1);
 
-  // ── On-Surface (never pure black) ──
-  static const Color onSurface = Color(0xFF191C19);
-  static const Color onSurfaceVariant = Color(0xFF414941);
-  static const Color outline = Color(0xFF717971);
-  static const Color outlineVariant = Color(0xFFC1C9BE);
+  // ── On-Surface (deep charcoal, never pure black) ──
+  static const Color onSurface = Color(0xFF2D3436);
+  static const Color onSurfaceVariant = Color(0xFF3F4A3C);
+  static const Color outline = Color(0xFF6F7A6B);
+  static const Color outlineVariant = Color(0xFFBECAB9);
 
   // ── Status Colors ──
-  static const Color success = Color(0xFF2E7D32);
-  static const Color warning = Color(0xFFF9A825);
-  static const Color error = Color(0xFFC62828);
+  static const Color success = Color(0xFF4CAF50);
+  static const Color warning = Color(0xFFFFB74D);
+  static const Color error = Color(0xFFBA1A1A);
   static const Color info = Color(0xFF1565C0);
 
   // ── Gradients ──
@@ -51,17 +53,17 @@ class LivingLedgerTheme {
     end: Alignment.bottomRight,
   );
 
-  // ── Spacing Scale ──
+  // ── Spacing Scale (4px base unit, per DESIGN.md) ──
   static const double spacingXs = 4.0;
   static const double spacingSm = 8.0;
   static const double spacingMd = 16.0;
-  static const double spacingLg = 24.0;
-  static const double spacingXl = 32.0;
+  static const double spacingLg = 32.0;
+  static const double spacingXl = 40.0;
   static const double spacing2xl = 48.0;
   static const double spacing3xl = 64.0;
 
-  // ── Border Radius ──
-  static const double radiusSm = 8.0;
+  // ── Border Radius ("Extra-Soft" shape language) ──
+  static const double radiusSm = 4.0;
   static const double radiusMd = 12.0;
   static const double radiusLg = 16.0;
   static const double radiusXl = 24.0;
@@ -83,26 +85,26 @@ class LivingLedgerTheme {
     width: 1.5,
   );
 
-  /// Ambient shadow for floating elements
-  static List<BoxShadow> ambientShadow = [
+  /// Level 2 — floating elements (FABs, active modals): deeper shadow
+  static List<BoxShadow> ambientShadow = const [
     BoxShadow(
-      color: onSurface.withValues(alpha: 0.06),
-      blurRadius: 32,
-      offset: const Offset(0, 4),
+      color: Color(0x14000000), // rgba(0,0,0,0.08)
+      blurRadius: 30,
+      offset: Offset(0, 8),
     ),
   ];
 
-  /// Card shadow - subtle lift
-  static List<BoxShadow> cardShadow = [
+  /// Level 1 — cards/surfaces: soft, diffused ambient shadow
+  static List<BoxShadow> cardShadow = const [
     BoxShadow(
-      color: onSurface.withValues(alpha: 0.04),
-      blurRadius: 16,
-      offset: const Offset(0, 2),
+      color: Color(0x0A000000), // rgba(0,0,0,0.04)
+      blurRadius: 20,
+      offset: Offset(0, 4),
     ),
   ];
 
   static ThemeData get themeData {
-    final textTheme = GoogleFonts.manropeTextTheme();
+    final textTheme = GoogleFonts.publicSansTextTheme();
 
     return ThemeData(
       useMaterial3: true,
@@ -248,7 +250,7 @@ class LivingLedgerTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusFull),
           ),
-          textStyle: GoogleFonts.manrope(
+          textStyle: GoogleFonts.publicSans(
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
