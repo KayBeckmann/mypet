@@ -328,31 +328,38 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 160,
-      padding: const EdgeInsets.all(VetTheme.spacingLg),
+      width: 180,
+      padding: const EdgeInsets.all(VetTheme.spacingMd),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.25)),
+        color: VetTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(VetTheme.radiusMd),
+        border: Border.all(color: VetTheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: VetTheme.spacingSm),
           Text(
-            value,
-            style: Theme.of(context)
-                .textTheme
-                .headlineMedium
-                ?.copyWith(color: color, fontWeight: FontWeight.bold),
+            label.toUpperCase(),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: VetTheme.onSurfaceVariant,
+                  letterSpacing: 1,
+                ),
           ),
-          Text(
-            label,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: color.withOpacity(0.8)),
+          const SizedBox(height: VetTheme.spacingSm),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                value,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: VetTheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(width: 8),
+              Icon(icon, color: color, size: 16),
+            ],
           ),
         ],
       ),
@@ -364,47 +371,103 @@ class _TodayAppointments extends StatelessWidget {
   final List<VetAppointment> appointments;
   const _TodayAppointments({required this.appointments});
 
+  Color _statusColor(AppointmentStatus s) => switch (s) {
+        AppointmentStatus.confirmed => VetTheme.primary,
+        AppointmentStatus.requested => VetTheme.secondary,
+        AppointmentStatus.completed => VetTheme.onSurfaceVariant,
+        AppointmentStatus.cancelled => VetTheme.tertiary,
+        AppointmentStatus.noShow => VetTheme.tertiary,
+      };
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(VetTheme.spacingLg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Container(
+      decoration: BoxDecoration(
+        color: VetTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(VetTheme.radiusMd),
+        border: Border.all(color: VetTheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: VetTheme.spacingMd, vertical: VetTheme.spacingSm),
+            decoration: BoxDecoration(
+              border: Border(
+                  bottom: BorderSide(color: VetTheme.surfaceContainerHigh)),
+            ),
+            child: Row(
               children: [
-                const Icon(Icons.today, size: 20),
-                const SizedBox(width: VetTheme.spacingSm),
                 Text(
-                  'Termine heute',
+                  'Heutige Agenda',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                       ),
                 ),
                 const Spacer(),
-                Text(
-                  '${appointments.length}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                Text('${appointments.length}',
+                    style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
-            const Divider(height: VetTheme.spacingLg),
-            if (appointments.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: VetTheme.spacingMd),
-                child: Text(
-                  'Keine Termine heute',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: Colors.grey),
-                ),
-              )
-            else
-              ...appointments.map((a) => _AppointmentRow(appointment: a)),
-          ],
-        ),
+          ),
+          if (appointments.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(VetTheme.spacingMd),
+              child: Text(
+                'Keine Termine heute',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: VetTheme.onSurfaceVariant),
+              ),
+            )
+          else
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowColor:
+                    WidgetStateProperty.all(VetTheme.surfaceContainerLow),
+                horizontalMargin: VetTheme.spacingMd,
+                columnSpacing: VetTheme.spacingLg,
+                dividerThickness: 0.5,
+                columns: const [
+                  DataColumn(label: Text('Zeit')),
+                  DataColumn(label: Text('Patient')),
+                  DataColumn(label: Text('Besitzer')),
+                  DataColumn(label: Text('Grund')),
+                  DataColumn(label: Text('Status')),
+                ],
+                rows: appointments.map((a) {
+                  final color = _statusColor(a.status);
+                  return DataRow(cells: [
+                    DataCell(Text(a.timeLabel,
+                        style: TextStyle(color: VetTheme.onSurfaceVariant))),
+                    DataCell(Text(a.petName ?? '–',
+                        style: const TextStyle(fontWeight: FontWeight.w600))),
+                    DataCell(Text(a.ownerName ?? '–')),
+                    DataCell(Text(a.title,
+                        overflow: TextOverflow.ellipsis)),
+                    DataCell(Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(VetTheme.radiusMd),
+                      ),
+                      child: Text(
+                        a.statusLabel.toUpperCase(),
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: color),
+                      ),
+                    )),
+                  ]);
+                }).toList(),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -567,94 +630,149 @@ class _ExpiringVaccinationsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fmt = DateFormat('dd.MM.yyyy');
-
     return Container(
-      padding: const EdgeInsets.all(VetTheme.spacingLg),
       decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(VetTheme.radiusLg),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+        color: VetTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(VetTheme.radiusMd),
+        border: Border.all(color: VetTheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.vaccines_rounded,
-                  color: Colors.amber, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'Ablaufende Impfungen (nächste 30 Tage)',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-            ],
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+                horizontal: VetTheme.spacingMd, vertical: VetTheme.spacingSm),
+            decoration: BoxDecoration(
+              color: VetTheme.surfaceContainerLow,
+              border: Border(
+                  bottom: BorderSide(color: VetTheme.surfaceContainerHigh)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.vaccines_rounded,
+                    color: VetTheme.tertiary, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Ablaufende Impfungen',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          ...vaccinations.map((v) {
-            final validUntil = v['valid_until'] as String?;
-            DateTime? date;
-            if (validUntil != null) date = DateTime.tryParse(validUntil);
-            final daysLeft = date != null
-                ? date.difference(DateTime.now()).inDays
-                : null;
+          Padding(
+            padding: const EdgeInsets.all(VetTheme.spacingMd),
+            child: Column(
+              children: vaccinations.map((v) {
+                final validUntil = v['valid_until'] as String?;
+                DateTime? date;
+                if (validUntil != null) date = DateTime.tryParse(validUntil);
+                final daysLeft = date != null
+                    ? date.difference(DateTime.now()).inDays
+                    : null;
+                final urgent = daysLeft != null && daysLeft <= 7;
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: InkWell(
-                onTap: () => context.go('/patients/${v['pet_id']}'),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: VetTheme.spacingSm),
+                  padding: const EdgeInsets.all(VetTheme.spacingSm),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: VetTheme.outlineVariant),
+                    borderRadius: BorderRadius.circular(VetTheme.radiusMd),
                   ),
-                  child: Row(
-                    children: [
-                      Text(
-                        v['pet_name'] as String? ?? '—',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          v['vaccine_name'] as String? ?? '—',
-                          style: const TextStyle(
-                              color: VetTheme.onSurfaceVariant,
-                              fontSize: 13),
+                  child: InkWell(
+                    onTap: () => context.go('/patients/${v['pet_id']}'),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: VetTheme.secondaryContainer
+                                .withValues(alpha: 0.2),
+                            borderRadius:
+                                BorderRadius.circular(VetTheme.radiusMd),
+                          ),
+                          child: Icon(Icons.pets_rounded,
+                              color: VetTheme.secondary, size: 18),
                         ),
-                      ),
-                      if (date != null) ...[
-                        Text(
-                          fmt.format(date),
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: daysLeft != null && daysLeft <= 7
-                                  ? VetTheme.error
-                                  : Colors.amber.shade700,
-                              fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '($daysLeft T)',
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: daysLeft != null && daysLeft <= 7
-                                  ? VetTheme.error
-                                  : Colors.amber.shade700),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      v['pet_name'] as String? ?? '—',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (daysLeft != null)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: (urgent
+                                                ? VetTheme.tertiary
+                                                : VetTheme.secondary)
+                                            .withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(
+                                            VetTheme.radiusMd),
+                                      ),
+                                      child: Text(
+                                        '$daysLeft Tage',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: urgent
+                                              ? VetTheme.tertiary
+                                              : VetTheme.secondary,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              Text(
+                                v['vaccine_name'] as String? ?? '—',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: VetTheme.onSurfaceVariant),
+                              ),
+                              const SizedBox(height: 6),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 28,
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    side: BorderSide(
+                                        color: VetTheme.outlineVariant),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          VetTheme.radiusMd),
+                                    ),
+                                  ),
+                                  onPressed: () {},
+                                  child: const Text('Erinnerung senden',
+                                      style: TextStyle(fontSize: 12)),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            );
-          }),
+                );
+              }).toList(),
+            ),
+          ),
         ],
       ),
     );
