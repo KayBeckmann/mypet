@@ -3,10 +3,16 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <!-- usesCleartextTraffic: Backend läuft aktuell nur über http:// (keine
+         Domain/TLS bisher, siehe TODO.md "Phase 20 Rest"). Android blockiert
+         Cleartext-Traffic seit API 28 sonst komplett — ohne dieses Flag
+         erreicht die App den Server überhaupt nicht. Entfernen, sobald TLS
+         aktiv ist. -->
     <application
         android:label="MyPet"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
