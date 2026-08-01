@@ -1,0 +1,112 @@
+# Reverse-Proxy-Template für MyPet mit TLS via Let's Encrypt/Certbot.
+#
+# Wird von scripts/setup-ssl.sh mit envsubst zu reverse-proxy.conf gerendert
+# (ersetzt ${DOMAIN_*}-Platzhalter). Nicht direkt einbinden.
+#
+# Erwartete Subdomains (A-Records müssen auf den Server zeigen, bevor
+# setup-ssl.sh läuft):
+#   ${DOMAIN_OWNER}     -> web-owner:80
+#   ${DOMAIN_VET}       -> web-vet:80
+#   ${DOMAIN_PROVIDER}  -> web-provider:80
+#   ${DOMAIN_ADMIN}     -> web-admin:80
+#   ${DOMAIN_API}       -> backend:8080
+
+# ACME-HTTP-01-Challenge für alle Domains (muss vor dem ersten Zertifikat
+# über HTTP erreichbar sein, daher eigener, unbedingt aktiver Server-Block).
+server {
+    listen 80;
+    server_name ${DOMAIN_OWNER} ${DOMAIN_VET} ${DOMAIN_PROVIDER} ${DOMAIN_ADMIN} ${DOMAIN_API};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# --- Ab hier erst aktiv, sobald Zertifikate existieren (setup-ssl.sh
+#     entfernt diesen Teil beim ersten Rendern, vor dem ersten erfolgreichen
+#     `certbot certonly`, und rendert ihn danach wieder ein) ---
+# Hinweis: `nginx -t` schlägt außerhalb des Compose-Netzwerks mit "host not
+# found in upstream" fehl, weil web-owner/web-vet/etc. nur innerhalb des
+# mypet-Compose-Projekts auflösbar sind — kein Config-Fehler, nur beim
+# isolierten Syntax-Check außerhalb des echten Deployments zu erwarten.
+#SSL_BLOCKS_START
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMAIN_OWNER};
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN_OWNER}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_OWNER}/privkey.pem;
+    location / {
+        proxy_pass http://web-owner:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMAIN_VET};
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN_VET}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_VET}/privkey.pem;
+    location / {
+        proxy_pass http://web-vet:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMAIN_PROVIDER};
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN_PROVIDER}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_PROVIDER}/privkey.pem;
+    location / {
+        proxy_pass http://web-provider:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMAIN_ADMIN};
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN_ADMIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_ADMIN}/privkey.pem;
+    location / {
+        proxy_pass http://web-admin:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMAIN_API};
+    client_max_body_size 20m;
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN_API}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_API}/privkey.pem;
+    location / {
+        proxy_pass http://backend:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+#SSL_BLOCKS_END

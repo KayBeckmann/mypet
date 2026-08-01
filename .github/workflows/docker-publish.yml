@@ -1,11 +1,20 @@
 name: Build & Publish Docker Images
 
-# Baut alle Service-Images und pushed sie ins GitHub Container Registry (GHCR).
-# Der Produktions-Server muss dann nur noch `docker compose pull && docker compose up -d` ausführen.
+# Baut alle Service-Images, pushed sie ins GitHub Container Registry (GHCR)
+# und deployed sie danach automatisch auf den Produktions-Server per SSH.
 #
 # Voraussetzung: Repository-Variable "API_BASE_URL" in GitHub setzen
 #   Settings → Secrets and variables → Actions → Variables → New repository variable
 #   Name: API_BASE_URL   Value: http://<server-ip>:8080
+#
+# Voraussetzung für den automatischen Deploy-Schritt (Job "deploy" unten):
+# vier Repository-Secrets unter Settings → Secrets and variables → Actions → Secrets
+#   DEPLOY_HOST        z.B. 10.10.0.22 (oder Domain, sobald vorhanden)
+#   DEPLOY_USER        SSH-Benutzer auf dem Server
+#   DEPLOY_SSH_KEY      privater SSH-Key (passend zu einem auf dem Server hinterlegten Public Key)
+#   DEPLOY_PATH        Pfad zum mypet-Checkout auf dem Server, z.B. /home/kay/mypet
+# Fehlen die Secrets, überspringt der Job automatisch (kein Fehlschlag) — der
+# Build/Push läuft trotzdem durch wie bisher, nur ohne Auto-Deploy.
 
 on:
   push:
@@ -164,3 +173,37 @@ jobs:
             -f web_admin/Dockerfile \
             -t ghcr.io/${{ env.OWNER }}/mypet-web-admin:latest \
             .
+
+  # ── Deploy: Produktions-Server per SSH aktualisieren ────────────────────
+  # Läuft nur, wenn alle Image-Builds erfolgreich waren, und überspringt sich
+  # selbst (statt fehlzuschlagen), solange die DEPLOY_*-Secrets noch nicht
+  # gesetzt sind (siehe Hinweis am Dateianfang).
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    needs: [backend, web-owner, web-vet, web-provider, web-admin]
+    steps:
+      - name: Check deploy secrets present
+        id: check
+        run: |
+          if [ -n "${{ secrets.DEPLOY_HOST }}" ] && [ -n "${{ secrets.DEPLOY_USER }}" ] && [ -n "${{ secrets.DEPLOY_SSH_KEY }}" ] && [ -n "${{ secrets.DEPLOY_PATH }}" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Deploy-Secrets (DEPLOY_HOST/DEPLOY_USER/DEPLOY_SSH_KEY/DEPLOY_PATH) sind nicht gesetzt — Auto-Deploy übersprungen, Images liegen aber in der Registry bereit."
+          fi
+
+      - name: SSH deploy (pull + restart)
+        if: steps.check.outputs.ready == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+            cd "${{ secrets.DEPLOY_PATH }}"
+            git pull --ff-only
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
